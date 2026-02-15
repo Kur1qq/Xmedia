@@ -10,7 +10,17 @@ import { LivestreamSection } from "@/components/home/LivestreamSection";
 import { FeaturedStudios } from "@/components/home/FeaturedStudios";
 
 // Slide Data
-const slides = [
+interface Slide {
+  id: number;
+  badge: string;
+  title: string;
+  highlight: string;
+  subTitle: string;
+  description: string;
+  image: string;
+}
+
+const slides: Slide[] = [
   {
     id: 1,
     badge: "Онцлох",
