@@ -13,6 +13,7 @@ import { FeaturedStudios } from "@/components/home/FeaturedStudios";
 const slides = [
   {
     id: 1,
+    badge: "Онцлох",
     title: "Мэргэжлийн студио",
     highlight: "түрээсийн",
     subTitle: "үйлчилгээ",
@@ -21,6 +22,7 @@ const slides = [
   },
   {
     id: 2,
+    badge: "Шинэ",
     title: "Шууд дамжуулалтийн",
     highlight: "түрээсийн",
     subTitle: "үйлчилгээ",
@@ -29,6 +31,7 @@ const slides = [
   },
   {
     id: 3,
+    badge: "Эрэлттэй",
     title: "Мэргэжлийн зурагчин",
     highlight: "түрээсийн",
     subTitle: "үйлчилгээ",
