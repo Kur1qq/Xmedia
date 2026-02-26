@@ -12,12 +12,24 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const prisma_module_1 = require("./prisma.module");
 const health_controller_1 = require("./health.controller");
+const users_module_1 = require("./users/users.module");
+const bookings_module_1 = require("./bookings/bookings.module");
+const equipment_module_1 = require("./equipment/equipment.module");
+const category_module_1 = require("./category/category.module");
+const upload_module_1 = require("./upload/upload.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [
+            prisma_module_1.PrismaModule,
+            users_module_1.UsersModule,
+            bookings_module_1.BookingsModule,
+            equipment_module_1.EquipmentModule,
+            category_module_1.CategoryModule,
+            upload_module_1.UploadModule
+        ],
         controllers: [app_controller_1.AppController, health_controller_1.HealthController],
         providers: [app_service_1.AppService],
     })

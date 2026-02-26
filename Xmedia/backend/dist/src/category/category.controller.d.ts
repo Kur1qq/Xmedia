@@ -1,0 +1,71 @@
+import { CategoryService } from './category.service';
+export declare class CategoryController {
+    private readonly categoryService;
+    constructor(categoryService: CategoryService);
+    create(createCategoryDto: {
+        name: string;
+        description?: string;
+        icon?: string;
+    }): Promise<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
+    findAll(): Promise<({
+        subCategories: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            categoryId: number;
+        }[];
+    } & {
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    })[]>;
+    findOne(id: number): Promise<{
+        subCategories: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            categoryId: number;
+        }[];
+    } & {
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
+    update(id: number, updateCategoryDto: {
+        name?: string;
+        description?: string;
+        icon?: string;
+    }): Promise<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
+    remove(id: number): Promise<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
+}
