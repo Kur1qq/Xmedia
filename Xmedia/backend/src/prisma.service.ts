@@ -1,11 +1,16 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import * as mariadb from 'mariadb';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
     constructor() {
-        const connectionString = process.env.DATABASE_URL || 'mysql://root:endisgiihiijbaina@localhost:3306/xmedia';
+        let connectionString = process.env.DATABASE_URL || 'mysql://root:endisgiihiijbaina@localhost:3306/xmedia';
+        if (!connectionString.includes('allowPublicKeyRetrieval')) {
+            connectionString += connectionString.includes('?') ? '&allowPublicKeyRetrieval=true' : '?allowPublicKeyRetrieval=true';
+        }
+
         const adapter = new PrismaMariaDb(connectionString);
 
         super({

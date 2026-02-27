@@ -16,16 +16,19 @@ exports.BookingsController = void 0;
 const common_1 = require("@nestjs/common");
 const bookings_service_1 = require("./bookings.service");
 const client_1 = require("@prisma/client");
+const admin_log_service_1 = require("../admin/admin-log.service");
 let BookingsController = class BookingsController {
     bookingsService;
-    constructor(bookingsService) {
+    log;
+    constructor(bookingsService, log) {
         this.bookingsService = bookingsService;
+        this.log = log;
     }
-    async findAll() {
-        return this.bookingsService.findAll();
-    }
-    async updateStatus(id, status) {
-        return this.bookingsService.updateStatus(id, status);
+    async findAll() { return this.bookingsService.findAll(); }
+    async updateStatus(id, status, req) {
+        const result = await this.bookingsService.updateStatus(id, status);
+        this.log.log(req.user?.id ?? 0, 'BOOKING_STATUS_UPDATE', 'Booking', id, `status=${status}`, req.ip).catch(() => { });
+        return result;
     }
 };
 exports.BookingsController = BookingsController;
@@ -39,12 +42,14 @@ __decorate([
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)('status')),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, String, Object]),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "updateStatus", null);
 exports.BookingsController = BookingsController = __decorate([
     (0, common_1.Controller)('api/bookings'),
-    __metadata("design:paramtypes", [bookings_service_1.BookingsService])
+    __metadata("design:paramtypes", [bookings_service_1.BookingsService,
+        admin_log_service_1.AdminLogService])
 ], BookingsController);
 //# sourceMappingURL=bookings.controller.js.map

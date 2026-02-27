@@ -1,12 +1,14 @@
 import { CategoryService } from './category.service';
+import { AdminLogService } from '../admin/admin-log.service';
 export declare class CategoryController {
     private readonly categoryService;
-    constructor(categoryService: CategoryService);
-    create(createCategoryDto: {
+    private readonly log;
+    constructor(categoryService: CategoryService, log: AdminLogService);
+    create(dto: {
         name: string;
         description?: string;
         icon?: string;
-    }): Promise<{
+    }, req: any): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -48,11 +50,11 @@ export declare class CategoryController {
         description: string | null;
         icon: string | null;
     }>;
-    update(id: number, updateCategoryDto: {
+    update(id: number, dto: {
         name?: string;
         description?: string;
         icon?: string;
-    }): Promise<{
+    }, req: any): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -60,7 +62,7 @@ export declare class CategoryController {
         description: string | null;
         icon: string | null;
     }>;
-    remove(id: number): Promise<{
+    remove(id: number, req: any): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;

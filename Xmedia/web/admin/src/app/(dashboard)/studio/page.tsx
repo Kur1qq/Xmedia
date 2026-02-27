@@ -1,0 +1,482 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { Plus, X, Pencil, Trash2, Image as ImageIcon, UploadCloud } from "lucide-react";
+import { toast } from "sonner";
+import * as Tabs from '@radix-ui/react-tabs';
+
+export default function StudioPage() {
+    // Shared State
+    const [loading, setLoading] = useState(true);
+
+    // --- STUDIO STATE ---
+    const [studios, setStudios] = useState<any[] /* eslint-disable-line @typescript-eslint/no-explicit-any */>([]);
+    const [isStudioModalOpen, setIsStudioModalOpen] = useState(false);
+    const [isSavingStudio, setIsSavingStudio] = useState(false);
+    const [editingStudio, setEditingStudio] = useState<any | null /* eslint-disable-line @typescript-eslint/no-explicit-any */>(null);
+    const [studioFormData, setStudioFormData] = useState({
+        name: "", description: "", address: "", sizeSqm: "", capacity: "",
+        hourlyRate: "", dailyRate: "", images: "", isAvailable: true, equipmentIds: [] as number[],
+    });
+
+    // --- EQUIPMENT STATE ---
+    const [equipments, setEquipments] = useState<any[] /* eslint-disable-line @typescript-eslint/no-explicit-any */>([]);
+    const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
+    const [isSavingEquipment, setIsSavingEquipment] = useState(false);
+    const [editingEquipment, setEditingEquipment] = useState<any | null /* eslint-disable-line @typescript-eslint/no-explicit-any */>(null);
+    const [equipmentFormData, setEquipmentFormData] = useState({
+        name: "", description: "", type: "camera", images: "",
+    });
+
+    const equipmentTypes = [
+        { value: "camera", label: "Камер (Camera)" },
+        { value: "lighting", label: "Гэрэлтүүлэг (Lighting)" },
+        { value: "accessories", label: "Тоноглол (Accessories)" },
+        { value: "audio", label: "Дуу (Audio)" },
+        { value: "computer", label: "Компьютер (Computer)" },
+        { value: "drone", label: "Дрон (Drone)" },
+        { value: "background", label: "Дэвсгэр (Background)" },
+    ];
+
+    // Shared Image Upload
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [uploadTarget, setUploadTarget] = useState<'studio' | 'equipment' | null>(null);
+
+    const fetchData = async () => {
+        try {
+            const [resStudios, resEquipments] = await Promise.all([
+                fetch('http://localhost:4000/api/studio'),
+                fetch('http://localhost:4000/api/equipment'),
+            ]);
+
+            if (resStudios.ok) setStudios(await resStudios.json());
+            if (resEquipments.ok) setEquipments(await resEquipments.json());
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !uploadTarget) return;
+
+        setIsUploadingImage(true);
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+
+        try {
+            const res = await fetch('http://localhost:4000/api/upload', {
+                method: 'POST',
+                body: uploadData,
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (uploadTarget === 'studio') {
+                    setStudioFormData(prev => ({ ...prev, images: data.url }));
+                } else if (uploadTarget === 'equipment') {
+                    setEquipmentFormData(prev => ({ ...prev, images: data.url }));
+                }
+                toast.success("Зураг амжилттай хуулагдлаа!");
+            } else {
+                toast.error("Зураг хуулахад алдаа гарлаа.");
+            }
+        } catch (error) {
+            console.error("Image upload failed", error);
+            toast.error("Сервертэй холбогдоход алдаа гарлаа.");
+        } finally {
+            setIsUploadingImage(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            setUploadTarget(null);
+        }
+    };
+
+    // ==========================================
+    // STUDIO ACTIONS
+    // ==========================================
+    const handleOpenStudioModal = (studio: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ = null) => {
+        if (studio) {
+            setEditingStudio(studio);
+            setStudioFormData({
+                name: studio.name, description: studio.description || "", address: studio.address || "",
+                sizeSqm: studio.sizeSqm || "", capacity: studio.capacity || "",
+                hourlyRate: studio.hourlyRate || "", dailyRate: studio.dailyRate || "",
+                images: studio.images || "", isAvailable: studio.isAvailable,
+                equipmentIds: studio.equipment ? studio.equipment.map((e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => e.equipmentId) : [],
+            });
+        } else {
+            setEditingStudio(null);
+            setStudioFormData({
+                name: "", description: "", address: "", sizeSqm: "", capacity: "",
+                hourlyRate: "", dailyRate: "", images: "", isAvailable: true, equipmentIds: [],
+            });
+        }
+        setIsStudioModalOpen(true);
+    };
+
+    const handleSaveStudio = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSavingStudio(true);
+
+        try {
+            const method = editingStudio ? 'PATCH' : 'POST';
+            const url = editingStudio ? `http://localhost:4000/api/studio/${editingStudio.id}` : 'http://localhost:4000/api/studio';
+
+            const payload = {
+                name: studioFormData.name,
+                description: studioFormData.description || undefined,
+                address: studioFormData.address || undefined,
+                sizeSqm: studioFormData.sizeSqm ? parseFloat(studioFormData.sizeSqm) : undefined,
+                capacity: studioFormData.capacity ? parseInt(studioFormData.capacity) : undefined,
+                hourlyRate: studioFormData.hourlyRate ? parseFloat(studioFormData.hourlyRate) : 0,
+                dailyRate: studioFormData.dailyRate ? parseFloat(studioFormData.dailyRate) : undefined,
+                images: studioFormData.images || undefined,
+                isAvailable: studioFormData.isAvailable,
+                equipmentIds: studioFormData.equipmentIds,
+            };
+
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+            if (res.ok) {
+                await fetchData();
+                setIsStudioModalOpen(false);
+                toast.success(editingStudio ? "Студи шинэчлэгдлээ" : "Студи нэмэгдлээ");
+            } else {
+                toast.error("Алдаа гарлаа.");
+            }
+        } catch (error) {
+            toast.error("Сервертэй алдаа гарав.");
+        } finally {
+            setIsSavingStudio(false);
+        }
+    };
+
+    const handleDeleteStudio = async (id: number) => {
+        if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
+        try {
+            const res = await fetch(`http://localhost:4000/api/studio/${id}`, { method: 'DELETE' });
+            if (res.ok) { setStudios(studios.filter(st => st.id !== id)); toast.success("Устгагдлаа"); }
+            else toast.error("Устгахад алдаа гарлаа.");
+        } catch (error) { toast.error("Сервертэй холбогдоход алдаа гарлаа."); }
+    };
+
+    const toggleEquipmentSelection = (equipmentId: number) => {
+        setStudioFormData(prev => {
+            const currentIds = prev.equipmentIds;
+            if (currentIds.includes(equipmentId)) {
+                return { ...prev, equipmentIds: currentIds.filter(id => id !== equipmentId) };
+            } else {
+                return { ...prev, equipmentIds: [...currentIds, equipmentId] };
+            }
+        });
+    };
+
+    // ==========================================
+    // EQUIPMENT ACTIONS
+    // ==========================================
+    const handleOpenEquipmentModal = (equipment: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ = null) => {
+        if (equipment) {
+            setEditingEquipment(equipment);
+            setEquipmentFormData({
+                name: equipment.name,
+                description: equipment.description || "",
+                type: equipment.type,
+                images: equipment.images || "",
+            });
+        } else {
+            setEditingEquipment(null);
+            setEquipmentFormData({ name: "", description: "", type: "camera", images: "" });
+        }
+        setIsEquipmentModalOpen(true);
+    };
+
+    const handleSaveEquipment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSavingEquipment(true);
+
+        try {
+            const method = editingEquipment ? 'PATCH' : 'POST';
+            const url = editingEquipment ? `http://localhost:4000/api/equipment/${editingEquipment.id}` : 'http://localhost:4000/api/equipment';
+
+            const payload = { ...equipmentFormData, images: equipmentFormData.images || undefined };
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+            if (res.ok) {
+                await fetchData();
+                setIsEquipmentModalOpen(false);
+                toast.success(editingEquipment ? "Төхөөрөмж шинэчлэгдлээ" : "Төхөөрөмж нэмэгдлээ");
+            } else toast.error("Алдаа гарлаа");
+        } catch (error) { toast.error("Сервертэй алдаа гарав."); }
+        finally { setIsSavingEquipment(false); }
+    };
+
+    const handleDeleteEquipment = async (id: number) => {
+        if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
+        try {
+            const res = await fetch(`http://localhost:4000/api/equipment/${id}`, { method: 'DELETE' });
+            if (res.ok) { setEquipments(equipments.filter(e => e.id !== id)); toast.success("Төхөөрөмж устгагдлаа"); }
+            else toast.error("Алдаа гарлаа.");
+        } catch (error) { toast.error("Сервертэй холбогдоход алдаа гарлаа."); }
+    };
+
+
+    return (
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight">Студио Удирдлага</h1>
+                <p className="text-muted-foreground mt-1">Студийн өрөөнүүд болон тоног төхөөрөмжийг удирдах хэсэг.</p>
+            </div>
+
+            <Tabs.Root defaultValue="studios" className="flex flex-col w-full">
+                <Tabs.List className="flex shrink-0 border-b border-border/50 bg-background" aria-label="Management Tabs">
+                    <Tabs.Trigger
+                        value="studios"
+                        className="px-5 h-[45px] flex items-center justify-center text-sm font-medium leading-none text-muted-foreground select-none hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary outline-none cursor-pointer transition-colors"
+                    >
+                        Студиуд (Үндсэн)
+                    </Tabs.Trigger>
+                    <Tabs.Trigger
+                        value="equipments"
+                        className="px-5 h-[45px] flex items-center justify-center text-sm font-medium leading-none text-muted-foreground select-none hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary outline-none cursor-pointer transition-colors"
+                    >
+                        Тоног төхөөрөмж
+                    </Tabs.Trigger>
+                </Tabs.List>
+
+                {/* ===================================== */}
+                {/* STUDIOS TAB CONTENT */}
+                {/* ===================================== */}
+                <Tabs.Content value="studios" className="outline-none pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold">Студиуд</h2>
+                        <button onClick={() => handleOpenStudioModal()} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                            <Plus className="h-4 w-4" /> Нэмэх
+                        </button>
+                    </div>
+
+                    <div className="rounded-md border border-border/50 bg-card overflow-hidden">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
+                                <tr>
+                                    <th className="px-6 py-4 font-medium border-b w-[80px]">Зураг</th>
+                                    <th className="px-6 py-4 font-medium border-b w-[200px]">Нэр</th>
+                                    <th className="px-6 py-4 font-medium border-b">Үнэ / Цаг</th>
+                                    <th className="px-6 py-4 font-medium border-b">Багтаамж</th>
+                                    <th className="px-6 py-4 font-medium border-b w-[100px]">Төлөв</th>
+                                    <th className="px-6 py-4 font-medium border-b text-right">Үйлдэл</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/50">
+                                {loading ? (<tr><td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">Уншиж байна...</td></tr>)
+                                    : studios.length === 0 ? (<tr><td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">Бүртгэл алга байна.</td></tr>)
+                                        : studios.map((s) => (
+                                            <tr key={s.id} className="hover:bg-muted/30">
+                                                <td className="px-6 py-4">
+                                                    {s.images ? (
+                                                        <div className="w-10 h-10 rounded overflow-hidden">
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img src={s.images} alt={s.name} className="w-full h-full object-cover" />
+                                                        </div>
+                                                    ) : <div className="w-10 h-10 rounded bg-muted flex items-center justify-center"><ImageIcon className="w-4 h-4 text-muted-foreground" /></div>}
+                                                </td>
+                                                <td className="px-6 py-4 font-medium">{s.name}</td>
+                                                <td className="px-6 py-4">{Number(s.hourlyRate).toLocaleString()} ₮</td>
+                                                <td className="px-6 py-4">{s.capacity || '-'}</td>
+                                                <td className="px-6 py-4"><span className={`px-2 py-0.5 text-xs rounded-full ${s.isAvailable ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>{s.isAvailable ? 'Идэвхтэй' : 'Идэвхгүй'}</span></td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-3">
+                                                        <button onClick={() => handleOpenStudioModal(s)} className="text-muted-foreground hover:text-primary"><Pencil className="w-4 h-4" /></button>
+                                                        <button onClick={() => handleDeleteStudio(s.id)} className="text-muted-foreground hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Tabs.Content>
+
+                {/* ===================================== */}
+                {/* EQUIPMENTS TAB CONTENT */}
+                {/* ===================================== */}
+                <Tabs.Content value="equipments" className="outline-none pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold">Тоног төхөөрөмж</h2>
+                        <button onClick={() => handleOpenEquipmentModal()} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                            <Plus className="h-4 w-4" /> Төхөөрөмж нэмэх
+                        </button>
+                    </div>
+
+                    <div className="rounded-md border border-border/50 bg-card overflow-hidden">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
+                                <tr>
+                                    <th className="px-6 py-4 font-medium border-b w-[80px]">Зураг</th>
+                                    <th className="px-6 py-4 font-medium border-b w-[200px]">Нэр</th>
+                                    <th className="px-6 py-4 font-medium border-b w-[150px]">Төрөл</th>
+                                    <th className="px-6 py-4 font-medium border-b">Тайлбар</th>
+                                    <th className="px-6 py-4 font-medium border-b text-right">Үйлдэл</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/50">
+                                {loading ? (<tr><td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">Уншиж байна...</td></tr>)
+                                    : equipments.length === 0 ? (<tr><td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">Бүртгэл алга байна.</td></tr>)
+                                        : equipments.map((e) => (
+                                            <tr key={e.id} className="hover:bg-muted/30">
+                                                <td className="px-6 py-4">
+                                                    {e.images ? (
+                                                        <div className="w-10 h-10 rounded overflow-hidden">
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img src={e.images} alt={e.name} className="w-full h-full object-cover" />
+                                                        </div>
+                                                    ) : <div className="w-10 h-10 rounded bg-muted flex items-center justify-center"><ImageIcon className="w-4 h-4 text-muted-foreground" /></div>}
+                                                </td>
+                                                <td className="px-6 py-4 font-medium">{e.name}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary capitalize">{e.type}</span>
+                                                </td>
+                                                <td className="px-6 py-4 text-muted-foreground truncate max-w-[300px]">{e.description || '-'}</td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-3">
+                                                        <button onClick={() => handleOpenEquipmentModal(e)} className="text-muted-foreground hover:text-primary"><Pencil className="w-4 h-4" /></button>
+                                                        <button onClick={() => handleDeleteEquipment(e.id)} className="text-muted-foreground hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Tabs.Content>
+            </Tabs.Root>
+
+            {/* SHARED IMAGE INPUT (Hidden) */}
+            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+
+            {/* ===================================== */}
+            {/* STUDIO MODAL */}
+            {/* ===================================== */}
+            {isStudioModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border border-border/50 shadow-lg p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-lg font-semibold">{editingStudio ? 'Студи засах' : 'Шинэ студи нэмэх'}</h2>
+                            <button onClick={() => setIsStudioModalOpen(false)}><X className="w-5 h-5 text-muted-foreground hover:text-foreground" /></button>
+                        </div>
+                        <form onSubmit={handleSaveStudio} className="space-y-4">
+                            <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-lg border border-border/50">
+                                <div className="w-16 h-16 rounded overflow-hidden bg-muted flex items-center justify-center">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    {studioFormData.images ? <img src={studioFormData.images} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
+                                </div>
+                                <button type="button" disabled={isUploadingImage} onClick={() => { setUploadTarget('studio'); fileInputRef.current?.click(); }} className="px-3 py-1.5 text-sm bg-background border border-border/50 rounded-md hover:bg-muted">Зураг хуулах</button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
+                                    <input required value={studioFormData.name} onChange={e => setStudioFormData({ ...studioFormData, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Хаяг байршил</label>
+                                    <input value={studioFormData.address} onChange={e => setStudioFormData({ ...studioFormData, address: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Талбайн хэмжээ (м.кв)</label>
+                                    <input type="number" value={studioFormData.sizeSqm} onChange={e => setStudioFormData({ ...studioFormData, sizeSqm: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Багтаамж (хүн)</label>
+                                    <input type="number" value={studioFormData.capacity} onChange={e => setStudioFormData({ ...studioFormData, capacity: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Цагийн үнэ (₮)</label>
+                                    <input type="number" value={studioFormData.hourlyRate} onChange={e => setStudioFormData({ ...studioFormData, hourlyRate: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Өдрийн үнэ (₮)</label>
+                                    <input type="number" value={studioFormData.dailyRate} onChange={e => setStudioFormData({ ...studioFormData, dailyRate: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium">Тайлбар</label>
+                                <textarea value={studioFormData.description} onChange={e => setStudioFormData({ ...studioFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium block">Дагалдах тоног төхөөрөмж</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 border border-border/50 rounded-md">
+                                    {equipments.map(eq => (
+                                        <label key={eq.id} className="flex items-center gap-2 text-sm p-1 hover:bg-muted/50 rounded cursor-pointer">
+                                            <input type="checkbox" checked={studioFormData.equipmentIds.includes(eq.id)} onChange={() => toggleEquipmentSelection(eq.id)} /> {eq.name}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={studioFormData.isAvailable} onChange={e => setStudioFormData({ ...studioFormData, isAvailable: e.target.checked })} /> Идэвхтэй (Захиалга авах боломжтой)</label>
+
+                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsStudioModalOpen(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={isSavingStudio} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{isSavingStudio ? '...' : 'Хадгалах'}</button></div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ===================================== */}
+            {/* EQUIPMENT MODAL */}
+            {/* ===================================== */}
+            {isEquipmentModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-lg font-semibold">{editingEquipment ? 'Төхөөрөмж засах' : 'Төхөөрөмж үүсгэх'}</h2>
+                            <button onClick={() => setIsEquipmentModalOpen(false)}><X className="w-5 h-5 text-muted-foreground hover:text-foreground" /></button>
+                        </div>
+                        <form onSubmit={handleSaveEquipment} className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium flex items-center justify-between">
+                                    Төхөөрөмжийн зураг
+                                    {equipmentFormData.images && (
+                                        <button type="button" onClick={() => setEquipmentFormData(prev => ({ ...prev, images: "" }))} className="text-xs text-red-500 hover:underline">Зураг устгах</button>
+                                    )}
+                                </label>
+                                <div className="flex gap-4 items-start">
+                                    <div className="w-16 h-16 shrink-0 rounded-md border border-border/50 bg-muted flex items-center justify-center overflow-hidden">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        {equipmentFormData.images ? <img src={equipmentFormData.images} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-muted-foreground/30" />}
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <button type="button" onClick={() => { setUploadTarget('equipment'); fileInputRef.current?.click(); }} disabled={isUploadingImage} className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-border/50 bg-background px-4 py-2 text-sm font-medium hover:bg-muted focus-visible:outline-none">
+                                            {isUploadingImage ? <span className="animate-pulse">Хуулж байна...</span> : <><UploadCloud className="w-4 h-4" /> Зураг сонгох</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
+                                <input required value={equipmentFormData.name} onChange={e => setEquipmentFormData({ ...equipmentFormData, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium">Төрөл (Ангилал)</label>
+                                <select value={equipmentFormData.type} onChange={(e) => setEquipmentFormData({ ...equipmentFormData, type: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                    {equipmentTypes.map(type => (
+                                        <option key={type.value} value={type.value}>{type.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium">Тайлбар</label>
+                                <textarea value={equipmentFormData.description} onChange={e => setEquipmentFormData({ ...equipmentFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
+                            </div>
+                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsEquipmentModalOpen(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={isSavingEquipment} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{isSavingEquipment ? '...' : 'Хадгалах'}</button></div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

@@ -15,34 +15,40 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CategoryController = void 0;
 const common_1 = require("@nestjs/common");
 const category_service_1 = require("./category.service");
+const admin_log_service_1 = require("../admin/admin-log.service");
 let CategoryController = class CategoryController {
     categoryService;
-    constructor(categoryService) {
+    log;
+    constructor(categoryService, log) {
         this.categoryService = categoryService;
+        this.log = log;
     }
-    create(createCategoryDto) {
-        return this.categoryService.create(createCategoryDto);
+    async create(dto, req) {
+        const result = await this.categoryService.create(dto);
+        this.log.log(req.user?.id ?? 0, 'CATEGORY_CREATE', 'Category', result?.id, dto.name, req.ip).catch(() => { });
+        return result;
     }
-    findAll() {
-        return this.categoryService.findAll();
+    findAll() { return this.categoryService.findAll(); }
+    findOne(id) { return this.categoryService.findOne(id); }
+    async update(id, dto, req) {
+        const result = await this.categoryService.update(id, dto);
+        this.log.log(req.user?.id ?? 0, 'CATEGORY_UPDATE', 'Category', id, dto.name, req.ip).catch(() => { });
+        return result;
     }
-    findOne(id) {
-        return this.categoryService.findOne(id);
-    }
-    update(id, updateCategoryDto) {
-        return this.categoryService.update(id, updateCategoryDto);
-    }
-    remove(id) {
-        return this.categoryService.remove(id);
+    async remove(id, req) {
+        const result = await this.categoryService.remove(id);
+        this.log.log(req.user?.id ?? 0, 'CATEGORY_DELETE', 'Category', id, undefined, req.ip).catch(() => { });
+        return result;
     }
 };
 exports.CategoryController = CategoryController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
 ], CategoryController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
@@ -61,19 +67,22 @@ __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
 ], CategoryController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
 ], CategoryController.prototype, "remove", null);
 exports.CategoryController = CategoryController = __decorate([
     (0, common_1.Controller)('categories'),
-    __metadata("design:paramtypes", [category_service_1.CategoryService])
+    __metadata("design:paramtypes", [category_service_1.CategoryService,
+        admin_log_service_1.AdminLogService])
 ], CategoryController);
 //# sourceMappingURL=category.controller.js.map

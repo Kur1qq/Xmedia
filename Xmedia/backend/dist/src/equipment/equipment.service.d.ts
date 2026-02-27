@@ -15,7 +15,7 @@ export declare class EquipmentService {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     findAll(): Promise<{
         id: number;
@@ -24,7 +24,7 @@ export declare class EquipmentService {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
@@ -33,7 +33,7 @@ export declare class EquipmentService {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     update(id: number, data: {
         name?: string;
@@ -47,7 +47,7 @@ export declare class EquipmentService {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     remove(id: number): Promise<{
         id: number;
@@ -56,6 +56,6 @@ export declare class EquipmentService {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
 }

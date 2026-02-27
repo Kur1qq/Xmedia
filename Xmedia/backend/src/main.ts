@@ -12,10 +12,10 @@ async function bootstrap() {
 
   // CORS тохиргоо нэмэх
   app.enableCors({
-    origin: 'http://localhost:3000', // Next.js ажиллаж буй порт
+    origin: ['http://localhost:3000', 'http://localhost:3002'], // Next.js ажиллаж буй портууд
     credentials: true,
   });
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.PORT ?? 4000);
 }
 bootstrap();

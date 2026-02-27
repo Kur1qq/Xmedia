@@ -17,7 +17,7 @@ export default function UsersPage() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const res = await fetch('http://localhost:3001/api/users');
+                const res = await fetch('http://localhost:4000/api/users');
                 if (res.ok) {
                     const data = await res.json();
                     setUsers(data);

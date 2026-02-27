@@ -15,34 +15,40 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EquipmentController = void 0;
 const common_1 = require("@nestjs/common");
 const equipment_service_1 = require("./equipment.service");
+const admin_log_service_1 = require("../admin/admin-log.service");
 let EquipmentController = class EquipmentController {
     equipmentService;
-    constructor(equipmentService) {
+    log;
+    constructor(equipmentService, log) {
         this.equipmentService = equipmentService;
+        this.log = log;
     }
-    create(createData) {
-        return this.equipmentService.create(createData);
+    async create(createData, req) {
+        const result = await this.equipmentService.create(createData);
+        this.log.log(req.user?.id ?? 0, 'EQUIPMENT_CREATE', 'Equipment', result?.id, createData.name, req.ip).catch(() => { });
+        return result;
     }
-    findAll() {
-        return this.equipmentService.findAll();
+    findAll() { return this.equipmentService.findAll(); }
+    findOne(id) { return this.equipmentService.findOne(id); }
+    async update(id, updateData, req) {
+        const result = await this.equipmentService.update(id, updateData);
+        this.log.log(req.user?.id ?? 0, 'EQUIPMENT_UPDATE', 'Equipment', id, updateData.name, req.ip).catch(() => { });
+        return result;
     }
-    findOne(id) {
-        return this.equipmentService.findOne(id);
-    }
-    update(id, updateData) {
-        return this.equipmentService.update(id, updateData);
-    }
-    remove(id) {
-        return this.equipmentService.remove(id);
+    async remove(id, req) {
+        const result = await this.equipmentService.remove(id);
+        this.log.log(req.user?.id ?? 0, 'EQUIPMENT_DELETE', 'Equipment', id, undefined, req.ip).catch(() => { });
+        return result;
     }
 };
 exports.EquipmentController = EquipmentController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
 ], EquipmentController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
@@ -61,19 +67,22 @@ __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
 ], EquipmentController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
 ], EquipmentController.prototype, "remove", null);
 exports.EquipmentController = EquipmentController = __decorate([
     (0, common_1.Controller)('equipment'),
-    __metadata("design:paramtypes", [equipment_service_1.EquipmentService])
+    __metadata("design:paramtypes", [equipment_service_1.EquipmentService,
+        admin_log_service_1.AdminLogService])
 ], EquipmentController);
 //# sourceMappingURL=equipment.controller.js.map

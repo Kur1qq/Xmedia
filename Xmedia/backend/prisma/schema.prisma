@@ -42,31 +42,33 @@ model Equipment {
   name        String        @db.VarChar(200)
   description String?       @db.Text
   type        EquipmentType @default(camera)
-  images      String?       @db.Text
+  images      Json?         // FIX: was @db.Text, now proper JSON
   createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
-  studios  StudioEquipment[]
-  services ServiceEquipment[]
+  studios              StudioEquipment[]
+  services             ServiceEquipment[]
+  liveServices         LiveServiceEquipment[]
+  photographerServices PhotographerServiceEquipment[]
 
   @@map("equipment")
 }
 
 model Studio {
-  id                Int      @id @default(autoincrement())
-  name              String   @db.VarChar(200)
-  description       String?  @db.Text
-  address           String?  @db.VarChar(500)
-  sizeSqm           Decimal? @map("size_sqm") @db.Decimal(10, 2)
-  capacity          Int?
-  hourlyRate        Decimal  @map("hourly_rate") @db.Decimal(12, 2)
-  dailyRate         Decimal? @map("daily_rate") @db.Decimal(12, 2)
-  equipmentIncluded Int?     @map("equipment_included")
-  amenities         String?  @db.Text // JSON array as string
-  images            String?  @db.Text // JSON array as string
-  isAvailable       Boolean  @default(true) @map("is_available")
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  address     String?  @db.VarChar(500)
+  sizeSqm     Decimal? @map("size_sqm") @db.Decimal(10, 2)
+  capacity    Int?
+  hourlyRate  Decimal  @map("hourly_rate") @db.Decimal(12, 2)
+  dailyRate   Decimal? @map("daily_rate") @db.Decimal(12, 2)
+  // FIX: equipmentIncluded Int? removed — StudioEquipment join table handles this
+  amenities   Json?    // FIX: was @db.Text, now proper JSON
+  images      Json?    // FIX: was @db.Text, now proper JSON
+  isAvailable Boolean  @default(true) @map("is_available")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
   equipment    StudioEquipment[]
   bookingItems BookingItem[]
@@ -84,6 +86,7 @@ model StudioEquipment {
   studio    Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
   equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
 
+  @@unique([studioId, equipmentId]) // FIX: prevent duplicate equipment on same studio
   @@map("studio_equipment")
 }
 
@@ -96,8 +99,11 @@ model ServiceCategory {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
-  subCategories ServiceSubCategory[] // Дэд категориудтай холбогдох
-  services      Service[] // Шууд үйлчилгээнүүдтэй холбогдох (хэрэв дэд категоригүй бол)
+  subCategories        ServiceSubCategory[]
+  services             Service[]
+  liveServices         LiveService[]
+  photographerServices PhotographerService[]
+  editServices         EditService[]
 
   @@map("service_categories")
 }
@@ -147,20 +153,154 @@ model Service {
   @@map("services")
 }
 
+// --------------------------------------------------------------------------
+// ШУУД ДАМЖУУЛАЛТ (LIVE STREAMING SERVICES)
+// --------------------------------------------------------------------------
+
+// Шууд дамжуулалтын үйлчилгээ (камерийн тоогоор үнэлдэг)
+model LiveService {
+  id          Int     @id @default(autoincrement())
+  categoryId  Int     @map("category_id")
+  name        String  @db.VarChar(200)
+  description String? @db.Text
+  image       String? @db.Text
+  isActive    Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  category     ServiceCategory         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  priceTiers   LiveServiceCameraTier[]
+  equipments   LiveServiceEquipment[]
+  bookingItems BookingItem[]           // FIX: back-relation
+
+  @@map("live_services")
+}
+
+// камерийн тоогоор тогтоосон үнийн мэдээлэл
+model LiveServiceCameraTier {
+  id            Int     @id @default(autoincrement())
+  liveServiceId Int     @map("live_service_id")
+  cameraCount   Int     @map("camera_count") // 1, 2, 3 ...
+  label         String? @db.VarChar(200) // "1 камер", "2 камер" г.м.
+  price         Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  liveService LiveService @relation(fields: [liveServiceId], references: [id], onDelete: Cascade)
+
+  @@map("live_service_camera_tiers")
+}
+
+// Шууд дамжуулалтын үйлчилгээнд ашиглагдах тоног төхөөрөмжүүд
+model LiveServiceEquipment {
+  id            Int @id @default(autoincrement())
+  liveServiceId Int @map("live_service_id")
+  equipmentId   Int @map("equipment_id")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  liveService LiveService @relation(fields: [liveServiceId], references: [id], onDelete: Cascade)
+  equipment   Equipment   @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@unique([liveServiceId, equipmentId]) // FIX: no duplicate equipment per live service
+  @@map("live_service_equipment")
+}
+
+// --------------------------------------------------------------------------
+// ЗУРАГЛААЧ (PHOTOGRAPHER SERVICES)
+// --------------------------------------------------------------------------
+
+// Үндсэн үйлчилгээний төрөл (Зураглаач, Зурагчин, Дрон...) - Админ тохируулна
+model PhotographerMainType {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)  // "Зураглаач", "Зурагчин", "Дрон"
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  subTypes PhotographerSubType[]
+  services PhotographerService[]
+
+  @@map("photographer_main_types")
+}
+
+// Дэд үйлчилгээний төрөл (Рийл, Богино контент, Фото, Батарей...) - Админ тохируулна
+model PhotographerSubType {
+  id           Int      @id @default(autoincrement())
+  mainTypeId   Int      @map("main_type_id")
+  name         String   @db.VarChar(100)  // "Рийл", "Богино контент", "Фото", "Батарей"
+  description  String?  @db.Text
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  mainType PhotographerMainType  @relation(fields: [mainTypeId], references: [id], onDelete: Cascade)
+  services PhotographerService[]
+
+  @@map("photographer_sub_types")
+}
+
+// Зураглаачийн үйлчилгээ
+model PhotographerService {
+  id          Int  @id @default(autoincrement())
+  categoryId  Int  @map("category_id")
+  mainTypeId  Int  @map("main_type_id")
+  subTypeId   Int? @map("sub_type_id")
+
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  image       String?  @db.Text
+  hourlyRate  Decimal? @map("hourly_rate") @db.Decimal(12, 2)
+  dailyRate   Decimal? @map("daily_rate") @db.Decimal(12, 2)
+  isActive    Boolean  @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  category     ServiceCategory              @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  mainType     PhotographerMainType         @relation(fields: [mainTypeId], references: [id])
+  subType      PhotographerSubType?         @relation(fields: [subTypeId], references: [id], onDelete: SetNull)
+  equipments   PhotographerServiceEquipment[]
+  bookingItems BookingItem[]               // FIX: back-relation
+
+  @@index([mainTypeId])  // FIX: index
+  @@map("photographer_services")
+}
+
+// Зураглаачийн үйлчилгээнд ашиглагдах тоног төхөөрөмжүүд
+model PhotographerServiceEquipment {
+  id                    Int @id @default(autoincrement())
+  photographerServiceId Int @map("photographer_service_id")
+  equipmentId           Int @map("equipment_id")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  photographerService PhotographerService @relation(fields: [photographerServiceId], references: [id], onDelete: Cascade)
+  equipment           Equipment           @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@unique([photographerServiceId, equipmentId]) // FIX: no duplicate equipment per service
+  @@map("photographer_service_equipment")
+}
+
 // Үйлчилгээнд багтах тоног төхөөрөмжүүд
 model ServiceEquipment {
   id          Int @id @default(autoincrement())
   serviceId   Int @map("service_id")
   equipmentId Int @map("equipment_id")
-  quantity    Int @default(1) // Тухайн үйлчилгээнд хэдэн ширхэг орох (жишээ нь: 2 гэрэл)
+  quantity    Int @default(1)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
-  // Relations
   service   Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
 
+  @@unique([serviceId, equipmentId]) // FIX: no duplicate equipment per service
   @@map("service_equipment")
 }
 
@@ -178,10 +318,13 @@ enum PaymentStatus {
   REFUNDED
 }
 
-// Юу захиалж байгаа вэ? 
+// Юу захиалж байгаа вэ?
 enum ItemType {
   STUDIO
   SERVICE
+  PHOTOGRAPHER_SERVICE  // FIX: Зураглаачийн үйлчилгээ
+  EDIT_SERVICE          // FIX: Эдит үйлчилгээ
+  LIVE_SERVICE          // FIX: Шууд дамжуулалтын үйлчилгээ
 }
 
 // 1. Үндсэн Захиалга
@@ -200,31 +343,33 @@ model Booking {
   // Relations
   user     User          @relation(fields: [userId], references: [id])
   items    BookingItem[]
-  payments Payment[] // Захиалгад төлсөн төлбөрүүд
+  payments Payment[]
 
+  @@index([userId])  // FIX: fast user→bookings lookup
   @@map("bookings")
 }
 
-// 2. Захиалга доторх зүйлс 
+// 2. Захиалга доторх зүйлс
 model BookingItem {
   id        Int      @id @default(autoincrement())
   bookingId Int      @map("booking_id")
   itemType  ItemType
 
-  // Сонгох боломжтой зүйлс: Аль нэг нь л утгатай байна
-  studioId  Int? @map("studio_id")
-  serviceId Int? @map("service_id")
+  // FIX: Аль нэг нь л утгатай байна — itemType-р ялгана
+  studioId              Int? @map("studio_id")
+  serviceId             Int? @map("service_id")
+  photographerServiceId Int? @map("photographer_service_id")  // FIX: нэмсэн
+  editServiceId         Int? @map("edit_service_id")          // FIX: нэмсэн
+  liveServiceId         Int? @map("live_service_id")          // FIX: нэмсэн
 
   quantity   Int     @default(1)
   unitPrice  Decimal @map("unit_price") @db.Decimal(12, 2)
   totalPrice Decimal @map("total_price") @db.Decimal(12, 2)
 
-  // Хуваарь:
-  // Бүх үйлчилгээ болон студид "Өдөр" сонгох шаардлагатай
+  // Бүх үйлчилгээ болон студид өдөр сонгох шаардлагатай
   bookingDate DateTime @map("booking_date") @db.Date
 
-  // Цаг сонгох: Студи, Шууд дамжуулалт, Зураглаачид НАРТ цаг шаардлагатай (12:00-14:00)
-  // харин 'Эдит' үйлчилгээнд зөвхөн bookingDate байхад хангалттай тул эдгээр нь NULL үлдэж болно.
+  // Цаг: Студи, Шууд дамжуулалт, Зураглаачид шаардлагатай; Эдитэд биш.
   startTime DateTime? @map("start_time") @db.Time(0)
   endTime   DateTime? @map("end_time") @db.Time(0)
 
@@ -232,10 +377,14 @@ model BookingItem {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
   // Relations
-  booking Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  studio  Studio?  @relation(fields: [studioId], references: [id], onDelete: SetNull)
-  service Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  booking             Booking              @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  studio              Studio?              @relation(fields: [studioId], references: [id], onDelete: SetNull)
+  service             Service?             @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  photographerService PhotographerService? @relation(fields: [photographerServiceId], references: [id], onDelete: SetNull)  // FIX
+  editService         EditService?         @relation(fields: [editServiceId], references: [id], onDelete: SetNull)          // FIX
+  liveService         LiveService?         @relation(fields: [liveServiceId], references: [id], onDelete: SetNull)          // FIX
 
+  @@index([bookingId])  // FIX: index for fast booking→items lookup
   @@map("booking_items")
 }
 
@@ -267,4 +416,102 @@ model Payment {
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("payments")
+}
+
+// --------------------------------------------------------------------------
+// ЭДИТ ҮЙЛЧИЛГЭЭ (EDIT SERVICES)
+// --------------------------------------------------------------------------
+
+model EditMainType {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  subTypes EditSubType[]
+  services EditService[]
+
+  @@map("edit_main_types")
+}
+
+model EditSubType {
+  id          Int      @id @default(autoincrement())
+  mainTypeId  Int      @map("main_type_id")
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  mainType EditMainType  @relation(fields: [mainTypeId], references: [id], onDelete: Cascade)
+  services EditService[]
+
+  @@map("edit_sub_types")
+}
+
+model EditService {
+  id          Int     @id @default(autoincrement())
+  categoryId  Int     @map("category_id")
+  mainTypeId  Int     @map("main_type_id")
+  subTypeId   Int?    @map("sub_type_id")
+  name        String  @db.VarChar(200)
+  description String? @db.Text
+  image       String? @db.Text
+  price       Decimal @db.Decimal(12, 2)
+  priceUnit   String  @default("1ш") @map("price_unit") @db.VarChar(50)
+  isActive    Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  category     ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  mainType     EditMainType    @relation(fields: [mainTypeId], references: [id])
+  subType      EditSubType?    @relation(fields: [subTypeId], references: [id], onDelete: SetNull)
+  bookingItems BookingItem[]  // FIX: back-relation
+
+  @@index([mainTypeId])  // FIX: index
+  @@map("edit_services")
+}
+
+// --------------------------------------------------------------------------
+// ADMIN AUTH & LOGGING
+// --------------------------------------------------------------------------
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+}
+
+model Admin {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique @db.VarChar(100)
+  password  String    @db.VarChar(255)
+  image     String?   @db.Text
+  role      AdminRole @default(ADMIN)
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  logs AdminLog[]
+
+  @@map("admins")
+}
+
+model AdminLog {
+  id        Int      @id @default(autoincrement())
+  adminId   Int?     @map("admin_id")  // FIX: nullable — admin устгасан ч лог хадгалагдана
+  action    String   @db.VarChar(200)
+  entity    String?  @db.VarChar(100)
+  entityId  Int?     @map("entity_id")
+  detail    String?  @db.Text
+  ip        String?  @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  admin Admin? @relation(fields: [adminId], references: [id], onDelete: SetNull)  // FIX: SetNull
+
+  @@index([adminId])  // FIX: fast filter by admin
+  @@map("admin_logs")
 }

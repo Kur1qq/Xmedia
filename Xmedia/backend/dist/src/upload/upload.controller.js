@@ -24,7 +24,7 @@ let UploadController = class UploadController {
             return { error: 'No file uploaded' };
         }
         return {
-            url: `http://localhost:3001/public/uploads/${file.filename}`
+            url: `http://localhost:4000/public/uploads/${file.filename}`
         };
     }
 };

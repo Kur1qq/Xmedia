@@ -1,34 +1,87 @@
-import { Users, DollarSign, Activity, FileText } from "lucide-react";
+"use client";
 
-export default function Home() {
-  const stats = [
-    { label: "Total Users", value: "2,543", icon: Users, change: "+12.5%", positive: true },
-    { label: "Revenue", value: "$45,231.89", icon: DollarSign, change: "+5.2%", positive: true },
-    { label: "Active Sessions", value: "1,204", icon: Activity, change: "-2.4%", positive: false },
-    { label: "Total Articles", value: "854", icon: FileText, change: "+18.1%", positive: true },
+import { useEffect, useState } from "react";
+import { Users, CalendarDays, Camera, CreditCard } from "lucide-react";
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalBookings: 0,
+    totalRevenue: 0,
+    activeStudios: 0,
+    activeEquipment: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await fetch('http://localhost:4000/api/dashboard/summary');
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard summary", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSummary();
+  }, []);
+
+  const cards = [
+    {
+      title: "Нийт хэрэглэгч",
+      value: loading ? "..." : stats.totalUsers.toString(),
+      icon: Users,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+    },
+    {
+      title: "Нийт захиалга",
+      value: loading ? "..." : stats.totalBookings.toString(),
+      icon: CalendarDays,
+      color: "text-green-500",
+      bg: "bg-green-500/10",
+    },
+    {
+      title: "Орлого",
+      value: loading ? "..." : `${Number(stats.totalRevenue).toLocaleString()} ₮`,
+      icon: CreditCard,
+      color: "text-violet-500",
+      bg: "bg-violet-500/10",
+    },
+    {
+      title: "Төхөөрөмж / Студи",
+      value: loading ? "..." : `${stats.activeEquipment} / ${stats.activeStudios}`,
+      icon: Camera,
+      color: "text-orange-500",
+      bg: "bg-orange-500/10",
+    },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard Overview</h1>
-        <p className="text-muted-foreground mt-1">Welcome back. Here is what&apos;s happening today.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Хяналтын самбар</h1>
+          <p className="text-muted-foreground mt-1">Системийн ерөнхий мэдээлэл болон статистик.</p>
+        </div>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, i) => (
-          <div key={i} className="bg-background border-border p-6 rounded-xl border shadow-sm">
+        {cards.map((stat, i) => (
+          <div key={i} className="bg-card hover:bg-muted/50 transition-colors cursor-default border-border p-6 rounded-xl border shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
-              <div className="p-2 bg-primary/10 text-primary rounded-lg">
+              <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
+              <div className={`p-2 rounded-lg ${stat.bg} ${stat.color}`}>
                 <stat.icon size={18} />
               </div>
             </div>
             <div className="mt-4 flex items-baseline gap-2">
               <span className="text-3xl font-bold">{stat.value}</span>
-              <span className={`text-xs font-medium ${stat.positive ? "text-emerald-500" : "text-rose-500"}`}>
-                {stat.change}
-              </span>
             </div>
           </div>
         ))}
@@ -37,7 +90,7 @@ export default function Home() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Mock Chart Area */}
         <div className="bg-background border-border p-6 rounded-xl border shadow-sm min-h-[300px] flex flex-col">
-          <h2 className="text-lg font-semibold mb-4 text-accent-foreground">Revenue Analytics</h2>
+          <h2 className="text-lg font-semibold mb-4 text-accent-foreground">Орлогын мэдээлэл</h2>
           <div className="flex-1 rounded-lg border border-dashed border-border border-b-0 flex items-end px-4 gap-2 pt-8 relative">
             <div className="absolute inset-x-0 bottom-0 top-0 grid grid-rows-4 opacity-5 pointer-events-none">
               <div className="border-b border-foreground w-full"></div>
@@ -58,13 +111,13 @@ export default function Home() {
 
         {/* Mock Recent Activity Area */}
         <div className="bg-background border-border p-6 rounded-xl border shadow-sm min-h-[300px]">
-          <h2 className="text-lg font-semibold mb-6 text-accent-foreground">Recent Activity</h2>
+          <h2 className="text-lg font-semibold mb-6 text-accent-foreground">Сүүлийн үйл ажиллагаа</h2>
           <div className="space-y-6">
             {[
-              { title: "New user registered", time: "2 minutes ago", initial: "U", bg: "bg-blue-500/10 text-blue-500" },
-              { title: "System updated", time: "1 hour ago", initial: "S", bg: "bg-purple-500/10 text-purple-500" },
-              { title: "Payment processed", time: "3 hours ago", initial: "P", bg: "bg-emerald-500/10 text-emerald-500" },
-              { title: "Server error logged", time: "5 hours ago", initial: "E", bg: "bg-rose-500/10 text-rose-500" }
+              { title: "Шинэ хэрэглэгч бүртгүүллээ", time: "2 минутын өмнө", initial: "Ш", bg: "bg-blue-500/10 text-blue-500" },
+              { title: "Төхөөрөмж нэмэгдсэн", time: "1 цагийн өмнө", initial: "Т", bg: "bg-purple-500/10 text-purple-500" },
+              { title: "Захиалга баталгаажсан", time: "3 цагийн өмнө", initial: "З", bg: "bg-emerald-500/10 text-emerald-500" },
+              { title: "Захиалга цуцлагдсан", time: "5 цагийн өмнө", initial: "З", bg: "bg-rose-500/10 text-rose-500" }
             ].map((activity, i) => (
               <div key={i} className="flex gap-4">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-xs flex-shrink-0 ${activity.bg}`}>

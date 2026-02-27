@@ -1,0 +1,432 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { Plus, X, Pencil, Trash2, Image as ImageIcon, ChevronDown, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+import * as Tabs from '@radix-ui/react-tabs';
+
+const API = 'http://localhost:4000/api';
+const tabCls = "px-5 h-[45px] flex items-center justify-center text-sm font-medium leading-none text-muted-foreground select-none hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary outline-none cursor-pointer transition-colors";
+const PRICE_UNITS = ["1ш", "1 цаг", "1 өдөр", "1 төсөл"];
+
+export default function EditPage() {
+    const [loading, setLoading] = useState(true);
+
+    // --- CATEGORY ---
+    const [categories, setCategories] = useState<any[]>([]);
+    const [isCatModal, setIsCatModal] = useState(false);
+    const [savingCat, setSavingCat] = useState(false);
+    const [editingCat, setEditingCat] = useState<any | null>(null);
+    const [catForm, setCatForm] = useState({ name: "", description: "" });
+
+    // --- MAIN TYPE ---
+    const [mainTypes, setMainTypes] = useState<any[]>([]);
+    const [isMainModal, setIsMainModal] = useState(false);
+    const [savingMain, setSavingMain] = useState(false);
+    const [editingMain, setEditingMain] = useState<any | null>(null);
+    const [mainForm, setMainForm] = useState({ name: "", description: "", sortOrder: "0" });
+    const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+
+    // --- SUB TYPE ---
+    const [isSubModal, setIsSubModal] = useState(false);
+    const [savingSub, setSavingSub] = useState(false);
+    const [editingSub, setEditingSub] = useState<any | null>(null);
+    const [subForm, setSubForm] = useState({ name: "", description: "", sortOrder: "0", mainTypeId: "" });
+
+    // --- SERVICE ---
+    const [services, setServices] = useState<any[]>([]);
+    const [isSvcModal, setIsSvcModal] = useState(false);
+    const [savingSvc, setSavingSvc] = useState(false);
+    const [editingSvc, setEditingSvc] = useState<any | null>(null);
+    const [svcForm, setSvcForm] = useState({
+        name: "", categoryId: "", mainTypeId: "", subTypeId: "",
+        price: "", priceUnit: "1ш", description: "", image: "", isActive: true,
+    });
+
+    const filteredSubTypes = mainTypes.find(m => m.id === parseInt(svcForm.mainTypeId))?.subTypes || [];
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadingImg, setUploadingImg] = useState(false);
+
+    const fetchData = async () => {
+        try {
+            const [rCats, rSvcs, rMains] = await Promise.all([
+                fetch(`${API}/categories`),
+                fetch(`${API}/edit-services`),
+                fetch(`${API}/edit-types/main`),
+            ]);
+            if (rCats.ok) setCategories(await rCats.json());
+            if (rSvcs.ok) setServices(await rSvcs.json());
+            if (rMains.ok) setMainTypes(await rMains.json());
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+    };
+    useEffect(() => { fetchData(); }, []);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]; if (!file) return;
+        setUploadingImg(true);
+        const fd = new FormData(); fd.append('file', file);
+        try {
+            const res = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+            if (res.ok) { const d = await res.json(); setSvcForm(p => ({ ...p, image: d.url })); toast.success("Зураг хуулагдлаа!"); }
+            else toast.error("Зураг хуулахад алдаа.");
+        } catch { toast.error("Сервертэй алдаа."); }
+        finally { setUploadingImg(false); if (fileInputRef.current) fileInputRef.current.value = ''; }
+    };
+
+    // ======= CATEGORY =======
+    const openCatModal = (c: any = null) => { setEditingCat(c); setCatForm({ name: c?.name || "", description: c?.description || "" }); setIsCatModal(true); };
+    const saveCat = async (e: React.FormEvent) => {
+        e.preventDefault(); setSavingCat(true);
+        const url = editingCat ? `${API}/categories/${editingCat.id}` : `${API}/categories`;
+        const res = await fetch(url, { method: editingCat ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(catForm) });
+        if (res.ok) { await fetchData(); setIsCatModal(false); toast.success("Хадгалагдлаа"); } else toast.error("Алдаа");
+        setSavingCat(false);
+    };
+    const deleteCat = async (id: number) => {
+        if (!confirm("Устгахдаа итгэлтэй байна уу?")) return;
+        const res = await fetch(`${API}/categories/${id}`, { method: 'DELETE' });
+        if (res.ok) { setCategories(p => p.filter(c => c.id !== id)); toast.success("Устгагдлаа"); } else toast.error("Алдаа");
+    };
+
+    // ======= MAIN TYPE =======
+    const openMainModal = (mt: any = null) => { setEditingMain(mt); setMainForm({ name: mt?.name || "", description: mt?.description || "", sortOrder: mt?.sortOrder?.toString() || "0" }); setIsMainModal(true); };
+    const saveMain = async (e: React.FormEvent) => {
+        e.preventDefault(); setSavingMain(true);
+        const url = editingMain ? `${API}/edit-types/main/${editingMain.id}` : `${API}/edit-types/main`;
+        const res = await fetch(url, { method: editingMain ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: mainForm.name, description: mainForm.description || undefined, sortOrder: parseInt(mainForm.sortOrder) || 0 }) });
+        if (res.ok) { await fetchData(); setIsMainModal(false); toast.success("Хадгалагдлаа"); } else toast.error("Алдаа");
+        setSavingMain(false);
+    };
+    const deleteMain = async (id: number) => {
+        if (!confirm("Устгавал дагалдах дэд төрлүүд устгагдана. Итгэлтэй байна уу?")) return;
+        const res = await fetch(`${API}/edit-types/main/${id}`, { method: 'DELETE' });
+        if (res.ok) { await fetchData(); toast.success("Устгагдлаа"); } else toast.error("Алдаа");
+    };
+
+    // ======= SUB TYPE =======
+    const openSubModal = (mainTypeId: number, st: any = null) => { setEditingSub(st); setSubForm({ name: st?.name || "", description: st?.description || "", sortOrder: st?.sortOrder?.toString() || "0", mainTypeId: (st?.mainTypeId || mainTypeId).toString() }); setIsSubModal(true); };
+    const saveSub = async (e: React.FormEvent) => {
+        e.preventDefault(); setSavingSub(true);
+        const url = editingSub ? `${API}/edit-types/sub/${editingSub.id}` : `${API}/edit-types/sub`;
+        const payload = { name: subForm.name, description: subForm.description || undefined, sortOrder: parseInt(subForm.sortOrder) || 0, mainTypeId: parseInt(subForm.mainTypeId) };
+        const res = await fetch(url, { method: editingSub ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) { await fetchData(); setIsSubModal(false); toast.success("Хадгалагдлаа"); } else toast.error("Алдаа");
+        setSavingSub(false);
+    };
+    const deleteSub = async (id: number) => {
+        if (!confirm("Устгахдаа итгэлтэй байна уу?")) return;
+        const res = await fetch(`${API}/edit-types/sub/${id}`, { method: 'DELETE' });
+        if (res.ok) { await fetchData(); toast.success("Устгагдлаа"); } else toast.error("Алдаа");
+    };
+
+    // ======= SERVICE =======
+    const openSvcModal = (s: any = null) => {
+        setEditingSvc(s);
+        setSvcForm({ name: s?.name || "", categoryId: s?.categoryId?.toString() || categories[0]?.id?.toString() || "", mainTypeId: s?.mainTypeId?.toString() || "", subTypeId: s?.subTypeId?.toString() || "", price: s?.price?.toString() || "", priceUnit: s?.priceUnit || "1ш", description: s?.description || "", image: s?.image || "", isActive: s?.isActive ?? true });
+        setIsSvcModal(true);
+    };
+    const saveSvc = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!svcForm.categoryId) { toast.error("Ангилал сонгоно уу!"); return; }
+        if (!svcForm.mainTypeId) { toast.error("Үндсэн төрөл сонгоно уу!"); return; }
+        if (!svcForm.price) { toast.error("Үнэ оруулна уу!"); return; }
+        setSavingSvc(true);
+        const url = editingSvc ? `${API}/edit-services/${editingSvc.id}` : `${API}/edit-services`;
+        const payload = { name: svcForm.name, categoryId: parseInt(svcForm.categoryId), mainTypeId: parseInt(svcForm.mainTypeId), subTypeId: svcForm.subTypeId ? parseInt(svcForm.subTypeId) : null, price: parseFloat(svcForm.price), priceUnit: svcForm.priceUnit, description: svcForm.description || undefined, image: svcForm.image || undefined, isActive: svcForm.isActive };
+        const res = await fetch(url, { method: editingSvc ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) { await fetchData(); setIsSvcModal(false); toast.success("Хадгалагдлаа"); } else { const err = await res.json().catch(() => ({})); toast.error(err?.message || "Алдаа"); }
+        setSavingSvc(false);
+    };
+    const deleteSvc = async (id: number) => {
+        if (!confirm("Устгахдаа итгэлтэй байна уу?")) return;
+        const res = await fetch(`${API}/edit-services/${id}`, { method: 'DELETE' });
+        if (res.ok) { setServices(p => p.filter(s => s.id !== id)); toast.success("Устгагдлаа"); } else toast.error("Алдаа");
+    };
+
+    return (
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight">Эдит</h1>
+                <p className="text-muted-foreground mt-1">Эдит үйлчилгээ, төрлүүд болон ангиллыг удирдах хэсэг.</p>
+            </div>
+
+            <Tabs.Root defaultValue="services" className="flex flex-col w-full">
+                <Tabs.List className="flex shrink-0 border-b border-border/50 bg-background" aria-label="Edit Tabs">
+                    <Tabs.Trigger value="services" className={tabCls}>Үйлчилгээ</Tabs.Trigger>
+                    <Tabs.Trigger value="types" className={tabCls}>Төрлүүд</Tabs.Trigger>
+                    <Tabs.Trigger value="categories" className={tabCls}>Ангилал</Tabs.Trigger>
+                </Tabs.List>
+
+                {/* ========= SERVICES TAB ========= */}
+                <Tabs.Content value="services" className="outline-none pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold">Эдит үйлчилгээ</h2>
+                        <button onClick={() => openSvcModal()} disabled={mainTypes.length === 0} title={mainTypes.length === 0 ? 'Эхлээд Төрлүүд нэмнэ үү' : ''} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+                            <Plus className="h-4 w-4" /> Үйлчилгээ нэмэх
+                        </button>
+                    </div>
+                    {mainTypes.length === 0 && !loading && (
+                        <div className="text-sm text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-md px-4 py-3 mb-4">
+                            ⚠️ Үйлчилгээ нэмэхийн өмнө <strong>Төрлүүд</strong> табаас үндсэн төрлүүдийг нэмнэ үү. (Жишээ: Фото, Видео)
+                        </div>
+                    )}
+                    <div className="rounded-md border border-border/50 bg-card overflow-hidden">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
+                                <tr>
+                                    <th className="px-4 py-4 font-medium border-b w-[60px]">Зураг</th>
+                                    <th className="px-4 py-4 font-medium border-b">Нэр</th>
+                                    <th className="px-4 py-4 font-medium border-b">Үндсэн төрөл</th>
+                                    <th className="px-4 py-4 font-medium border-b">Дэд төрөл</th>
+                                    <th className="px-4 py-4 font-medium border-b">Ангилал</th>
+                                    <th className="px-4 py-4 font-medium border-b">Үнэ</th>
+                                    <th className="px-4 py-4 font-medium border-b w-[90px]">Төлөв</th>
+                                    <th className="px-4 py-4 font-medium border-b text-right">Үйлдэл</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/50">
+                                {loading ? (<tr><td colSpan={8} className="py-8 text-center text-muted-foreground">Уншиж байна...</td></tr>)
+                                    : services.length === 0 ? (<tr><td colSpan={8} className="py-8 text-center text-muted-foreground">Бүртгэл алга.</td></tr>)
+                                        : services.map(s => (
+                                            <tr key={s.id} className="hover:bg-muted/30">
+                                                <td className="px-4 py-3">
+                                                    {s.image ? <div className="w-10 h-10 rounded overflow-hidden">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={s.image} alt={s.name} className="w-full h-full object-cover" /></div>
+                                                        : <div className="w-10 h-10 rounded bg-muted flex items-center justify-center"><ImageIcon className="w-4 h-4 text-muted-foreground" /></div>}
+                                                </td>
+                                                <td className="px-4 py-3 font-medium">{s.name}</td>
+                                                <td className="px-4 py-3">{s.mainType && <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{s.mainType.name}</span>}</td>
+                                                <td className="px-4 py-3">{s.subType && <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-semibold text-blue-400">{s.subType.name}</span>}</td>
+                                                <td className="px-4 py-3 text-muted-foreground text-xs">{s.category?.name || "—"}</td>
+                                                <td className="px-4 py-3 font-medium">{Number(s.price).toLocaleString()} ₮ <span className="text-muted-foreground text-xs">/ {s.priceUnit}</span></td>
+                                                <td className="px-4 py-3"><span className={`px-2 py-0.5 text-xs rounded-full ${s.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>{s.isActive ? 'Идэвхтэй' : 'Идэвхгүй'}</span></td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <div className="flex justify-end gap-3">
+                                                        <button onClick={() => openSvcModal(s)} className="text-muted-foreground hover:text-primary"><Pencil className="w-4 h-4" /></button>
+                                                        <button onClick={() => deleteSvc(s.id)} className="text-muted-foreground hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Tabs.Content>
+
+                {/* ========= TYPES TAB ========= */}
+                <Tabs.Content value="types" className="outline-none pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold">Эдит Төрлүүд</h2>
+                        <button onClick={() => openMainModal()} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                            <Plus className="h-4 w-4" /> Үндсэн төрөл нэмэх
+                        </button>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">Жишээ: <strong>Фото</strong> (Лого, Зураг янзлах, Хэвлэлийн эх...), <strong>Видео</strong> (Рийл 60 сек, Богино контент 5-10 мин, Нэвтрүүлэг...)</p>
+                    {loading ? <p className="text-muted-foreground text-sm">Уншиж байна...</p>
+                        : mainTypes.length === 0 ? (
+                            <div className="text-center py-12 border border-dashed border-border/50 rounded-md text-muted-foreground text-sm">
+                                Үндсэн төрөл байхгүй байна.<br />Фото, Видео гэх мэт төрлүүдийг нэмнэ үү.
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {mainTypes.map(mt => (
+                                    <div key={mt.id} className="rounded-md border border-border/50 bg-card overflow-hidden">
+                                        <div className="flex items-center justify-between px-5 py-3 bg-muted/30">
+                                            <button onClick={() => setExpanded(p => ({ ...p, [mt.id]: !p[mt.id] }))} className="flex items-center gap-2 font-semibold text-sm hover:text-primary transition-colors">
+                                                {expanded[mt.id] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                                {mt.name}
+                                                <span className="text-xs text-muted-foreground font-normal">({mt.subTypes?.length || 0} дэд төрөл)</span>
+                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => openSubModal(mt.id)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><Plus className="w-3 h-3" /> Дэд төрөл нэмэх</button>
+                                                <button onClick={() => openMainModal(mt)} className="text-muted-foreground hover:text-primary ml-2"><Pencil className="w-4 h-4" /></button>
+                                                <button onClick={() => deleteMain(mt.id)} className="text-muted-foreground hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        </div>
+                                        {expanded[mt.id] && (
+                                            <div className="divide-y divide-border/50">
+                                                {mt.subTypes?.length === 0 ? <p className="px-8 py-3 text-sm text-muted-foreground italic">Дэд төрөл байхгүй.</p>
+                                                    : mt.subTypes?.map((st: any) => (
+                                                        <div key={st.id} className="flex items-center justify-between px-8 py-2.5 text-sm hover:bg-muted/20">
+                                                            <div>
+                                                                <span className="font-medium">{st.name}</span>
+                                                                {st.description && <span className="ml-2 text-muted-foreground text-xs">— {st.description}</span>}
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <button onClick={() => openSubModal(mt.id, st)} className="text-muted-foreground hover:text-primary"><Pencil className="w-3.5 h-3.5" /></button>
+                                                                <button onClick={() => deleteSub(st.id)} className="text-muted-foreground hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                </Tabs.Content>
+
+                {/* ========= CATEGORIES TAB ========= */}
+                <Tabs.Content value="categories" className="outline-none pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold">Ангилал</h2>
+                        <button onClick={() => openCatModal()} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-4 w-4" /> Ангилал үүсгэх</button>
+                    </div>
+                    <div className="rounded-md border border-border/50 bg-card overflow-hidden">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
+                                <tr>
+                                    <th className="px-6 py-4 font-medium border-b w-[80px]">ID</th>
+                                    <th className="px-6 py-4 font-medium border-b">Нэр</th>
+                                    <th className="px-6 py-4 font-medium border-b">Тайлбар</th>
+                                    <th className="px-6 py-4 font-medium border-b text-right">Үйлдэл</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/50">
+                                {loading ? (<tr><td colSpan={4} className="py-8 text-center text-muted-foreground">Уншиж байна...</td></tr>)
+                                    : categories.length === 0 ? (<tr><td colSpan={4} className="py-8 text-center text-muted-foreground">Бүртгэл алга.</td></tr>)
+                                        : categories.map(c => (
+                                            <tr key={c.id} className="hover:bg-muted/30">
+                                                <td className="px-6 py-4 text-muted-foreground">{c.id}</td>
+                                                <td className="px-6 py-4 font-medium">{c.name}</td>
+                                                <td className="px-6 py-4 text-muted-foreground">{c.description || "—"}</td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-3">
+                                                        <button onClick={() => openCatModal(c)} className="text-muted-foreground hover:text-primary"><Pencil className="w-4 h-4" /></button>
+                                                        <button onClick={() => deleteCat(c.id)} className="text-muted-foreground hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Tabs.Content>
+            </Tabs.Root>
+
+            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+
+            {/* CATEGORY MODAL */}
+            {isCatModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
+                        <div className="flex justify-between items-center mb-6"><h2 className="text-lg font-semibold">{editingCat ? 'Ангилал засах' : 'Ангилал үүсгэх'}</h2><button onClick={() => setIsCatModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button></div>
+                        <form onSubmit={saveCat} className="space-y-4">
+                            <div className="space-y-1"><label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label><input required value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
+                            <div className="space-y-1"><label className="text-sm font-medium">Тайлбар</label><textarea value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" /></div>
+                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsCatModal(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={savingCat} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{savingCat ? '...' : 'Хадгалах'}</button></div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* MAIN TYPE MODAL */}
+            {isMainModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
+                        <div className="flex justify-between items-center mb-6"><h2 className="text-lg font-semibold">{editingMain ? 'Үндсэн төрөл засах' : 'Үндсэн төрөл нэмэх'}</h2><button onClick={() => setIsMainModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button></div>
+                        <form onSubmit={saveMain} className="space-y-4">
+                            <div className="space-y-1"><label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label><input required placeholder="Фото, Видео..." value={mainForm.name} onChange={e => setMainForm({ ...mainForm, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
+                            <div className="space-y-1"><label className="text-sm font-medium">Тайлбар</label><textarea value={mainForm.description} onChange={e => setMainForm({ ...mainForm, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[60px]" /></div>
+                            <div className="space-y-1"><label className="text-sm font-medium">Дараалал</label><input type="number" value={mainForm.sortOrder} onChange={e => setMainForm({ ...mainForm, sortOrder: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
+                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsMainModal(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={savingMain} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{savingMain ? '...' : 'Хадгалах'}</button></div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* SUB TYPE MODAL */}
+            {isSubModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
+                        <div className="flex justify-between items-center mb-6"><h2 className="text-lg font-semibold">{editingSub ? 'Дэд төрөл засах' : 'Дэд төрөл нэмэх'}</h2><button onClick={() => setIsSubModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button></div>
+                        <form onSubmit={saveSub} className="space-y-4">
+                            <div className="space-y-1"><label className="text-sm font-medium">Үндсэн төрөл <span className="text-red-500">*</span></label>
+                                <select required value={subForm.mainTypeId} onChange={e => setSubForm({ ...subForm, mainTypeId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                    <option value="" disabled>Сонгох...</option>
+                                    {mainTypes.map(mt => <option key={mt.id} value={mt.id}>{mt.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-1"><label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label><input required placeholder="Лого, Зураг янзлах, Рийл 60 сек..." value={subForm.name} onChange={e => setSubForm({ ...subForm, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
+                            <div className="space-y-1"><label className="text-sm font-medium">Тайлбар</label><textarea value={subForm.description} onChange={e => setSubForm({ ...subForm, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[60px]" /></div>
+                            <div className="space-y-1"><label className="text-sm font-medium">Дараалал</label><input type="number" value={subForm.sortOrder} onChange={e => setSubForm({ ...subForm, sortOrder: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
+                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsSubModal(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={savingSub} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{savingSub ? '...' : 'Хадгалах'}</button></div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* SERVICE MODAL */}
+            {isSvcModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border border-border/50 shadow-lg p-6">
+                        <div className="flex justify-between items-center mb-6"><h2 className="text-lg font-semibold">{editingSvc ? 'Үйлчилгээ засах' : 'Шинэ үйлчилгээ нэмэх'}</h2><button onClick={() => setIsSvcModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button></div>
+                        <form onSubmit={saveSvc} className="space-y-4">
+                            {/* Image */}
+                            <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-lg border border-border/50">
+                                <div className="w-16 h-16 rounded overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    {svcForm.image ? <img src={svcForm.image} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
+                                </div>
+                                <button type="button" disabled={uploadingImg} onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 text-sm bg-background border border-border/50 rounded-md hover:bg-muted">{uploadingImg ? "Хуулж байна..." : "Зураг хуулах"}</button>
+                            </div>
+
+                            {/* Category & Name */}
+                            <div className="space-y-1"><label className="text-sm font-medium">Ангилал <span className="text-red-500">*</span></label>
+                                <select required value={svcForm.categoryId} onChange={e => setSvcForm({ ...svcForm, categoryId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                    <option value="" disabled>Сонгох...</option>
+                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-1"><label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
+                                <input required value={svcForm.name} onChange={e => setSvcForm({ ...svcForm, name: e.target.value })} placeholder="Нэр..." className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                            </div>
+
+                            {/* Main + Sub type */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1"><label className="text-sm font-medium">Үндсэн төрөл <span className="text-red-500">*</span></label>
+                                    <select required value={svcForm.mainTypeId} onChange={e => setSvcForm({ ...svcForm, mainTypeId: e.target.value, subTypeId: "" })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                        <option value="" disabled>Сонгох...</option>
+                                        {mainTypes.map(mt => <option key={mt.id} value={mt.id}>{mt.name}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-1"><label className="text-sm font-medium">Дэд төрөл</label>
+                                    <select value={svcForm.subTypeId} onChange={e => setSvcForm({ ...svcForm, subTypeId: e.target.value })} disabled={!svcForm.mainTypeId || filteredSubTypes.length === 0} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm disabled:opacity-50">
+                                        <option value="">— Сонгох —</option>
+                                        {filteredSubTypes.map((st: any) => <option key={st.id} value={st.id}>{st.name}</option>)}
+                                    </select>
+                                    {svcForm.mainTypeId && filteredSubTypes.length === 0 && <p className="text-xs text-muted-foreground mt-1">⚠️ Энэ төрөлд дэд төрөл байхгүй.</p>}
+                                </div>
+                            </div>
+
+                            {/* Price */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1"><label className="text-sm font-medium">Үнэ (₮) <span className="text-red-500">*</span></label>
+                                    <input required type="number" min={0} value={svcForm.price} onChange={e => setSvcForm({ ...svcForm, price: e.target.value })} placeholder="0" className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                </div>
+                                <div className="space-y-1"><label className="text-sm font-medium">Нэгж</label>
+                                    <select value={svcForm.priceUnit} onChange={e => setSvcForm({ ...svcForm, priceUnit: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                        {PRICE_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Description */}
+                            <div className="space-y-1"><label className="text-sm font-medium">Тайлбар</label>
+                                <textarea value={svcForm.description} onChange={e => setSvcForm({ ...svcForm, description: e.target.value })} placeholder="Тайлбар..." className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
+                            </div>
+
+                            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={svcForm.isActive} onChange={e => setSvcForm({ ...svcForm, isActive: e.target.checked })} /> Идэвхтэй</label>
+
+                            <div className="flex justify-end gap-2 pt-4 border-t border-border/50">
+                                <button type="button" onClick={() => setIsSvcModal(false)} className="px-4 py-2 text-sm border border-border/50 rounded-md hover:bg-muted">Болих</button>
+                                <button type="submit" disabled={savingSvc} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{savingSvc ? 'Хадгалж байна...' : 'Хадгалах'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

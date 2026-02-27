@@ -42,10 +42,10 @@ async function bootstrap() {
     app.setGlobalPrefix('api');
     app.use('/public', express.static((0, path_1.join)(process.cwd(), 'public')));
     app.enableCors({
-        origin: 'http://localhost:3000',
+        origin: ['http://localhost:3000', 'http://localhost:3002'],
         credentials: true,
     });
-    await app.listen(process.env.PORT ?? 3001);
+    await app.listen(process.env.PORT ?? 4000);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

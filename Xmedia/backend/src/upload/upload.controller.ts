@@ -22,7 +22,7 @@ export class UploadController {
         }
         // Return the URL to access the uploaded file
         return {
-            url: `http://localhost:3001/public/uploads/${file.filename}`
+            url: `http://localhost:4000/public/uploads/${file.filename}`
         };
     }
 }

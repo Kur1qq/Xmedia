@@ -1,8 +1,10 @@
 import { BookingsService } from './bookings.service';
 import { BookingStatus } from '@prisma/client';
+import { AdminLogService } from '../admin/admin-log.service';
 export declare class BookingsController {
     private readonly bookingsService;
-    constructor(bookingsService: BookingsService);
+    private readonly log;
+    constructor(bookingsService: BookingsService, log: AdminLogService);
     findAll(): Promise<({
         user: {
             id: number;
@@ -17,14 +19,13 @@ export declare class BookingsController {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                images: string | null;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
                 capacity: number | null;
                 hourlyRate: import("@prisma/client-runtime-utils").Decimal;
                 dailyRate: import("@prisma/client-runtime-utils").Decimal | null;
-                equipmentIncluded: number | null;
-                amenities: string | null;
+                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 isAvailable: boolean;
             } | null;
             service: {
@@ -32,23 +33,26 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                isActive: boolean;
                 description: string | null;
-                categoryId: number;
-                subCategoryId: number | null;
                 price: import("@prisma/client-runtime-utils").Decimal;
                 priceUnit: string;
                 durationMinutes: number | null;
                 portfolioImages: string | null;
-                isActive: boolean;
+                categoryId: number;
+                subCategoryId: number | null;
             } | null;
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            studioId: number | null;
+            liveServiceId: number | null;
+            photographerServiceId: number | null;
             bookingId: number;
             itemType: import("@prisma/client").$Enums.ItemType;
-            studioId: number | null;
             serviceId: number | null;
+            editServiceId: number | null;
             quantity: number;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
@@ -79,7 +83,7 @@ export declare class BookingsController {
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     })[]>;
-    updateStatus(id: number, status: BookingStatus): Promise<{
+    updateStatus(id: number, status: BookingStatus, req: any): Promise<{
         user: {
             id: number;
             username: string;
@@ -93,10 +97,13 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            studioId: number | null;
+            liveServiceId: number | null;
+            photographerServiceId: number | null;
             bookingId: number;
             itemType: import("@prisma/client").$Enums.ItemType;
-            studioId: number | null;
             serviceId: number | null;
+            editServiceId: number | null;
             quantity: number;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
