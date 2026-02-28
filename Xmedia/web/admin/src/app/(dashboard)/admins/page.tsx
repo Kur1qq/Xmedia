@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Plus, X, Pencil, Trash2, ShieldCheck, User, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { fetchWithAuth, getAdminInfo } from "@/lib/auth";
+import { fetchWithAuth, getAdminInfo, getToken } from "@/lib/auth";
 
 const ROLES: Record<string, { label: string; color: string }> = {
     SUPER_ADMIN: { label: 'Дээд Админ', color: 'bg-red-500/10 text-red-400' },
@@ -48,7 +48,7 @@ export default function AdminsPage() {
         setUploadingImg(true);
         const fd = new FormData(); fd.append('file', file);
         try {
-            const res = await fetch('http://localhost:4000/api/upload', { method: 'POST', body: fd });
+            const res = await fetch('http://localhost:4000/api/upload', { method: 'POST', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: fd });
             if (res.ok) { const d = await res.json(); setForm(p => ({ ...p, image: d.url })); toast.success("Зураг хуулагдлаа!"); }
             else toast.error("Зураг хуулахад алдаа.");
         } catch { toast.error("Сервертэй алдаа."); }

@@ -33,16 +33,28 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+require("dotenv/config");
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
+const common_1 = require("@nestjs/common");
 const express = __importStar(require("express"));
 const path_1 = require("path");
+const all_exceptions_filter_1 = require("./common/filters/all-exceptions.filter");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.setGlobalPrefix('api');
+    app.useGlobalPipes(new common_1.ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+    }));
+    app.useGlobalFilters(new all_exceptions_filter_1.AllExceptionsFilter());
     app.use('/public', express.static((0, path_1.join)(process.cwd(), 'public')));
+    const corsOrigins = process.env.CORS_ORIGINS
+        ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+        : ['http://localhost:3000', 'http://localhost:3002'];
     app.enableCors({
-        origin: ['http://localhost:3000', 'http://localhost:3002'],
+        origin: corsOrigins,
         credentials: true,
     });
     await app.listen(process.env.PORT ?? 4000);

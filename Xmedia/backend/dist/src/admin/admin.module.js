@@ -33,7 +33,7 @@ exports.AdminModule = AdminModule = __decorate([
             passport_1.PassportModule,
             jwt_1.JwtModule.register({
                 secret: jwt_strategy_1.JWT_SECRET,
-                signOptions: { expiresIn: '24h' },
+                signOptions: { expiresIn: jwt_strategy_1.JWT_EXPIRES_IN },
             }),
         ],
         controllers: [admin_controller_1.AdminController],

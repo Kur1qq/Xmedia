@@ -39,7 +39,7 @@ export class AdminService {
     async create(data: { username: string; password: string; role?: string; image?: string }) {
         const exists = await this.prisma.admin.findUnique({ where: { username: data.username } });
         if (exists) throw new ConflictException('Тухайн нэвтрэх нэр аль хэдийн бүртгэлтэй байна.');
-        const hash = await bcrypt.hash(data.password, 10);
+        const hash = await bcrypt.hash(data.password, 12);
         return this.prisma.admin.create({
             data: { username: data.username, password: hash, role: (data.role as any) || 'ADMIN', image: data.image },
             select: { id: true, username: true, image: true, role: true, isActive: true, createdAt: true },
@@ -50,7 +50,7 @@ export class AdminService {
         await this.findOne(id);
         const updateData: any = { ...data };
         if (data.password) {
-            updateData.password = await bcrypt.hash(data.password, 10);
+            updateData.password = await bcrypt.hash(data.password, 12);
         } else {
             delete updateData.password;
         }
@@ -70,11 +70,13 @@ export class AdminService {
     async seed() {
         const count = await this.prisma.admin.count();
         if (count === 0) {
-            const hash = await bcrypt.hash('admin123', 10);
+            const seedPassword = process.env.ADMIN_SEED_PASSWORD;
+            if (!seedPassword) throw new Error('ADMIN_SEED_PASSWORD environment variable is not set!');
+            const hash = await bcrypt.hash(seedPassword, 12);
             await this.prisma.admin.create({
                 data: { username: 'admin', password: hash, role: 'SUPER_ADMIN' },
             });
-            console.log('✅ Default SUPER_ADMIN created: username=admin password=admin123');
+            console.log('✅ Default SUPER_ADMIN created: username=admin (password from ADMIN_SEED_PASSWORD env)');
         }
     }
 }

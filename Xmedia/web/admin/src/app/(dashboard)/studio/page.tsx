@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Plus, X, Pencil, Trash2, Image as ImageIcon, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import * as Tabs from '@radix-ui/react-tabs';
+import { getToken } from "@/lib/auth";
 
 export default function StudioPage() {
     // Shared State
@@ -74,6 +75,9 @@ export default function StudioPage() {
         try {
             const res = await fetch('http://localhost:4000/api/upload', {
                 method: 'POST',
+                headers: {
+                    ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
+                },
                 body: uploadData,
             });
 

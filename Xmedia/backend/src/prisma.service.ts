@@ -6,16 +6,16 @@ import * as mariadb from 'mariadb';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
     constructor() {
-        let connectionString = process.env.DATABASE_URL || 'mysql://root:endisgiihiijbaina@localhost:3306/xmedia';
-        if (!connectionString.includes('allowPublicKeyRetrieval')) {
-            connectionString += connectionString.includes('?') ? '&allowPublicKeyRetrieval=true' : '?allowPublicKeyRetrieval=true';
-        }
+        const connectionString = process.env.DATABASE_URL;
+        if (!connectionString) throw new Error('DATABASE_URL environment variable is not set!');
 
-        const adapter = new PrismaMariaDb(connectionString);
+        const fullConnectionString = connectionString.includes('allowPublicKeyRetrieval')
+            ? connectionString
+            : connectionString + (connectionString.includes('?') ? '&allowPublicKeyRetrieval=true' : '?allowPublicKeyRetrieval=true');
 
-        super({
-            adapter,
-        });
+        const adapter = new PrismaMariaDb(fullConnectionString);
+
+        super({ adapter });
     }
 
     async onModuleInit() {

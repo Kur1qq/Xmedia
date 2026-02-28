@@ -5,7 +5,7 @@ import { PrismaModule } from '../prisma.module';
 import { AdminService } from './admin.service';
 import { AdminLogService } from './admin-log.service';
 import { AdminController } from './admin.controller';
-import { JwtStrategy, JWT_SECRET } from './jwt.strategy';
+import { JwtStrategy, JWT_SECRET, JWT_EXPIRES_IN } from './jwt.strategy';
 
 @Module({
     imports: [
@@ -13,7 +13,7 @@ import { JwtStrategy, JWT_SECRET } from './jwt.strategy';
         PassportModule,
         JwtModule.register({
             secret: JWT_SECRET,
-            signOptions: { expiresIn: '24h' },
+            signOptions: { expiresIn: JWT_EXPIRES_IN as any },
         }),
     ],
     controllers: [AdminController],

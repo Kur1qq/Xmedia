@@ -18,19 +18,22 @@ const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
 const path_1 = require("path");
 const uuid_1 = require("uuid");
+const jwt_auth_guard_1 = require("../admin/jwt-auth.guard");
 let UploadController = class UploadController {
     uploadFile(file) {
         if (!file) {
             return { error: 'No file uploaded' };
         }
+        const baseUrl = process.env.APP_URL || 'http://localhost:4000';
         return {
-            url: `http://localhost:4000/public/uploads/${file.filename}`
+            url: `${baseUrl}/public/uploads/${file.filename}`
         };
     }
 };
 exports.UploadController = UploadController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN', 'MODERATOR')),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.diskStorage)({
             destination: './public/uploads',
@@ -38,7 +41,14 @@ __decorate([
                 const uniqueName = (0, uuid_1.v4)() + (0, path_1.extname)(file.originalname);
                 cb(null, uniqueName);
             }
-        })
+        }),
+        limits: { fileSize: 5 * 1024 * 1024 },
+        fileFilter: (req, file, cb) => {
+            if (!file.mimetype.match(/^image\//)) {
+                return cb(new common_1.BadRequestException('Зөвхөн зураг (image/*) upload хийнэ!'), false);
+            }
+            cb(null, true);
+        },
     })),
     __param(0, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),

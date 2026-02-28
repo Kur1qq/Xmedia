@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Plus, X, Pencil, Trash2, Image as ImageIcon, Camera } from "lucide-react";
 import { toast } from "sonner";
 import * as Tabs from '@radix-ui/react-tabs';
+import { getToken } from "@/lib/auth";
 
 interface CameraTier {
     id?: number;
@@ -64,7 +65,7 @@ export default function LivePage() {
         const fd = new FormData();
         fd.append('file', file);
         try {
-            const res = await fetch('http://localhost:4000/api/upload', { method: 'POST', body: fd });
+            const res = await fetch('http://localhost:4000/api/upload', { method: 'POST', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: fd });
             if (res.ok) {
                 const data = await res.json();
                 setServiceFormData(prev => ({ ...prev, image: data.url }));

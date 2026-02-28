@@ -9,11 +9,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JwtStrategy = exports.JWT_SECRET = void 0;
+exports.JwtStrategy = exports.JWT_EXPIRES_IN = exports.JWT_SECRET = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const passport_jwt_1 = require("passport-jwt");
-exports.JWT_SECRET = process.env.JWT_SECRET || 'xmedia_admin_jwt_secret_2024';
+if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is not set!');
+}
+exports.JWT_SECRET = process.env.JWT_SECRET;
+exports.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
     constructor() {
         super({

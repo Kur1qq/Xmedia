@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServiceController = void 0;
 const common_1 = require("@nestjs/common");
 const service_service_1 = require("./service.service");
+const jwt_auth_guard_1 = require("../admin/jwt-auth.guard");
 let ServiceController = class ServiceController {
     serviceService;
     constructor(serviceService) {
@@ -38,6 +39,7 @@ let ServiceController = class ServiceController {
 };
 exports.ServiceController = ServiceController;
 __decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN')),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -58,6 +60,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ServiceController.prototype, "findOne", null);
 __decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN')),
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -66,6 +69,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ServiceController.prototype, "update", null);
 __decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN')),
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

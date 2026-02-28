@@ -42,6 +42,44 @@ export declare class BookingsController {
                 categoryId: number;
                 subCategoryId: number | null;
             } | null;
+            liveService: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                image: string | null;
+                isActive: boolean;
+                description: string | null;
+                categoryId: number;
+            } | null;
+            photographerService: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                image: string | null;
+                isActive: boolean;
+                description: string | null;
+                hourlyRate: import("@prisma/client-runtime-utils").Decimal | null;
+                dailyRate: import("@prisma/client-runtime-utils").Decimal | null;
+                categoryId: number;
+                mainTypeId: number;
+                subTypeId: number | null;
+            } | null;
+            editService: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                image: string | null;
+                isActive: boolean;
+                description: string | null;
+                price: import("@prisma/client-runtime-utils").Decimal;
+                priceUnit: string;
+                categoryId: number;
+                mainTypeId: number;
+                subTypeId: number | null;
+            } | null;
         } & {
             id: number;
             createdAt: Date;

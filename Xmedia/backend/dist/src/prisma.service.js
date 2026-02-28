@@ -15,14 +15,14 @@ const client_1 = require("@prisma/client");
 const adapter_mariadb_1 = require("@prisma/adapter-mariadb");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     constructor() {
-        let connectionString = process.env.DATABASE_URL || 'mysql://root:endisgiihiijbaina@localhost:3306/xmedia';
-        if (!connectionString.includes('allowPublicKeyRetrieval')) {
-            connectionString += connectionString.includes('?') ? '&allowPublicKeyRetrieval=true' : '?allowPublicKeyRetrieval=true';
-        }
-        const adapter = new adapter_mariadb_1.PrismaMariaDb(connectionString);
-        super({
-            adapter,
-        });
+        const connectionString = process.env.DATABASE_URL;
+        if (!connectionString)
+            throw new Error('DATABASE_URL environment variable is not set!');
+        const fullConnectionString = connectionString.includes('allowPublicKeyRetrieval')
+            ? connectionString
+            : connectionString + (connectionString.includes('?') ? '&allowPublicKeyRetrieval=true' : '?allowPublicKeyRetrieval=true');
+        const adapter = new adapter_mariadb_1.PrismaMariaDb(fullConnectionString);
+        super({ adapter });
     }
     async onModuleInit() {
         try {

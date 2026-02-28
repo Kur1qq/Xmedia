@@ -22,6 +22,9 @@ export class BookingsService {
                     include: {
                         service: true,
                         studio: true,
+                        photographerService: true,
+                        editService: true,
+                        liveService: true,
                     }
                 },
                 payments: true,
