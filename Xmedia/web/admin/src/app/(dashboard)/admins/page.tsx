@@ -20,7 +20,11 @@ export default function AdminsPage() {
     const [form, setForm] = useState({ username: "", password: "", role: "ADMIN", image: "", isActive: true });
     const [uploadingImg, setUploadingImg] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
-    const me = getAdminInfo();
+    const [me, setMe] = useState<ReturnType<typeof getAdminInfo>>(null);
+
+    useEffect(() => {
+        setMe(getAdminInfo());
+    }, []);
 
     const fetchAdmins = async () => {
         try {
