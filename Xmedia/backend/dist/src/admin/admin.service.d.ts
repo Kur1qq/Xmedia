@@ -21,8 +21,8 @@ export declare class AdminService {
     }>;
     findAll(): Promise<{
         id: number;
-        createdAt: Date;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
@@ -35,8 +35,8 @@ export declare class AdminService {
     }[]>;
     findOne(id: number): Promise<{
         id: number;
-        createdAt: Date;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
@@ -55,8 +55,8 @@ export declare class AdminService {
         customRoleId?: number;
     }): Promise<{
         id: number;
-        createdAt: Date;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
@@ -76,8 +76,8 @@ export declare class AdminService {
         customRoleId?: number | null;
     }): Promise<{
         id: number;
-        createdAt: Date;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
@@ -90,9 +90,9 @@ export declare class AdminService {
     }>;
     remove(id: number): Promise<{
         id: number;
+        username: string;
         createdAt: Date;
         updatedAt: Date;
-        username: string;
         password: string;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;

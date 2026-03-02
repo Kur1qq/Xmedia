@@ -79,8 +79,8 @@ export declare class AdminController {
     }>;
     findAll(): Promise<{
         id: number;
-        createdAt: Date;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
@@ -93,8 +93,8 @@ export declare class AdminController {
     }[]>;
     findOne(id: string): Promise<{
         id: number;
-        createdAt: Date;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
@@ -107,8 +107,8 @@ export declare class AdminController {
     }>;
     create(body: any, req: any): Promise<{
         id: number;
-        createdAt: Date;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
@@ -121,8 +121,8 @@ export declare class AdminController {
     }>;
     update(id: string, body: any, req: any): Promise<{
         id: number;
-        createdAt: Date;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
@@ -135,9 +135,9 @@ export declare class AdminController {
     }>;
     remove(id: string, req: any): Promise<{
         id: number;
+        username: string;
         createdAt: Date;
         updatedAt: Date;
-        username: string;
         password: string;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;

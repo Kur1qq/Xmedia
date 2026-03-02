@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PortfolioController = void 0;
 const common_1 = require("@nestjs/common");
@@ -44,7 +43,7 @@ __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)('serviceType')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_a = typeof client_1.PortfolioServiceType !== "undefined" && client_1.PortfolioServiceType) === "function" ? _a : Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PortfolioController.prototype, "findAll", null);
 __decorate([

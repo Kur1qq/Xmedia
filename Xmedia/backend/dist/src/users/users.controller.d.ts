@@ -9,26 +9,26 @@ export declare class UsersController {
         passwordHash: string;
     }): Promise<{
         id: number;
-        createdAt: Date;
         username: string;
         email: string;
         phone: string | null;
+        createdAt: Date;
     }>;
     findAll(): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         username: string;
         email: string;
         phone: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     findOne(id: string): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         username: string;
         email: string;
         phone: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     update(id: string, body: {
         username?: string;
@@ -37,10 +37,10 @@ export declare class UsersController {
         passwordHash?: string;
     }): Promise<{
         id: number;
-        updatedAt: Date;
         username: string;
         email: string;
         phone: string | null;
+        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         id: number;

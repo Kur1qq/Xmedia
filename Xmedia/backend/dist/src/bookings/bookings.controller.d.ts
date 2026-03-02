@@ -15,11 +15,11 @@ export declare class BookingsController {
         items: ({
             studio: {
                 id: number;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
                 capacity: number | null;
@@ -28,11 +28,11 @@ export declare class BookingsController {
             } | null;
             service: {
                 id: number;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
                 isActive: boolean;
+                description: string | null;
                 price: import("@prisma/client-runtime-utils").Decimal;
                 priceUnit: string;
                 durationMinutes: number | null;
@@ -42,23 +42,23 @@ export declare class BookingsController {
             } | null;
             liveService: {
                 id: number;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
                 image: string | null;
                 isActive: boolean;
+                description: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 categoryId: number;
             } | null;
             photographerService: {
                 id: number;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
                 image: string | null;
                 isActive: boolean;
+                description: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 categoryId: number;
                 mainTypeId: number;
@@ -66,12 +66,12 @@ export declare class BookingsController {
             } | null;
             editService: {
                 id: number;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
                 image: string | null;
                 isActive: boolean;
+                description: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 categoryId: number;
                 mainTypeId: number;
@@ -150,12 +150,12 @@ export declare class BookingsController {
     updateStatus(id: number, status: BookingStatus, req: any): Promise<{
         user: {
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
             username: string;
             email: string;
             phone: string | null;
             passwordHash: string;
+            createdAt: Date;
+            updatedAt: Date;
         };
         items: {
             id: number;

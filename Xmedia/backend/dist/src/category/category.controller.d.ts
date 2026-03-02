@@ -10,44 +10,44 @@ export declare class CategoryController {
         icon?: string;
     }, req: any): Promise<{
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
         icon: string | null;
     }>;
     findAll(): Promise<({
         subCategories: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             categoryId: number;
         }[];
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
         icon: string | null;
     })[]>;
     findOne(id: number): Promise<{
         subCategories: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             categoryId: number;
         }[];
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
         icon: string | null;
     }>;
     update(id: number, dto: {
@@ -56,18 +56,18 @@ export declare class CategoryController {
         icon?: string;
     }, req: any): Promise<{
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
         icon: string | null;
     }>;
     remove(id: number, req: any): Promise<{
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
         icon: string | null;
     }>;
 }

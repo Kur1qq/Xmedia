@@ -8,70 +8,70 @@ export declare class EditTypeService {
         };
         subTypes: {
             id: number;
-            description: string | null;
-            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             mainTypeId: number;
+            sortOrder: number;
         }[];
     } & {
         id: number;
-        description: string | null;
-        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
+        sortOrder: number;
     })[]>;
     createMainType(data: any): Promise<{
         id: number;
-        description: string | null;
-        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
+        sortOrder: number;
     }>;
     updateMainType(id: number, data: any): Promise<{
         id: number;
-        description: string | null;
-        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
+        sortOrder: number;
     }>;
     removeMainType(id: number): Promise<{
         id: number;
-        description: string | null;
-        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
+        sortOrder: number;
     }>;
     createSubType(data: any): Promise<{
         id: number;
-        description: string | null;
-        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
         mainTypeId: number;
+        sortOrder: number;
     }>;
     updateSubType(id: number, data: any): Promise<{
         id: number;
-        description: string | null;
-        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
         mainTypeId: number;
+        sortOrder: number;
     }>;
     removeSubType(id: number): Promise<{
         id: number;
-        description: string | null;
-        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
         mainTypeId: number;
+        sortOrder: number;
     }>;
 }

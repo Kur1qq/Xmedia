@@ -7,21 +7,21 @@ export declare class LiveServiceController {
     create(body: any, req: any): Promise<{
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         equipments: ({
             equipment: {
                 id: number;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
@@ -41,33 +41,33 @@ export declare class LiveServiceController {
         }[];
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
     }>;
     findAll(): Promise<({
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         equipments: ({
             equipment: {
                 id: number;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
@@ -87,33 +87,33 @@ export declare class LiveServiceController {
         }[];
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
     })[]>;
     findOne(id: string): Promise<{
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         equipments: ({
             equipment: {
                 id: number;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
@@ -133,33 +133,33 @@ export declare class LiveServiceController {
         }[];
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
     }>;
     update(id: string, body: any, req: any): Promise<{
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         equipments: ({
             equipment: {
                 id: number;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
@@ -179,23 +179,23 @@ export declare class LiveServiceController {
         }[];
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
     }>;
     remove(id: string, req: any): Promise<{
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
     }>;

@@ -5,27 +5,27 @@ export declare class ServiceService {
     create(data: any): Promise<{
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         subCategory: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             categoryId: number;
         } | null;
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        description: string | null;
         price: import("@prisma/client-runtime-utils").Decimal;
         priceUnit: string;
         durationMinutes: number | null;
@@ -36,27 +36,27 @@ export declare class ServiceService {
     findAll(): Promise<({
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         subCategory: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             categoryId: number;
         } | null;
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        description: string | null;
         price: import("@prisma/client-runtime-utils").Decimal;
         priceUnit: string;
         durationMinutes: number | null;
@@ -67,27 +67,27 @@ export declare class ServiceService {
     findOne(id: number): Promise<{
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         subCategory: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             categoryId: number;
         } | null;
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        description: string | null;
         price: import("@prisma/client-runtime-utils").Decimal;
         priceUnit: string;
         durationMinutes: number | null;
@@ -98,27 +98,27 @@ export declare class ServiceService {
     update(id: number, data: any): Promise<{
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         subCategory: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             categoryId: number;
         } | null;
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        description: string | null;
         price: import("@prisma/client-runtime-utils").Decimal;
         priceUnit: string;
         durationMinutes: number | null;
@@ -128,11 +128,11 @@ export declare class ServiceService {
     }>;
     remove(id: number): Promise<{
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        description: string | null;
         price: import("@prisma/client-runtime-utils").Decimal;
         priceUnit: string;
         durationMinutes: number | null;

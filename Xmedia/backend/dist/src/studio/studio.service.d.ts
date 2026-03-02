@@ -6,12 +6,12 @@ export declare class StudioService {
         equipment: ({
             equipment: {
                 id: number;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
@@ -30,11 +30,11 @@ export declare class StudioService {
         }[];
     } & {
         id: number;
-        description: string | null;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;
@@ -45,12 +45,12 @@ export declare class StudioService {
         equipment: ({
             equipment: {
                 id: number;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
@@ -69,11 +69,11 @@ export declare class StudioService {
         }[];
     } & {
         id: number;
-        description: string | null;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;
@@ -84,12 +84,12 @@ export declare class StudioService {
         equipment: ({
             equipment: {
                 id: number;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
@@ -108,11 +108,11 @@ export declare class StudioService {
         }[];
     } & {
         id: number;
-        description: string | null;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;
@@ -123,12 +123,12 @@ export declare class StudioService {
         equipment: ({
             equipment: {
                 id: number;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
@@ -147,11 +147,11 @@ export declare class StudioService {
         }[];
     } & {
         id: number;
-        description: string | null;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;
@@ -160,11 +160,11 @@ export declare class StudioService {
     }>;
     remove(id: number): Promise<{
         id: number;
-        description: string | null;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;

@@ -6,12 +6,12 @@ export declare class EditServiceService {
         packages: ({
             subType: {
                 id: number;
-                description: string | null;
-                sortOrder: number;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 mainTypeId: number;
+                sortOrder: number;
             };
         } & {
             id: number;
@@ -24,37 +24,37 @@ export declare class EditServiceService {
         })[];
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         mainType: {
             id: number;
-            description: string | null;
-            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
+            sortOrder: number;
         };
         subType: {
             id: number;
-            description: string | null;
-            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             mainTypeId: number;
+            sortOrder: number;
         } | null;
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
@@ -64,12 +64,12 @@ export declare class EditServiceService {
         packages: ({
             subType: {
                 id: number;
-                description: string | null;
-                sortOrder: number;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 mainTypeId: number;
+                sortOrder: number;
             };
         } & {
             id: number;
@@ -82,37 +82,37 @@ export declare class EditServiceService {
         })[];
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         mainType: {
             id: number;
-            description: string | null;
-            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
+            sortOrder: number;
         };
         subType: {
             id: number;
-            description: string | null;
-            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             mainTypeId: number;
+            sortOrder: number;
         } | null;
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
@@ -122,12 +122,12 @@ export declare class EditServiceService {
         packages: ({
             subType: {
                 id: number;
-                description: string | null;
-                sortOrder: number;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 mainTypeId: number;
+                sortOrder: number;
             };
         } & {
             id: number;
@@ -140,37 +140,37 @@ export declare class EditServiceService {
         })[];
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         mainType: {
             id: number;
-            description: string | null;
-            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
+            sortOrder: number;
         };
         subType: {
             id: number;
-            description: string | null;
-            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             mainTypeId: number;
+            sortOrder: number;
         } | null;
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
@@ -180,12 +180,12 @@ export declare class EditServiceService {
         packages: ({
             subType: {
                 id: number;
-                description: string | null;
-                sortOrder: number;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
+                description: string | null;
                 mainTypeId: number;
+                sortOrder: number;
             };
         } & {
             id: number;
@@ -198,37 +198,37 @@ export declare class EditServiceService {
         })[];
         category: {
             id: number;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             icon: string | null;
         };
         mainType: {
             id: number;
-            description: string | null;
-            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
+            sortOrder: number;
         };
         subType: {
             id: number;
-            description: string | null;
-            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
             mainTypeId: number;
+            sortOrder: number;
         } | null;
     } & {
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
@@ -236,12 +236,12 @@ export declare class EditServiceService {
     }>;
     remove(id: number): Promise<{
         id: number;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
+        description: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
