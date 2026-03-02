@@ -600,7 +600,8 @@ enum PortfolioServiceType {
   STUDIO
   LIVE
   PHOTOGRAPHER
-  EDIT
+  PHOTO_EDIT
+  VIDEO_EDIT
 }
 
 model PortfolioItem {

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Mic2, MonitorPlay, X, Check, Users, Square, Info, ArrowLeft, Calendar as CalendarIcon, Phone, User, Loader2, Sparkles, Star, Shield, ArrowRight, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Camera, Mic2, MonitorPlay, X, Check, Users, Square, Info, ArrowLeft, Calendar as CalendarIcon, Phone, User, Loader2, Sparkles, Star, Shield, ArrowRight, HelpCircle, ChevronDown, ChevronUp, GalleryVerticalEnd } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -106,19 +107,20 @@ export default function StudiosPage() {
             {/* Background Glows */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-primary/20 hover:bg-primary/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
 
-            <div className="pt-40 md:pt-52 pb-24 relative z-10">
+            <div className="pt-40 md:pt-48 pb-24 relative z-10">
                 <div className="container mx-auto px-4 lg:px-8">
-                    {/* Hero Section */}
-                    <div className="text-center mb-20 max-w-3xl mx-auto">
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 font-medium text-sm text-gray-300">
-                            <Sparkles className="w-4 h-4 text-primary" /> Мэргэжлийн түвшин
-                        </motion.div>
-                        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight">
-                            Таны санааг бодит болгох <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">Студиуд</span>
-                        </motion.h1>
-                        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-gray-400 text-lg md:text-xl leading-relaxed">
-                            Олон улсын стандартын шаардлага хангасан, бүрэн тоноглогдсон тухтай орчинд уран бүтээлээ туурвих боломж.
-                        </motion.p>
+                    {/* Header — same as other pages */}
+                    <div className="mb-18 flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-bold mb-4">Мэргэжлийн <span className="text-primary">Студио</span></h1>
+                            <p className="text-gray-400 text-lg">Олон улсын стандартын шаардлага хангасан, бүрэн тоноглогдсон тухтай орчинд уран бүтээлээ туурвих боломж.</p>
+                        </div>
+                        <Link href="/portfolio/studio">
+                            <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white gap-2">
+                                <GalleryVerticalEnd className="w-4 h-4 text-primary" />
+                                Өмнөх ажлууд харах
+                            </Button>
+                        </Link>
                     </div>
 
                     {loading ? (

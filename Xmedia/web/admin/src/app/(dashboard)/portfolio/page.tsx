@@ -5,7 +5,7 @@ import { Plus, Pencil, Trash2, X, ImageIcon, Eye, EyeOff, Youtube, Facebook } fr
 import { toast } from "sonner";
 import { fetchWithAuth } from "@/lib/auth";
 
-type ServiceType = "STUDIO" | "LIVE" | "PHOTOGRAPHER" | "EDIT";
+type ServiceType = "STUDIO" | "LIVE" | "PHOTOGRAPHER" | "PHOTO_EDIT" | "VIDEO_EDIT";
 
 interface PortfolioItem {
     id: number;
@@ -28,10 +28,11 @@ const TABS: { key: ServiceType; label: string }[] = [
     { key: "STUDIO", label: "Студио" },
     { key: "LIVE", label: "Шууд дамжуулалт" },
     { key: "PHOTOGRAPHER", label: "Зураглаач" },
-    { key: "EDIT", label: "Эдит" },
+    { key: "PHOTO_EDIT", label: "Зураг эдит" },
+    { key: "VIDEO_EDIT", label: "Видео эдит" },
 ];
 
-const EMPTY_GENERIC = { title: "", description: "", images: [] as string[], tags: [] as string[], isPublished: true, sortOrder: 0 };
+const EMPTY_GENERIC = { title: "", description: "", images: [] as string[], tags: [] as string[], isPublished: true, sortOrder: 0, youtubeUrl: "", facebookUrl: "" };
 const EMPTY_LIVE = { title: "", description: "", image: "", viewCount: 0, liveDate: "", youtubeUrl: "", facebookUrl: "", isPublished: true };
 
 export default function PortfolioPage() {
@@ -86,6 +87,8 @@ export default function PortfolioPage() {
                 tags: Array.isArray(item.tags) ? item.tags : [],
                 isPublished: item.isPublished,
                 sortOrder: item.sortOrder,
+                youtubeUrl: item.youtubeUrl ?? "",
+                facebookUrl: item.facebookUrl ?? "",
             } : { ...EMPTY_GENERIC });
             setNewTag("");
             setNewImageUrl("");
@@ -167,6 +170,10 @@ export default function PortfolioPage() {
                 tags: genericForm.tags.length > 0 ? genericForm.tags : undefined,
                 isPublished: genericForm.isPublished,
                 sortOrder: genericForm.sortOrder,
+                ...(activeTab === "VIDEO_EDIT" ? {
+                    youtubeUrl: genericForm.youtubeUrl.trim() || undefined,
+                    facebookUrl: genericForm.facebookUrl.trim() || undefined,
+                } : {}),
             };
         }
 
@@ -211,7 +218,7 @@ export default function PortfolioPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Өмнөх ажлууд</h1>
-                    <p className="text-muted-foreground mt-1">4 үйлчилгээний portfolio болон өмнөх ажлуудыг удирдах.</p>
+                    <p className="text-muted-foreground mt-1">5 үйлчилгээний portfolio болон өмнөх ажлуудыг удирдах.</p>
                 </div>
                 <button onClick={() => openModal()} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
                     <Plus className="h-4 w-4" /> Ажил нэмэх
@@ -239,6 +246,11 @@ export default function PortfolioPage() {
                                 <>
                                     <th className="px-4 py-3">Огноо</th>
                                     <th className="px-4 py-3">Үзэлт</th>
+                                    <th className="px-4 py-3">Links</th>
+                                </>
+                            ) : activeTab === "VIDEO_EDIT" ? (
+                                <>
+                                    <th className="px-4 py-3">Тайлбар</th>
                                     <th className="px-4 py-3">Links</th>
                                 </>
                             ) : (
@@ -286,6 +298,27 @@ export default function PortfolioPage() {
                                                 {item.liveDate ? new Date(item.liveDate).toLocaleDateString("mn-MN") : "—"}
                                             </td>
                                             <td className="px-4 py-3 text-muted-foreground">{fmtNum(item.viewCount)}</td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex gap-2">
+                                                    {item.youtubeUrl && (
+                                                        <a href={item.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600" title="YouTube">
+                                                            <Youtube className="h-4 w-4" />
+                                                        </a>
+                                                    )}
+                                                    {item.facebookUrl && (
+                                                        <a href={item.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600" title="Facebook">
+                                                            <Facebook className="h-4 w-4" />
+                                                        </a>
+                                                    )}
+                                                    {!item.youtubeUrl && !item.facebookUrl && <span className="text-muted-foreground">—</span>}
+                                                </div>
+                                            </td>
+                                        </>
+                                    ) : activeTab === "VIDEO_EDIT" ? (
+                                        <>
+                                            <td className="px-4 py-3 text-muted-foreground max-w-[180px]">
+                                                <p className="truncate">{item.description || "—"}</p>
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex gap-2">
                                                     {item.youtubeUrl && (
@@ -485,6 +518,22 @@ export default function PortfolioPage() {
                                             <button type="button" onClick={addTag} className="px-3 h-8 text-xs rounded-lg border border-border hover:bg-muted">Нэмэх</button>
                                         </div>
                                     </div>
+                                    {activeTab === "VIDEO_EDIT" && (
+                                        <>
+                                            <div className="space-y-1">
+                                                <label className="text-sm font-medium flex items-center gap-1.5"><Youtube className="h-4 w-4 text-red-500" /> YouTube Link</label>
+                                                <input type="url" value={genericForm.youtubeUrl} onChange={e => setGenericForm({ ...genericForm, youtubeUrl: e.target.value })}
+                                                    className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                                    placeholder="https://youtube.com/watch?v=..." />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-sm font-medium flex items-center gap-1.5"><Facebook className="h-4 w-4 text-blue-500" /> Facebook Link</label>
+                                                <input type="url" value={genericForm.facebookUrl} onChange={e => setGenericForm({ ...genericForm, facebookUrl: e.target.value })}
+                                                    className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                                    placeholder="https://facebook.com/video/..." />
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="flex items-center gap-4">
                                         <div className="space-y-1 flex-1">
                                             <label className="text-sm font-medium">Эрэмбэ</label>

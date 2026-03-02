@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Film, X, ArrowLeft, Phone, User, Loader2, Check, Info } from "lucide-react";
+import { Film, X, ArrowLeft, Phone, User, Loader2, Check, Info, GalleryVerticalEnd } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -89,9 +90,17 @@ export default function VideoEditingPage() {
     return (
         <div className="pt-40 md:pt-48 pb-24 min-h-screen bg-black text-white">
             <div className="container mx-auto px-4 lg:px-8">
-                <div className="mb-18">
-                    <h1 className="text-2xl md:text-3xl font-bold mb-4">Видео <span className="text-primary">Эвлүүлэг</span></h1>
-                    <p className="text-gray-400 text-lg">Мэргэжлийн видео монтаж, дата редакт болон пост-продакшин үйлчилгээ.</p>
+                <div className="mb-18 flex items-start justify-between gap-4 flex-wrap">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold mb-4">Видео <span className="text-primary">Эвлүүлэг</span></h1>
+                        <p className="text-gray-400 text-lg">Мэргэжлийн видео монтаж, дата редакт болон пост-продакшин үйлчилгээ.</p>
+                    </div>
+                    <Link href="/portfolio/edit">
+                        <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white gap-2">
+                            <GalleryVerticalEnd className="w-4 h-4 text-primary" />
+                            Өмнөх ажлууд харах
+                        </Button>
+                    </Link>
                 </div>
 
                 {loading ? (

@@ -18,8 +18,6 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
-        editType: import("@prisma/client").$Enums.EditType | null;
-        videoUrl: string | null;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
@@ -36,8 +34,6 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
-        editType: import("@prisma/client").$Enums.EditType | null;
-        videoUrl: string | null;
     }>;
     create(data: {
         serviceType: PortfolioServiceType;
@@ -66,8 +62,6 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
-        editType: import("@prisma/client").$Enums.EditType | null;
-        videoUrl: string | null;
     }>;
     update(id: number, data: {
         serviceType?: PortfolioServiceType;
@@ -96,8 +90,6 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
-        editType: import("@prisma/client").$Enums.EditType | null;
-        videoUrl: string | null;
     }>;
     remove(id: number): Promise<{
         id: number;
@@ -114,7 +106,5 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
-        editType: import("@prisma/client").$Enums.EditType | null;
-        videoUrl: string | null;
     }>;
 }
