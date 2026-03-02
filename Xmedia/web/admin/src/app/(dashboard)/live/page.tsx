@@ -33,6 +33,7 @@ export default function LivePage() {
         name: "", categoryId: "", description: "", image: "", isActive: true,
         equipmentIds: [] as number[],
         priceTiers: [] as CameraTier[],
+        amenities: [] as string[],
     });
 
     // Image Upload
@@ -113,6 +114,7 @@ export default function LivePage() {
         name: "", categoryId: categories[0]?.id?.toString() || "", description: "", image: "", isActive: true,
         equipmentIds: [] as number[],
         priceTiers: [{ cameraCount: 1, label: "1 камер", price: "" }] as CameraTier[],
+        amenities: [] as string[],
     });
 
     const handleOpenServiceModal = (svc: any /* eslint-disable-line @typescript-eslint/no-explicit-any */ = null) => {
@@ -121,6 +123,7 @@ export default function LivePage() {
             setServiceFormData({
                 name: svc.name, categoryId: svc.categoryId?.toString() || "", description: svc.description || "",
                 image: svc.image || "", isActive: svc.isActive ?? true,
+                amenities: svc.amenities || [],
                 equipmentIds: svc.equipments?.map((e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => e.equipmentId) || [],
                 priceTiers: svc.priceTiers?.length
                     ? svc.priceTiers.map((t: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => ({ id: t.id, cameraCount: t.cameraCount, label: t.label || `${t.cameraCount} камер`, price: t.price?.toString() || "" }))
@@ -177,6 +180,7 @@ export default function LivePage() {
                 image: serviceFormData.image || undefined,
                 isActive: serviceFormData.isActive,
                 equipmentIds: serviceFormData.equipmentIds,
+                amenities: serviceFormData.amenities,
                 priceTiers: serviceFormData.priceTiers.map(t => ({
                     cameraCount: Number(t.cameraCount),
                     label: t.label || `${t.cameraCount} камер`,
@@ -393,6 +397,59 @@ export default function LivePage() {
                             <div className="space-y-1">
                                 <label className="text-sm font-medium">Тайлбар</label>
                                 <textarea value={serviceFormData.description} onChange={e => setServiceFormData({ ...serviceFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" placeholder="Үйлчилгээний тайлбар..." />
+                            </div>
+
+                            {/* Features / Amenities */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium block">Онцлог талууд (Features)</label>
+                                <div className="flex gap-2 mb-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Шинэ онцлог..."
+                                        className="flex-1 h-9 px-3 rounded-md border border-input bg-background text-sm"
+                                        id="new-amenity-input"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const val = (e.target as HTMLInputElement).value.trim();
+                                                if (val && !serviceFormData.amenities.includes(val)) {
+                                                    setServiceFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
+                                                    (e.target as HTMLInputElement).value = '';
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const input = document.getElementById('new-amenity-input') as HTMLInputElement;
+                                            const val = input.value.trim();
+                                            if (val && !serviceFormData.amenities.includes(val)) {
+                                                setServiceFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
+                                                input.value = '';
+                                            }
+                                        }}
+                                        className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-md text-sm border border-border/50 hover:bg-muted"
+                                    >
+                                        Нэмэх
+                                    </button>
+                                </div>
+                                {serviceFormData.amenities.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 p-3 bg-muted/30 border border-border/50 rounded-md">
+                                        {serviceFormData.amenities.map(amenity => (
+                                            <span key={amenity} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-background border border-border text-foreground rounded-full">
+                                                {amenity}
+                                                <button
+                                                    type="button"
+                                                    className="text-muted-foreground hover:text-red-500"
+                                                    onClick={() => setServiceFormData(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity) }))}
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Camera Price Tiers */}

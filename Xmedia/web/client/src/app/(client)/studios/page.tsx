@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Mic2, MonitorPlay, ArrowRight, X, Check, Users, Square, Info, ArrowLeft, Calendar as CalendarIcon, Clock, Phone, User } from "lucide-react";
+import { Camera, Mic2, MonitorPlay, X, Check, Users, Square, Info, ArrowLeft, Calendar as CalendarIcon, Phone, User, Loader2, Sparkles, Star, Shield, ArrowRight, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -11,414 +11,403 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-interface Studio {
+const API = "http://localhost:4000/api";
+
+interface StudioPackage {
     id: number;
-    title: string;
-    category: string;
-    description: string;
-    image: string;
-    icon: React.ReactNode;
-    area: string;
-    capacity: string;
-    price: string;
-    hourlyPrice: string;
-    dailyPrice: string;
-    features: string[];
-    equipment: string[];
+    hours: number;
+    price: number;
 }
 
-const studios: Studio[] = [
-    {
-        id: 1,
-        title: "Гэрэл зургийн студио",
-        category: "Photography",
-        description: "Мэргэжлийн гэрэлтүүлэг, арын дэвсгэр, тоног төхөөрөмжтэй, тав тухтай орчин.",
-        image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=2070&auto=format&fit=crop",
-        icon: <Camera className="w-6 h-6" />,
-        area: "150m²",
-        capacity: "10-15 хүн",
-        price: "150,000₮ / цаг",
-        hourlyPrice: "150,000₮",
-        dailyPrice: "150,000₮",
-        features: ["Өндөр тааз (4м)", "Хувцас солих өрөө", "Нүүр будалтын хэсэг", "Амралтын хэсэг", "Wi-Fi"],
-        equipment: ["Profoto D2 1000 AirTTL", "Softboxes & Umbrellas", "C-Stands", "V-Flats", "Color Gels"]
-    },
-    {
-        id: 2,
-        title: "Дуу бичлэгийн студио",
-        category: "Audio",
-        description: "Дууны дуугүй танхим, мэргэжлийн микрофон, хөгжмийн зэмсэг, эффект системтэй.",
-        image: "https://images.unsplash.com/photo-1598653222000-6b7b7a552625?q=80&w=2070&auto=format&fit=crop",
-        icon: <Mic2 className="w-6 h-6" />,
-        area: "80m²",
-        capacity: "5-8 хүн",
-        price: "120,000₮ / цаг",
-        hourlyPrice: "120,000₮",
-        dailyPrice: "120,000₮",
-        features: ["Бүрэн тусгаарлагдсан", "Vocal Booth", "Control Room", "Lounge Area", "Тусгай агааржуулалт"],
-        equipment: ["Neumann U87 Ai", "Apollo x8p Interface", "Genelec Monitors", "Pro Tools HD", "Yamaha C7 Grand Piano"]
-    },
-    {
-        id: 3,
-        title: "Видео продакшн студио",
-        category: "Video",
-        description: "Green screen, HD камер, үзэсгэлэнт гэрэлтүүлэг, эфирийн тоног төхөөрөмж.",
-        image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop",
-        icon: <MonitorPlay className="w-6 h-6" />,
-        area: "200m²",
-        capacity: "20+ хүн",
-        price: "250,000₮ / цаг",
-        hourlyPrice: "250,000₮",
-        dailyPrice: "250,000₮",
-        features: ["3 талт Green Screen", "Тайзны гэрэлтүүлэг", "Шууд эфирийн найруулагчийн хэсэг", "Make-up Room", "Ачаа оруулах хаалга"],
-        equipment: ["RED Komodo 6K", "Blackmagic URSA Mini", "Aputure 600d Pro", "ARRI SkyPanels", "Dana Dolly"]
-    }
-];
+interface Studio {
+    id: number;
+    name: string;
+    description: string;
+    images: string[] | string | null;  // JSON array or string
+    sizeSqm?: number;
+    capacity?: number;
+    amenities?: string[];
+    equipment: { equipment: { name: string } }[];
+    packages: StudioPackage[];
+}
+
+const TIMES = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
 
 export default function StudiosPage() {
-    const [selectedStudio, setSelectedStudio] = useState<Studio | null>(null);
+    const [studios, setStudios] = useState<Studio[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selected, setSelected] = useState<Studio | null>(null);
+    const [selectedPackage, setSelectedPackage] = useState<StudioPackage | null>(null);
     const [isBooking, setIsBooking] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [form, setForm] = useState({ name: "", phone: "", date: undefined as Date | undefined, time: "" });
+    const [faqOpen, setFaqOpen] = useState<number | null>(0); // Default open first FAQ
 
-    // Booking Form State
-    const [bookingData, setBookingData] = useState<{
-        name: string;
-        phone: string;
-        date: Date | undefined;
-        time: string;
-        duration: string;
-    }>({
-        name: "",
-        phone: "",
-        date: undefined,
-        time: "",
-        duration: "1"
-    });
+    useEffect(() => {
+        fetch(`${API}/studio`)
+            .then(r => r.json())
+            .then(data => setStudios(Array.isArray(data) ? data : data.data ?? data.items ?? []))
+            .catch(() => toast.error("Студиудын мэдээлэл татахад алдаа гарлаа."))
+            .finally(() => setLoading(false));
+    }, []);
 
-    const handleBookingSubmit = (e: React.FormEvent) => {
+    const minPrice = (s: Studio) => {
+        if (!s.packages || s.packages.length === 0) return 0;
+        return Math.min(...s.packages.map(p => Number(p.price)));
+    };
+
+    const getImage = (s: Studio): string => {
+        if (!s.images) return "";
+        if (Array.isArray(s.images) && s.images.length > 0) return s.images[0];
+        if (typeof s.images === "string") {
+            try { const p = JSON.parse(s.images); return Array.isArray(p) ? p[0] ?? "" : ""; } catch { return s.images; }
+        }
+        return "";
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Here you would typically send data to backend
-        const formattedDate = bookingData.date ? format(bookingData.date, "yyyy-MM-dd") : "";
-
-        toast.success("Захиалга амжилттай илгээгдлээ!", {
-            description: `${formattedDate}-ний өдөр ${bookingData.time} цагт ${selectedStudio?.title}-д захиалга бүртгэгдлээ. Бид тантай удахгүй холбогдох болно.`,
-            duration: 5000,
-        });
-        setIsBooking(false);
-        setSelectedStudio(null);
-        setBookingData({ name: "", phone: "", date: undefined, time: "", duration: "1" });
+        if (!form.time) { toast.error("Цагаа сонгоно уу."); return; }
+        if (!form.date) { toast.error("Огноогоо сонгоно уу."); return; }
+        setSubmitting(true);
+        try {
+            const res = await fetch(`${API}/api/bookings`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: form.name,
+                    phone: form.phone,
+                    date: format(form.date, "yyyy-MM-dd"),
+                    time: form.time,
+                    duration: selectedPackage ? selectedPackage.hours : 1,
+                    serviceType: "STUDIO",
+                    serviceId: selected!.id,
+                    unitPrice: selectedPackage ? Number(selectedPackage.price) : 0,
+                }),
+            });
+            if (!res.ok) throw new Error();
+            toast.success("Захиалга амжилттай бүртгэгдлээ!", {
+                description: `${format(form.date!, "yyyy-MM-dd")}-ний ${form.time} цагт "${selected?.name}" захиалагдлаа. Удахгүй холбогдох болно.`,
+                duration: 6000,
+            });
+            setSelected(null); setIsBooking(false); setSelectedPackage(null);
+            setForm({ name: "", phone: "", date: undefined, time: "" });
+        } catch {
+            toast.error("Захиалга бүртгэхэд алдаа гарлаа. Дахин оролдно уу.");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
-    const closeHandler = () => {
-        setSelectedStudio(null);
-        setIsBooking(false);
-    };
+    const close = () => { setSelected(null); setIsBooking(false); setSelectedPackage(null); };
 
     return (
-        <div className="pt-20 min-h-screen bg-black text-white">
-            <div className="container mx-auto px-4 py-12">
-                <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
-                    <div className="max-w-2xl">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white font-sans">
-                            Манай <span className="text-primary">Студиуд</span>
-                        </h1>
-                        <p className="text-gray-400 text-lg">
-                            Таны уран бүтээлийг амилуулах мэргэжлийн студи, тоног төхөөрөмжүүд.
-                        </p>
-                    </div>
-                </div>
+        <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
+            {/* Background Glows */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-primary/20 hover:bg-primary/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {studios.map((studio, index) => (
-                        <motion.div
-                            key={studio.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.1 * (index + 1) }}
-                            className="group relative bg-[#1a1a1a] rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-300 cursor-pointer"
-                            onClick={() => setSelectedStudio(studio)}
-                        >
-                            <div className="relative h-64 overflow-hidden">
-                                <div className="absolute top-4 right-4 z-10 bg-primary p-2.5 rounded-full text-white shadow-lg">
-                                    {studio.icon}
-                                </div>
-                                <div
-                                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                                    style={{ backgroundImage: `url('${studio.image}')` }}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-transparent opacity-80" />
-                            </div>
-
-                            <div className="p-6 pt-2">
-                                <h3 className="text-2xl font-bold text-white mb-2">{studio.title}</h3>
-                                <p className="text-gray-400 text-sm mb-6 line-clamp-2">
-                                    {studio.description}
-                                </p>
-
-                                <div className="flex justify-between items-center text-sm text-gray-500 mb-6 border-t border-white/10 pt-4">
-                                    <span className="flex items-center gap-1"><Square className="w-4 h-4" /> {studio.area}</span>
-                                    <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {studio.capacity}</span>
-                                </div>
-
-                                <Button className="w-full h-14 rounded-none bg-white/5 border border-white/30 backdrop-blur-sm text-white font-semibold flex items-center justify-center gap-2 group-hover:border-red-500/50 group-hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] transition-all duration-300 relative overflow-hidden">
-                                    <span className="relative z-10">Дэлгэрэнгүй</span>
-                                </Button>
-                            </div>
+            <div className="pt-40 md:pt-52 pb-24 relative z-10">
+                <div className="container mx-auto px-4 lg:px-8">
+                    {/* Hero Section */}
+                    <div className="text-center mb-20 max-w-3xl mx-auto">
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 font-medium text-sm text-gray-300">
+                            <Sparkles className="w-4 h-4 text-primary" /> Мэргэжлийн түвшин
                         </motion.div>
-                    ))}
+                        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight">
+                            Таны санааг бодит болгох <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">Студиуд</span>
+                        </motion.h1>
+                        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-gray-400 text-lg md:text-xl leading-relaxed">
+                            Олон улсын стандартын шаардлага хангасан, бүрэн тоноглогдсон тухтай орчинд уран бүтээлээ туурвих боломж.
+                        </motion.p>
+                    </div>
+
+                    {loading ? (
+                        <div className="flex items-center justify-center h-64">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        </div>
+                    ) : studios.length === 0 ? (
+                        <p className="text-gray-500 text-center py-24">Одоогоор студи нэмэгдээгүй байна.</p>
+                    ) : (
+                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ${studios.length < 3 ? 'justify-items-center' : ''}`}>
+                            {studios.map((studio, i) => (
+                                <motion.div
+                                    key={studio.id}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: 0.08 * i }}
+                                    className={`group relative bg-[#0f0f0f] rounded-2xl overflow-hidden border border-white/5 hover:border-primary/40 transition-all duration-500 cursor-pointer ${studios.length < 3 ? 'w-full max-w-lg' : 'w-full'} hover:shadow-[0_0_30px_rgba(239,68,68,0.15)] hover:-translate-y-1`}
+                                    onClick={() => setSelected(studio)}
+                                >
+                                    <div className="relative h-60 overflow-hidden">
+                                        {getImage(studio) ? (
+                                            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url('${getImage(studio)}')` }} />
+                                        ) : (
+                                            <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center"><Camera className="w-12 h-12 text-zinc-700" /></div>
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/50 to-transparent opacity-80" />
+
+                                        {/* Mini Badges inside image */}
+                                        <div className="absolute top-4 left-4 flex gap-2">
+                                            {studio.sizeSqm && (
+                                                <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 border border-white/10 uppercase"><Square className="w-3 h-3 text-primary" /> {Number(studio.sizeSqm)} м.кв</div>
+                                            )}
+                                        </div>
+                                        <div className="absolute top-4 right-4">
+                                            {studio.capacity && (
+                                                <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 border border-white/10 uppercase"><Users className="w-3 h-3 text-primary" /> {studio.capacity} хүн</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="p-6 pt-4 flex flex-col h-[200px]">
+                                        <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{studio.name}</h3>
+                                        <p className="text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed flex-1">{studio.description}</p>
+                                        <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
+                                            <div className="flex flex-col flex-1">
+                                                <span className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold">Эхлэх үнэ</span>
+                                                <span className="text-white font-extrabold text-lg">{minPrice(studio).toLocaleString()}₮</span>
+                                            </div>
+                                            <Button size="sm" className="bg-white/5 border border-white/10 text-white hover:bg-primary hover:border-primary group-hover:text-white font-semibold transition-all shadow-none">
+                                                Дэлгэрэнгүй <ArrowRight className="w-4 h-4 ml-1.5 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Studio Details Modal */}
-            <AnimatePresence>
-                {selectedStudio && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
-                        onClick={closeHandler}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-[#111] w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-3xl border border-white/10 shadow-2xl relative flex flex-col md:flex-row"
-                        >
-                            <button
-                                onClick={closeHandler}
-                                className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-white/20 rounded-full text-white transition-colors"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
-
-                            {/* Left Side: Image (Always visible) */}
-                            <div className={`relative h-48 md:h-auto md:w-1/2 lg:w-5/12 transition-all duration-500 ${isBooking ? 'hidden md:block' : 'block'}`}>
-                                <div
-                                    className="absolute inset-0 bg-cover bg-center"
-                                    style={{ backgroundImage: `url('${selectedStudio.image}')` }}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#111] md:bg-gradient-to-r md:from-transparent md:to-[#111]" />
-
-                                <div className="absolute bottom-6 left-6 right-6 md:hidden">
-                                    <h3 className="text-2xl font-bold text-white mb-1">{selectedStudio.title}</h3>
-                                    <p className="text-primary font-bold">{selectedStudio.hourlyPrice}</p>
+            {/* Features Section */}
+            <div className="border-t border-white/5 bg-[#0a0a0a] py-24 relative z-0">
+                <div className="container mx-auto px-4 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl font-bold mb-4">Яагаад биднийг сонгох вэ?</h2>
+                        <p className="text-gray-400">Мэргэжлийн үр дүн, тав тухтай орчин таныг хүлээж байна.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            { icon: Camera, title: "Топ Тоног Төхөөрөмж", desc: "Сэтгэл ханамжийн баталгаа өгөх хамгийн сүүлийн үеийн камер, гэрэлтүүлэг." },
+                            { icon: Users, title: "Тав Тухтай Орчин", desc: "Бүх төрлийн зураг авалт, нэвтрүүлэгт зориулагдсан өргөн зай, дулаан орчин." },
+                            { icon: Shield, title: "Найдвартай Үйлчилгээ", desc: "Захиалга бүрт мэргэжлийн туслах, найрсаг харилцааг бид амлаж байна." },
+                            { icon: Check, title: "Уян Хатан Хуваарь", desc: "Таны цаг заванд тохирсон өдөр, цагийн сонголтууд." }
+                        ].map((feat, idx) => (
+                            <motion.div key={idx} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.1 }} className="bg-[#111] p-6 rounded-2xl border border-white/5 hover:border-primary/30 transition-colors">
+                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 text-primary">
+                                    <feat.icon className="w-6 h-6" />
                                 </div>
+                                <h3 className="font-bold text-lg mb-2">{feat.title}</h3>
+                                <p className="text-sm text-gray-400 leading-relaxed">{feat.desc}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* FAQ Section */}
+            <div className="py-24 relative z-0">
+                <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
+                    <div className="text-center mb-14">
+                        <h2 className="text-3xl font-bold mb-4">Түгээмэл асуултууд</h2>
+                    </div>
+                    <div className="space-y-4">
+                        {[
+                            { q: "Захиалга баталгаажуулахын тулд төлбөр урьдчилж төлөх шаардлагатай юу?", a: "Тийм ээ, та студийн цагийг баталгаажуулахын тулд урьдчилгаа 50% эсвэл бүрэн төлөх шаардлагатай. Төлбөр орсны дараа таны цаг баталгаажна." },
+                            { q: "Студийн багцад туслах ажилтан орох уу?", a: "Үндсэн багцуудад тоног төхөөрөмж, талбай багтсан болно. Хэрвээ танд гэрэлтүүлэг болон камер дээр туслах шаардлагатай бол нэмэлтээр хүн авах боломжтой." },
+                            { q: "Цагаа өөрчлөх эсвэл цуцлах боломжтой юу?", a: "Захиалгаа 24 цагийн өмнө өөрчлөх буюу цуцлах боломжтой. Үүнээс хойш бол урьдчилгаа буцаагдахгүйг анхаарна уу." },
+                            { q: "Нэмэлт цаг сунгах боломж бий юу?", a: "Хэрэв таны дараагийн цагт өөр хүн захиалга өгөөгүй бол сунгах боломжтой. Сунгасан цагийн төлбөрийг хагас эсвэл бүтэн цагаар тооцно." }
+                        ].map((faq, idx) => (
+                            <div key={idx} className="bg-[#111] border border-white/5 rounded-xl overflow-hidden transition-all duration-300">
+                                <button onClick={() => setFaqOpen(faqOpen === idx ? null : idx)} className="w-full flex items-center justify-between p-5 text-left font-medium hover:bg-white/5 transition-colors">
+                                    <span>{faq.q}</span>
+                                    {faqOpen === idx ? <ChevronUp className="w-5 h-5 text-primary" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                                </button>
+                                <AnimatePresence>
+                                    {faqOpen === idx && (
+                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="px-5 pb-5 text-gray-400 text-sm leading-relaxed">
+                                            {faq.a}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* CTA Banner */}
+            <div className="py-20 relative z-0">
+                <div className="container mx-auto px-4 lg:px-8">
+                    <div className="bg-gradient-to-r from-red-900/40 via-black to-red-900/40 border border-primary/20 rounded-3xl p-10 md:p-16 text-center shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+                        <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Танд өөр тусгай шаардлага байгаа юу?</h2>
+                        <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">Том хэмжээний зураг авалт, тусгай төсөл эсвэл олон хоногоор студи ашиглах шаардлагатай бол бидэнтэй шууд холбогдож үнийн санал авна уу.</p>
+                        <Button size="lg" className="bg-primary hover:bg-red-600 text-white font-bold h-14 px-8 text-lg w-full sm:w-auto shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all hover:scale-105 active:scale-95">
+                            <Phone className="w-5 h-5 mr-2" /> Бидэнтэй холбогдох
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Detail + Booking Modal */}
+            <AnimatePresence>
+                {selected && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                        onClick={close}>
+                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+                            onClick={e => e.stopPropagation()}
+                            className="bg-[#0a0a0a] w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-3xl border border-white/5 shadow-2xl flex flex-col md:flex-row relative">
+                            <button onClick={close} className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-white/20 rounded-full text-white transition-colors"><X className="w-5 h-5" /></button>
+
+                            {/* Image */}
+                            <div className={`relative h-64 md:h-auto md:w-1/2 flex-shrink-0 ${isBooking ? 'hidden md:block' : ''}`}>
+                                {getImage(selected)
+                                    ? <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${getImage(selected)}')` }} />
+                                    : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><Camera className="w-16 h-16 text-zinc-600" /></div>
+                                }
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#111]" />
                             </div>
 
-                            {/* Right Side: Content Area (Switchable) */}
-                            <div className="flex-1 bg-[#111] overflow-y-auto max-h-[calc(90vh-12rem)] md:max-h-[90vh] relative flex flex-col">
+                            {/* Right panel */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
                                 <AnimatePresence mode="wait">
                                     {!isBooking ? (
-                                        // DETAILS VIEW
-                                        <motion.div
-                                            key="details"
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -20 }}
-                                            transition={{ duration: 0.3 }}
-                                            className="p-6 md:p-12 flex flex-col h-full"
-                                        >
-                                            <div className="hidden md:block mb-8">
-                                                <div className="flex justify-between items-center mb-4">
-                                                    <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-wider border border-primary/20">
-                                                        {selectedStudio.category}
-                                                    </span>
-                                                    <div className="flex items-center gap-4 text-sm text-gray-400">
-                                                        <span className="flex items-center gap-1.5"><Square className="w-4 h-4" /> {selectedStudio.area}</span>
-                                                        <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {selectedStudio.capacity}</span>
-                                                    </div>
+                                        <motion.div key="detail" initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="p-5 md:p-8 flex flex-col h-full">
+                                            <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
+                                                <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-red-500/10 text-red-500 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
+                                                    Photography
                                                 </div>
-                                                <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">{selectedStudio.title}</h2>
-                                                <p className="text-gray-400 leading-relaxed text-lg">
-                                                    {selectedStudio.description}
-                                                </p>
+                                                <div className="flex flex-wrap gap-3">
+                                                    {selected.sizeSqm && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Square className="w-3.5 h-3.5 text-gray-400" />
+                                                            <span className="text-sm text-gray-300">{Number(selected.sizeSqm)}m²</span>
+                                                        </div>
+                                                    )}
+                                                    {selected.capacity && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Users className="w-3.5 h-3.5 text-gray-400" />
+                                                            <span className="text-sm text-gray-300">{selected.capacity}-{Number(selected.capacity) + 5} хүн</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            <div className="md:hidden mb-6">
-                                                <p className="text-gray-300 leading-relaxed">
-                                                    {selectedStudio.description}
-                                                </p>
-                                            </div>
+                                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{selected.name}</h2>
+                                            <p className="text-gray-400 mb-5 leading-relaxed text-xs md:text-sm">{selected.description}</p>
 
-                                            <div className="space-y-8 flex-1">
-                                                {/* Features Grid */}
-                                                <div>
-                                                    <h4 className="text-white font-bold mb-4 flex items-center gap-2">
-                                                        <Info className="w-4 h-4 text-primary" /> Онцлог талууд
+                                            {(selected.amenities && selected.amenities.length > 0) && (
+                                                <div className="mb-5 w-full">
+                                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                        <Info className="w-3.5 h-3.5 text-red-500" />Онцлог талууд
                                                     </h4>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        {selectedStudio.features.map((feature, i) => (
-                                                            <div key={i} className="flex items-center gap-2 text-sm text-gray-300 bg-white/5 p-2 rounded-lg border border-white/5">
-                                                                <Check className="w-4 h-4 text-primary shrink-0" />
-                                                                <span>{feature}</span>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        {selected.amenities.map((amenity, i) => (
+                                                            <div key={i} className="flex items-center gap-2.5 text-xs text-gray-200 bg-[#141414] px-3 py-2 rounded-lg border border-white/5 truncate">
+                                                                <Check className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                                                                <span className="truncate">{amenity}</span>
                                                             </div>
                                                         ))}
                                                     </div>
                                                 </div>
+                                            )}
 
-                                                {/* Equipment List */}
-                                                <div>
-                                                    <h4 className="text-white font-bold mb-4">Тоног төхөөрөмж</h4>
-                                                    <div className="bg-zinc-900/50 rounded-xl p-4 border border-white/5">
+                                            {selected.equipment?.length > 0 && (
+                                                <div className="mb-5 w-full">
+                                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                        <Info className="w-3.5 h-3.5 text-red-500" />Тоног төхөөрөмж
+                                                    </h4>
+                                                    <div className="bg-[#141414] p-4 rounded-lg border border-white/5">
                                                         <ul className="space-y-2">
-                                                            {selectedStudio.equipment.map((item, i) => (
-                                                                <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-600 mt-1.5 shrink-0" />
-                                                                    {item}
+                                                            {selected.equipment.map((eq, i) => (
+                                                                <li key={i} className="flex items-start gap-2.5 text-xs text-gray-300">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-[5px]" />
+                                                                    <span className="flex-1 leading-snug">{eq.equipment?.name}</span>
                                                                 </li>
                                                             ))}
                                                         </ul>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            )}
 
-                                            {/* Footer Action */}
-                                            <div className="mt-8 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                                <div className="flex gap-8 w-full sm:w-auto justify-between sm:justify-start">
-                                                    <div>
-                                                        <p className="text-gray-400 text-xs uppercase tracking-wider">Цагийн үнэ</p>
-                                                        <p className="text-xl lg:text-2xl font-bold text-white">{selectedStudio.hourlyPrice}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-gray-400 text-xs uppercase tracking-wider">Өдрийн үнэ</p>
-                                                        <p className="text-xl lg:text-2xl font-bold text-white">{selectedStudio.dailyPrice}</p>
+                                            {selected.packages && selected.packages.length > 0 && (
+                                                <div className="mb-6 w-full">
+                                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                        Үнийн багцууд
+                                                    </h4>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        {selected.packages.map((pkg) => {
+                                                            const isSelected = selectedPackage?.id === pkg.id;
+                                                            return (
+                                                                <div
+                                                                    key={pkg.id}
+                                                                    onClick={() => setSelectedPackage(pkg)}
+                                                                    className={`cursor-pointer p-4 rounded-xl border relative transition-all ${isSelected ? 'border-primary bg-primary/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
+                                                                >
+                                                                    {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-primary" /></div>}
+                                                                    <p className="text-lg font-bold pr-6 text-center text-white mb-2">{pkg.hours} цаг</p>
+                                                                    <p className="text-gray-400 font-bold mt-1 text-sm text-center">₮{Number(pkg.price).toLocaleString()}</p>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
-                                                <Button
-                                                    className="w-full sm:w-auto font-semibold text-lg px-4 h-12 bg-white/5 border border-white/20 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/10 hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] hover:border-red-500/50 hover:scale-105"
-                                                    onClick={() => setIsBooking(true)}
-                                                >
-                                                    Захиалга өгөх
-                                                </Button>
+                                            )}
+
+                                            <div className="mt-auto pt-5 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+                                                <div className="flex flex-col items-start md:items-center">
+                                                    <p className="text-gray-500 text-[10px] uppercase tracking-wider">Нийт үнэ</p>
+                                                    <p className="text-2xl font-bold">
+                                                        {selectedPackage ? `${Number(selectedPackage.price).toLocaleString()}₮` : 'Багц сонгоно уу'}
+                                                    </p>
+                                                </div>
+                                                <Button onClick={() => setIsBooking(true)} disabled={selected.packages?.length > 0 && !selectedPackage} className="w-full md:w-auto px-6 h-12 bg-primary hover:bg-red-600 font-semibold rounded-lg transition-all">Захиалга өгөх</Button>
                                             </div>
                                         </motion.div>
                                     ) : (
-                                        // BOOKING FORM VIEW
-                                        <motion.div
-                                            key="booking"
-                                            initial={{ opacity: 0, x: 20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: 20 }}
-                                            transition={{ duration: 0.3 }}
-                                            className="p-6 md:p-12 flex flex-col h-full"
-                                        >
-                                            <div className="flex items-center gap-4 mb-8">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setIsBooking(false)}
-                                                    className="text-gray-400 hover:text-white hover:bg-white/10"
-                                                >
-                                                    <ArrowLeft className="w-6 h-6" />
-                                                </Button>
-                                                <h2 className="text-2xl md:text-3xl font-bold text-white">Захиалга өгөх</h2>
+                                        <motion.div key="booking" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} className="p-5 md:p-8">
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <Button variant="ghost" size="icon" onClick={() => setIsBooking(false)} className="text-gray-400 hover:text-white hover:bg-white/10"><ArrowLeft className="w-5 h-5" /></Button>
+                                                <h2 className="text-xl font-bold text-white">Захиалга өгөх — <span className="text-primary">{selected.name}</span></h2>
                                             </div>
-
-                                            <form onSubmit={handleBookingSubmit} className="space-y-6 flex-1">
-                                                <div className="space-y-4">
-                                                    <div className="grid gap-2">
-                                                        <span className="text-sm font-medium text-gray-300">Таны нэр</span>
-                                                        <div className="relative">
-                                                            <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                                                            <Input
-                                                                required
-                                                                className="pl-10 bg-white/5 border-white/10 text-white focus-visible:ring-primary"
-                                                                placeholder="Нэрээ оруулна уу"
-                                                                value={bookingData.name}
-                                                                onChange={(e) => setBookingData({ ...bookingData, name: e.target.value })}
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid gap-2">
-                                                        <span className="text-sm font-medium text-gray-300">Утасны дугаар</span>
-                                                        <div className="relative">
-                                                            <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                                                            <Input
-                                                                required
-                                                                type="tel"
-                                                                className="pl-10 bg-white/5 border-white/10 text-white focus-visible:ring-primary"
-                                                                placeholder="Утасны дугаар"
-                                                                value={bookingData.phone}
-                                                                onChange={(e) => setBookingData({ ...bookingData, phone: e.target.value })}
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid gap-2">
-                                                        <span className="text-sm font-medium text-gray-300">Огноо</span>
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <Button
-                                                                    variant={"outline"}
-                                                                    className={cn(
-                                                                        "w-full pl-10 justify-start text-left font-normal bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white",
-                                                                        !bookingData.date && "text-muted-foreground"
-                                                                    )}
-                                                                >
-                                                                    <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                                                                    {bookingData.date ? format(bookingData.date, "yyyy-MM-dd") : <span>Огноо сонгох</span>}
-                                                                </Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-auto p-0 bg-[#111] border-white/10 z-[200]" align="start">
-                                                                <Calendar
-                                                                    mode="single"
-                                                                    selected={bookingData.date}
-                                                                    onSelect={(date) => setBookingData({ ...bookingData, date })}
-                                                                    initialFocus
-                                                                    className="bg-[#111] text-white"
-                                                                />
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                    </div>
-
-                                                    <div className="space-y-3">
-                                                        <span className="text-sm font-medium text-gray-300">Сул цагууд</span>
-                                                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                                                            {["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"].map((time) => (
-                                                                <button
-                                                                    key={time}
-                                                                    type="button"
-                                                                    onClick={() => setBookingData({ ...bookingData, time })}
-                                                                    className={`px-2 py-2 text-sm rounded-md border transition-all duration-200 ${bookingData.time === time
-                                                                        ? "bg-primary border-primary text-white shadow-[0_0_15px_rgba(255,0,0,0.4)] scale-105"
-                                                                        : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20 hover:text-white"
-                                                                        }`}
-                                                                >
-                                                                    {time}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                        {!bookingData.time && <p className="text-xs text-red-500/80">* Цагаа сонгоно уу</p>}
-                                                    </div>
-
-                                                    <div className="grid gap-2">
-                                                        <span className="text-sm font-medium text-gray-300">Үргэлжлэх хугацаа (цагаар)</span>
-                                                        <Input
-                                                            required
-                                                            type="number"
-                                                            min="1"
-                                                            max="10"
-                                                            className="bg-white/5 border-white/10 text-white focus-visible:ring-primary"
-                                                            value={bookingData.duration}
-                                                            onChange={(e) => setBookingData({ ...bookingData, duration: e.target.value })}
-                                                        />
+                                            <form onSubmit={handleSubmit} className="space-y-4">
+                                                <div className="relative">
+                                                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                                                    <Input required placeholder="Таны нэр" className="pl-10 bg-white/5 border-white/10 text-white focus-visible:ring-primary" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+                                                </div>
+                                                <div className="relative">
+                                                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                                                    <Input required type="tel" placeholder="Утасны дугаар" className="pl-10 bg-white/5 border-white/10 text-white focus-visible:ring-primary" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                                                </div>
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button variant="outline" className={cn("w-full justify-start pl-10 relative bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white", !form.date && "text-gray-500")}>
+                                                            <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                                                            {form.date ? format(form.date, "yyyy-MM-dd") : "Огноо сонгох"}
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-auto p-0 bg-[#111] border-white/10 z-[200]" align="start">
+                                                        <Calendar mode="single" selected={form.date} onSelect={d => setForm({ ...form, date: d })} className="bg-[#111] text-white" />
+                                                    </PopoverContent>
+                                                </Popover>
+                                                <div>
+                                                    <p className="text-sm text-gray-400 mb-2">Эхлэх цаг</p>
+                                                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                                                        {TIMES.map(t => (
+                                                            <button key={t} type="button" onClick={() => setForm({ ...form, time: t })}
+                                                                className={`py-2 text-xs rounded-lg border transition-all ${form.time === t ? "bg-primary border-primary text-white" : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:text-white"}`}>{t}</button>
+                                                        ))}
                                                     </div>
                                                 </div>
-
-                                                <div className="pt-4 border-t border-white/10">
-                                                    <div className="flex justify-between items-center mb-6">
-                                                        <span className="text-gray-400">Нийт төлбөр (тооцоолсон):</span>
-                                                        <span className="text-2xl font-bold text-primary">
-                                                            {(parseInt(selectedStudio.hourlyPrice.replace(/\D/g, '')) * parseInt(bookingData.duration || "0")).toLocaleString()}₮
-                                                        </span>
-                                                    </div>
-                                                    <Button type="submit" className="w-full font-semibold text-lg h-12 bg-primary hover:bg-red-600 text-white shadow-lg shadow-red-900/20">
-                                                        Баталгаажуулах
-                                                    </Button>
+                                                <div className="pt-4 border-t border-white/10 flex items-center justify-between mb-2">
+                                                    <span className="text-gray-400 text-sm">Нийт үнэ:</span>
+                                                    <span className="text-xl font-bold text-primary">{selectedPackage ? Number(selectedPackage.price).toLocaleString() : 0}₮</span>
                                                 </div>
+                                                <Button type="submit" disabled={submitting} className="w-full h-11 bg-primary hover:bg-red-600 text-white font-semibold">
+                                                    {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Илгээж байна...</> : "Захиалга баталгаажуулах"}
+                                                </Button>
                                             </form>
                                         </motion.div>
                                     )}

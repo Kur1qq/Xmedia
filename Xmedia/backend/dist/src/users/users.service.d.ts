@@ -4,19 +4,19 @@ export declare class UsersService {
     constructor(prisma: PrismaService);
     findAll(): Promise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         username: string;
         email: string;
         phone: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         username: string;
         email: string;
         phone: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     create(data: {
         username: string;
@@ -25,10 +25,10 @@ export declare class UsersService {
         passwordHash: string;
     }): Promise<{
         id: number;
+        createdAt: Date;
         username: string;
         email: string;
         phone: string | null;
-        createdAt: Date;
     }>;
     update(id: number, data: {
         username?: string;
@@ -37,10 +37,10 @@ export declare class UsersService {
         passwordHash?: string;
     }): Promise<{
         id: number;
+        updatedAt: Date;
         username: string;
         email: string;
         phone: string | null;
-        updatedAt: Date;
     }>;
     remove(id: number): Promise<{
         id: number;

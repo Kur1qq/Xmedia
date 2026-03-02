@@ -4,9 +4,17 @@ import { useEffect, useState, useRef } from "react";
 import { Plus, X, Pencil, Trash2, Image as ImageIcon, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import * as Tabs from '@radix-ui/react-tabs';
+import { getToken } from "@/lib/auth";
 
 const API = 'http://localhost:4000/api';
 const tabCls = "px-5 h-[45px] flex items-center justify-center text-sm font-medium leading-none text-muted-foreground select-none hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary outline-none cursor-pointer transition-colors";
+
+interface ServicePackage {
+    id?: number;
+    subTypeId: string;
+    price: string;
+    priceLabel: string;
+}
 
 export default function PhotographerPage() {
     const [loading, setLoading] = useState(true);
@@ -38,9 +46,11 @@ export default function PhotographerPage() {
     const [isSavingService, setIsSavingService] = useState(false);
     const [editingService, setEditingService] = useState<any | null>(null);/* eslint-disable-line @typescript-eslint/no-explicit-any */
     const [serviceFormData, setServiceFormData] = useState({
-        name: "", categoryId: "", mainTypeId: "", subTypeId: "",
-        description: "", image: "", hourlyRate: "", dailyRate: "", isActive: true,
+        name: "", categoryId: "", mainTypeId: "",
+        description: "", image: "", isActive: true,
         equipmentIds: [] as number[],
+        amenities: [] as string[],
+        packages: [] as ServicePackage[],
     });
 
     // Equipment list
@@ -81,7 +91,11 @@ export default function PhotographerPage() {
         const fd = new FormData();
         fd.append('file', file);
         try {
-            const res = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+            const res = await fetch(`${API}/upload`, {
+                method: 'POST',
+                headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+                body: fd
+            });
             if (res.ok) { const data = await res.json(); setServiceFormData(prev => ({ ...prev, image: data.url })); toast.success("Зураг хуулагдлаа!"); }
             else toast.error("Зураг хуулахад алдаа.");
         } catch { toast.error("Сервертэй холбогдоход алдаа."); }
@@ -99,7 +113,7 @@ export default function PhotographerPage() {
         try {
             const method = editingCategory ? 'PATCH' : 'POST';
             const url = editingCategory ? `${API}/categories/${editingCategory.id}` : `${API}/categories`;
-            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(categoryFormData) });
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: JSON.stringify(categoryFormData) });
             if (res.ok) { await fetchData(); setIsCategoryModalOpen(false); toast.success("Ангилал хадгалагдлаа"); }
             else toast.error("Алдаа гарлаа");
         } catch { toast.error("Сервертэй алдаа."); }
@@ -107,7 +121,7 @@ export default function PhotographerPage() {
     };
     const deleteCategory = async (id: number) => {
         if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
-        const res = await fetch(`${API}/categories/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API}/categories/${id}`, { method: 'DELETE', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) } });
         if (res.ok) { setCategories(prev => prev.filter(c => c.id !== id)); toast.success("Устгагдлаа"); }
         else toast.error("Алдаа гарлаа.");
     };
@@ -124,7 +138,7 @@ export default function PhotographerPage() {
             const method = editingMainType ? 'PATCH' : 'POST';
             const url = editingMainType ? `${API}/photographer-types/main/${editingMainType.id}` : `${API}/photographer-types/main`;
             const payload = { name: mainTypeForm.name, description: mainTypeForm.description || undefined, sortOrder: parseInt(mainTypeForm.sortOrder) || 0 };
-            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: JSON.stringify(payload) });
             if (res.ok) { await fetchData(); setIsMainTypeModalOpen(false); toast.success("Хадгалагдлаа"); }
             else toast.error("Алдаа гарлаа");
         } catch { toast.error("Сервертэй алдаа."); }
@@ -132,7 +146,7 @@ export default function PhotographerPage() {
     };
     const deleteMainType = async (id: number) => {
         if (!window.confirm("Устгавал дагалдах дэд төрлүүд устгагдана. Итгэлтэй байна уу?")) return;
-        const res = await fetch(`${API}/photographer-types/main/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API}/photographer-types/main/${id}`, { method: 'DELETE', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) } });
         if (res.ok) { await fetchData(); toast.success("Устгагдлаа"); }
         else toast.error("Алдаа гарлаа.");
     };
@@ -149,7 +163,7 @@ export default function PhotographerPage() {
             const method = editingSubType ? 'PATCH' : 'POST';
             const url = editingSubType ? `${API}/photographer-types/sub/${editingSubType.id}` : `${API}/photographer-types/sub`;
             const payload = { name: subTypeForm.name, description: subTypeForm.description || undefined, sortOrder: parseInt(subTypeForm.sortOrder) || 0, mainTypeId: parseInt(subTypeForm.mainTypeId) };
-            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: JSON.stringify(payload) });
             if (res.ok) { await fetchData(); setIsSubTypeModalOpen(false); toast.success("Хадгалагдлаа"); }
             else toast.error("Алдаа гарлаа");
         } catch { toast.error("Сервертэй алдаа."); }
@@ -157,7 +171,7 @@ export default function PhotographerPage() {
     };
     const deleteSubType = async (id: number) => {
         if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
-        const res = await fetch(`${API}/photographer-types/sub/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API}/photographer-types/sub/${id}`, { method: 'DELETE', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) } });
         if (res.ok) { await fetchData(); toast.success("Устгагдлаа"); }
         else toast.error("Алдаа гарлаа.");
     };
@@ -167,18 +181,35 @@ export default function PhotographerPage() {
         setEditingService(svc);
         setServiceFormData({
             name: svc?.name || "", categoryId: svc?.categoryId?.toString() || categories[0]?.id?.toString() || "",
-            mainTypeId: svc?.mainTypeId?.toString() || "", subTypeId: svc?.subTypeId?.toString() || "",
+            mainTypeId: svc?.mainTypeId?.toString() || "",
             description: svc?.description || "", image: svc?.image || "",
-            hourlyRate: svc?.hourlyRate?.toString() || "", dailyRate: svc?.dailyRate?.toString() || "", isActive: svc?.isActive ?? true,
+            isActive: svc?.isActive ?? true,
             equipmentIds: svc?.equipments?.map((e: any) => e.equipmentId) || [],
+            amenities: Array.isArray(svc?.amenities) ? svc?.amenities : [],
+            packages: svc?.packages?.length ? svc.packages.map((p: any) => ({
+                id: p.id, subTypeId: p.subTypeId?.toString() || "", price: p.price?.toString() || "", priceLabel: p.priceLabel || ""
+            })) : [{ subTypeId: "", price: "", priceLabel: "" }],
         });
         setIsServiceModalOpen(true);
     };
+
+    const addPackage = () => setServiceFormData(prev => ({ ...prev, packages: [...prev.packages, { subTypeId: "", price: "", priceLabel: "" }] }));
+    const removePackage = (idx: number) => setServiceFormData(prev => ({ ...prev, packages: prev.packages.filter((_, i) => i !== idx) }));
+    const updatePackage = (idx: number, field: keyof ServicePackage, value: string) => {
+        setServiceFormData(prev => {
+            const pkgs = [...prev.packages];
+            pkgs[idx] = { ...pkgs[idx], [field]: value };
+            return { ...prev, packages: pkgs };
+        });
+    };
+
     const saveService = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!serviceFormData.categoryId) { toast.error("Ангилал сонгоно уу!"); return; }
         if (!serviceFormData.mainTypeId) { toast.error("Үндсэн төрөл сонгоно уу!"); return; }
-        if (!serviceFormData.hourlyRate && !serviceFormData.dailyRate) { toast.error("Цагийн эсвэл өдрийн үнэ оруулна уу!"); return; }
+        if (serviceFormData.packages.length === 0) { toast.error("Ядаж нэг багц (дэд төрөл) оруулна уу!"); return; }
+        if (serviceFormData.packages.some(p => !p.subTypeId || !p.price)) { toast.error("Багцын мэдээлэл дутуу байна!"); return; }
+
         setIsSavingService(true);
         try {
             const method = editingService ? 'PATCH' : 'POST';
@@ -186,14 +217,17 @@ export default function PhotographerPage() {
             const payload = {
                 name: serviceFormData.name, categoryId: parseInt(serviceFormData.categoryId),
                 mainTypeId: parseInt(serviceFormData.mainTypeId),
-                subTypeId: serviceFormData.subTypeId ? parseInt(serviceFormData.subTypeId) : null,
                 description: serviceFormData.description || undefined, image: serviceFormData.image || undefined,
-                hourlyRate: serviceFormData.hourlyRate ? parseFloat(serviceFormData.hourlyRate) : undefined,
-                dailyRate: serviceFormData.dailyRate ? parseFloat(serviceFormData.dailyRate) : undefined,
                 isActive: serviceFormData.isActive,
                 equipmentIds: serviceFormData.equipmentIds,
+                amenities: serviceFormData.amenities,
+                packages: serviceFormData.packages.map(p => ({
+                    subTypeId: parseInt(p.subTypeId),
+                    price: parseFloat(p.price),
+                    priceLabel: p.priceLabel || undefined,
+                })),
             };
-            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: JSON.stringify(payload) });
             if (res.ok) { await fetchData(); setIsServiceModalOpen(false); toast.success("Үйлчилгээ хадгалагдлаа"); }
             else { const err = await res.json().catch(() => ({})); toast.error(err?.message || "Алдаа гарлаа"); }
         } catch { toast.error("Сервертэй алдаа."); }
@@ -201,7 +235,7 @@ export default function PhotographerPage() {
     };
     const deleteService = async (id: number) => {
         if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
-        const res = await fetch(`${API}/photographer-services/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API}/photographer-services/${id}`, { method: 'DELETE', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) } });
         if (res.ok) { setServices(prev => prev.filter(s => s.id !== id)); toast.success("Устгагдлаа"); }
         else toast.error("Алдаа гарлаа.");
     };
@@ -242,9 +276,8 @@ export default function PhotographerPage() {
                                     <th className="px-4 py-4 font-medium border-b w-[60px]">Зураг</th>
                                     <th className="px-4 py-4 font-medium border-b">Нэр</th>
                                     <th className="px-4 py-4 font-medium border-b">Үндсэн төрөл</th>
-                                    <th className="px-4 py-4 font-medium border-b">Дэд төрөл</th>
                                     <th className="px-4 py-4 font-medium border-b">Ангилал</th>
-                                    <th className="px-4 py-4 font-medium border-b">Цаг/Өдөр үнэ</th>
+                                    <th className="px-4 py-4 font-medium border-b">Багц, Үнэ</th>
                                     <th className="px-4 py-4 font-medium border-b w-[90px]">Төлөв</th>
                                     <th className="px-4 py-4 font-medium border-b text-right">Үйлдэл</th>
                                 </tr>
@@ -263,13 +296,15 @@ export default function PhotographerPage() {
                                                 <td className="px-4 py-3">
                                                     {s.mainType && <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{s.mainType.name}</span>}
                                                 </td>
-                                                <td className="px-4 py-3">
-                                                    {s.subType && <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-semibold text-blue-400">{s.subType.name}</span>}
-                                                </td>
                                                 <td className="px-4 py-3 text-muted-foreground text-xs">{s.category?.name || "—"}</td>
-                                                <td className="px-4 py-3 text-xs space-y-0.5">
-                                                    {s.hourlyRate && <div>{Number(s.hourlyRate).toLocaleString()} ₮ <span className="text-muted-foreground">/ цаг</span></div>}
-                                                    {s.dailyRate && <div>{Number(s.dailyRate).toLocaleString()} ₮ <span className="text-muted-foreground">/ өдөр</span></div>}
+                                                <td className="px-4 py-3">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        {s.packages?.map((p: any) => (
+                                                            <span key={p.id} className="text-xs text-muted-foreground">
+                                                                {p.subType?.name || p.priceLabel}: <span className="text-foreground font-medium">{Number(p.price).toLocaleString()} ₮</span>
+                                                            </span>
+                                                        ))}
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <span className={`px-2 py-0.5 text-xs rounded-full ${s.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>{s.isActive ? 'Идэвхтэй' : 'Идэвхгүй'}</span>
@@ -499,50 +534,112 @@ export default function PhotographerPage() {
                                 </div>
                             </div>
 
-                            {/* Main Type + Sub Type */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Үндсэн төрөл <span className="text-red-500">*</span></label>
-                                    <select required value={serviceFormData.mainTypeId} onChange={e => setServiceFormData({ ...serviceFormData, mainTypeId: e.target.value, subTypeId: "" })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                                        <option value="" disabled>Сонгох...</option>
-                                        {mainTypes.map(mt => <option key={mt.id} value={mt.id}>{mt.name}</option>)}
-                                    </select>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Дэд төрөл</label>
-                                    <select value={serviceFormData.subTypeId} onChange={e => setServiceFormData({ ...serviceFormData, subTypeId: e.target.value })} disabled={!serviceFormData.mainTypeId || filteredSubTypes.length === 0} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm disabled:opacity-50">
-                                        <option value="">— Сонгох —</option>
-                                        {filteredSubTypes.map((st: any) => <option key={st.id} value={st.id}>{st.name}</option>)}
-                                    </select>
-                                    {serviceFormData.mainTypeId && filteredSubTypes.length === 0 && (
-                                        <p className="text-xs text-muted-foreground mt-1">⚠️ Энэ төрөлд дэд төрөл байхгүй байна.</p>
-                                    )}
-                                </div>
+                            {/* Main Type */}
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium">Үндсэн төрөл <span className="text-red-500">*</span></label>
+                                <select required value={serviceFormData.mainTypeId} onChange={e => setServiceFormData({ ...serviceFormData, mainTypeId: e.target.value, packages: [{ subTypeId: "", price: "", priceLabel: "" }] })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                    <option value="" disabled>Сонгох...</option>
+                                    {mainTypes.map(mt => <option key={mt.id} value={mt.id}>{mt.name}</option>)}
+                                </select>
                             </div>
 
-                            {/* Pricing */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Цагийн үнэ (₮)</label>
-                                    <div className="relative">
-                                        <input type="number" min={0} value={serviceFormData.hourlyRate} onChange={e => setServiceFormData({ ...serviceFormData, hourlyRate: e.target.value })} className="w-full h-9 px-3 pr-10 rounded-md border border-input bg-background text-sm" placeholder="0" />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">/ цаг</span>
-                                    </div>
+                            {/* Service Packages */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">Үнийн багцууд (Контентийн төрлүүд) <span className="text-red-500">*</span></label>
+                                    <button type="button" onClick={addPackage} disabled={!serviceFormData.mainTypeId || filteredSubTypes.length === 0} className="inline-flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50">
+                                        <Plus className="w-3 h-3" /> Нэмэх
+                                    </button>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Өдрийн үнэ (₮)</label>
-                                    <div className="relative">
-                                        <input type="number" min={0} value={serviceFormData.dailyRate} onChange={e => setServiceFormData({ ...serviceFormData, dailyRate: e.target.value })} className="w-full h-9 px-3 pr-10 rounded-md border border-input bg-background text-sm" placeholder="0" />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">/ өдөр</span>
+                                {!serviceFormData.mainTypeId ? (
+                                    <p className="text-xs text-muted-foreground">Эхлээд үндсэн төрлөө сонгоно уу.</p>
+                                ) : filteredSubTypes.length === 0 ? (
+                                    <p className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded p-2">⚠️ Энэ төрөлд дэд төрөл байхгүй байна. Төрлүүд табыг ашиглан дэд төрөл нэмнэ үү.</p>
+                                ) : (
+                                    <div className="space-y-2 rounded-md border border-border/50 p-3 bg-muted/20">
+                                        {serviceFormData.packages.map((pkg, idx) => (
+                                            <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-center">
+                                                <div>
+                                                    <label className="text-xs text-muted-foreground mb-1 block">Контентийн төрөл</label>
+                                                    <select required value={pkg.subTypeId} onChange={e => updatePackage(idx, 'subTypeId', e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                                        <option value="" disabled>Сонгох...</option>
+                                                        {filteredSubTypes.map((st: any) => <option key={st.id} value={st.id}>{st.name}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-muted-foreground mb-1 block">Нэршил (Сонголттой)</label>
+                                                    <input type="text" value={pkg.priceLabel || ""} onChange={e => updatePackage(idx, 'priceLabel', e.target.value)} placeholder="Жишээ: Бичлэг + Эвлүүлэг..." className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-muted-foreground mb-1 block">Үнэ (₮)</label>
+                                                    <input type="number" min={0} value={pkg.price} onChange={e => updatePackage(idx, 'price', e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required />
+                                                </div>
+                                                <button type="button" onClick={() => removePackage(idx)} disabled={serviceFormData.packages.length <= 1} className="mt-5 text-muted-foreground hover:text-red-500 disabled:opacity-30 flex justify-center">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
-                                </div>
+                                )}
                             </div>
-                            <p className="text-xs text-muted-foreground -mt-2">Аль нэгийг заавал оруулна уу.</p>
 
                             {/* Description */}
                             <div className="space-y-1">
                                 <label className="text-sm font-medium">Тайлбар</label>
                                 <textarea value={serviceFormData.description} onChange={e => setServiceFormData({ ...serviceFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" placeholder="Үйлчилгээний тайлбар..." />
+                            </div>
+
+                            {/* Amenities */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium block">Онцлог талууд</label>
+                                <div className="flex gap-2 mb-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Шинэ онцлог..."
+                                        className="flex-1 h-9 px-3 rounded-md border border-input bg-background text-sm"
+                                        id="new-amenity-input"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const val = (e.target as HTMLInputElement).value.trim();
+                                                if (val && !serviceFormData.amenities.includes(val)) {
+                                                    setServiceFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
+                                                    (e.target as HTMLInputElement).value = '';
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const input = document.getElementById('new-amenity-input') as HTMLInputElement;
+                                            const val = input.value.trim();
+                                            if (val && !serviceFormData.amenities.includes(val)) {
+                                                setServiceFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
+                                                input.value = '';
+                                            }
+                                        }}
+                                        className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-md text-sm border border-border/50 hover:bg-muted"
+                                    >
+                                        Нэмэх
+                                    </button>
+                                </div>
+                                {serviceFormData.amenities.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 p-3 bg-muted/30 border border-border/50 rounded-md">
+                                        {serviceFormData.amenities.map(amenity => (
+                                            <span key={amenity} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-background border border-border text-foreground rounded-full">
+                                                {amenity}
+                                                <button
+                                                    type="button"
+                                                    className="text-muted-foreground hover:text-red-500"
+                                                    onClick={() => setServiceFormData(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity) }))}
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Equipment */}

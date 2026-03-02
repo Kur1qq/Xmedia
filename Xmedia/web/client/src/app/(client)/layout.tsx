@@ -7,9 +7,9 @@ export default function ClientLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen flex-col">
+        <div className="h-screen overflow-hidden flex flex-col">
             <Header />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 overflow-hidden">{children}</main>
             <Footer />
         </div>
     );

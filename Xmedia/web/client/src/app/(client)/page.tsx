@@ -1,18 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { PlayCircle, Camera, Mic2, MonitorPlay } from "lucide-react";
-import { ParallaxGallery } from "@/components/home/ParallaxGallery";
-import { VideoEditingSection } from "@/components/home/VideoEditingSection";
-import { LivestreamSection } from "@/components/home/LivestreamSection";
-import { FeaturedStudios } from "@/components/home/FeaturedStudios";
+import { Camera, Radio, Image, Film } from "lucide-react";
 
 // Slide Data
 interface Slide {
   id: number;
-  badge: string;
   title: string;
   highlight: string;
   subTitle: string;
@@ -23,7 +18,6 @@ interface Slide {
 const slides: Slide[] = [
   {
     id: 1,
-    badge: "Онцлох",
     title: "Мэргэжлийн студио",
     highlight: "түрээсийн",
     subTitle: "үйлчилгээ",
@@ -32,7 +26,6 @@ const slides: Slide[] = [
   },
   {
     id: 2,
-    badge: "Шинэ",
     title: "Шууд дамжуулалтийн",
     highlight: "түрээсийн",
     subTitle: "үйлчилгээ",
@@ -41,7 +34,6 @@ const slides: Slide[] = [
   },
   {
     id: 3,
-    badge: "Эрэлттэй",
     title: "Мэргэжлийн зурагчин",
     highlight: "түрээсийн",
     subTitle: "үйлчилгээ",
@@ -56,7 +48,7 @@ export default function Home() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 10000); // 10 seconds
+    }, 10000);
 
     return () => clearInterval(timer);
   }, []);
@@ -64,7 +56,7 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center overflow-hidden">
+      <section className="relative h-full flex items-start overflow-hidden pt-40">
         {/* Background Slider */}
         <AnimatePresence mode="popLayout">
           <motion.div
@@ -93,38 +85,20 @@ export default function Home() {
               transition={{ duration: 0.7, ease: "easeInOut" }}
               className="max-w-4xl mx-auto"
             >
-              <span className="inline-block px-4 py-1.5 mb-6 text-sm font-medium text-white bg-primary rounded-full">
-                {slides[currentSlide].badge}
-              </span>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white mb-6 font-sans leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 font-sans leading-tight">
                 {slides[currentSlide].title} <span className="text-primary">{slides[currentSlide].highlight}</span> <br />
                 {slides[currentSlide].subTitle}
               </h1>
-              <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-gray-300 mb-10 leading-relaxed">
+              <p className="mt-3 max-w-xl mx-auto text-base sm:text-lg text-gray-300 mb-10 leading-relaxed">
                 {slides[currentSlide].description}
               </p>
             </motion.div>
           </AnimatePresence>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            <Button
-              size="lg"
-              className="h-14 px-8 text-lg font-semibold rounded-none bg-white/5 border border-white/30 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/10 hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] hover:border-primary/50 hover:scale-105 active:scale-95"
-            >
-              Захиалга өгөх
-            </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-none border-white/30 text-white hover:bg-primary hover:border-primary hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 backdrop-blur-sm">
-              Дэлгэрэнгүй
-            </Button>
-          </motion.div>
+
 
           {/* Slider Progress Bar & Indicators */}
-          <div className="mt-12 w-full flex flex-col items-center gap-4">
+          <div className="mt-16 w-full flex flex-col items-center gap-4">
             {/* Progress Bar */}
             <div className="w-full max-w-md h-1 bg-white/20 rounded-full overflow-hidden">
               <motion.div
@@ -147,68 +121,35 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Featured Studios Section */}
-      <FeaturedStudios />
-
-      {/* Our Works / Portfolio Section */}
-      <section className="w-full py-24 relative z-10 bg-black border-t border-white/5">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-white font-sans">
-              Бидний хийсэн <span className="text-primary">ажлууд</span>
-            </h2>
-            <p className="text-gray-400 text-lg">
-              Сүүлийн үед хийгдсэн онцлох бүтээн байгуулалтууд
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Service Cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mt-16 w-full grid grid-cols-2 sm:grid-cols-4 gap-3 px-2"
+          >
             {[
-              { id: 1, title: "Music Video", category: "Production", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070&auto=format&fit=crop" },
-              { id: 2, title: "Podcast Series", category: "Studio", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=2070&auto=format&fit=crop" },
-              { id: 3, title: "Brand Commercial", category: "Ad", image: "https://images.unsplash.com/photo-1601506521937-0121a7fc2a6b?q=80&w=2070&auto=format&fit=crop" },
-              { id: 4, title: "Live Concert", category: "Event", image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=2070&auto=format&fit=crop" },
-            ].map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="group relative h-80 rounded-xl overflow-hidden cursor-pointer"
+              { icon: Camera, label: "Студио", desc: "Мэргэжлийн зураг авалт", href: "/studios" },
+              { icon: Radio, label: "Шууд дамжуулалт", desc: "Онлайн live streaming", href: "/livestream" },
+              { icon: Image, label: "Зураглаач", desc: "Гэрэл зурагчны үйлчилгээ", href: "/photographers" },
+              { icon: Film, label: "Эдит", desc: "Видео эдит & монтаж", href: "/video-editing" },
+            ].map(({ icon: Icon, label, desc, href }) => (
+              <Link
+                key={label}
+                href={href}
+                className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md hover:bg-white/10 hover:border-primary/40 transition-all duration-300"
               >
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110 bg-gray-800"
-                  style={{ backgroundImage: `url('${item.image}')` }}
-                />
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300" />
-                <div className="absolute inset-0 flex flex-col justify-end p-6 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="text-primary text-sm font-semibold tracking-wider uppercase mb-1">{item.category}</span>
-                  <h3 className="text-white text-xl font-bold">{item.title}</h3>
+                <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300">
+                  <Icon className="w-5 h-5 text-primary" />
                 </div>
-              </motion.div>
+                <p className="text-white text-sm font-semibold">{label}</p>
+                <p className="text-white/50 text-xs text-center leading-snug">{desc}</p>
+              </Link>
             ))}
-          </div>
-
-          <div className="mt-12 text-center">
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white hover:text-black transition-all">
-              Бүгдийг үзэх
-            </Button>
-          </div>
+          </motion.div>
         </div>
       </section>
-
-      {/* Parallax Gallery Section */}
-      <ParallaxGallery />
-
-      {/* Video Editing Section */}
-      <VideoEditingSection />
-
-      {/* Livestream Section */}
-      <LivestreamSection />
     </>
   );
 }

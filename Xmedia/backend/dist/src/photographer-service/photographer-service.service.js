@@ -23,7 +23,7 @@ let PhotographerServiceService = class PhotographerServiceService {
             include: {
                 category: true,
                 mainType: true,
-                subType: true,
+                packages: { include: { subType: true } },
                 equipments: { include: { equipment: true } },
             },
         });
@@ -32,7 +32,8 @@ let PhotographerServiceService = class PhotographerServiceService {
         const item = await this.prisma.photographerService.findUnique({
             where: { id },
             include: {
-                category: true, mainType: true, subType: true,
+                category: true, mainType: true,
+                packages: { include: { subType: true } },
                 equipments: { include: { equipment: true } },
             },
         });
@@ -41,13 +42,21 @@ let PhotographerServiceService = class PhotographerServiceService {
         return item;
     }
     async create(data) {
-        const { categoryId, mainTypeId, subTypeId, equipmentIds, ...rest } = data;
+        const { categoryId, mainTypeId, subTypeId, hourlyRate, dailyRate, equipmentIds, packages, ...rest } = data;
         return this.prisma.photographerService.create({
             data: {
                 ...rest,
                 category: { connect: { id: categoryId } },
                 mainType: { connect: { id: mainTypeId } },
-                ...(subTypeId ? { subType: { connect: { id: subTypeId } } } : {}),
+                ...(packages?.length ? {
+                    packages: {
+                        create: packages.map((p) => ({
+                            subTypeId: p.subTypeId,
+                            price: p.price,
+                            priceLabel: p.priceLabel,
+                        })),
+                    },
+                } : {}),
                 ...(equipmentIds?.length ? {
                     equipments: {
                         create: equipmentIds.map((eId) => ({ equipmentId: eId })),
@@ -55,21 +64,21 @@ let PhotographerServiceService = class PhotographerServiceService {
                 } : {}),
             },
             include: {
-                category: true, mainType: true, subType: true,
+                category: true, mainType: true,
+                packages: { include: { subType: true } },
                 equipments: { include: { equipment: true } },
             },
         });
     }
     async update(id, data) {
         await this.findOne(id);
-        const { categoryId, mainTypeId, subTypeId, equipmentIds, ...rest } = data;
+        const { categoryId, mainTypeId, subTypeId, hourlyRate, dailyRate, equipmentIds, packages, ...rest } = data;
         await this.prisma.photographerService.update({
             where: { id },
             data: {
                 ...rest,
                 ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
                 ...(mainTypeId ? { mainType: { connect: { id: mainTypeId } } } : {}),
-                ...(subTypeId === null ? { subType: { disconnect: true } } : subTypeId ? { subType: { connect: { id: subTypeId } } } : {}),
             },
         });
         if (equipmentIds !== undefined) {
@@ -77,6 +86,19 @@ let PhotographerServiceService = class PhotographerServiceService {
             if (equipmentIds.length > 0) {
                 await this.prisma.photographerServiceEquipment.createMany({
                     data: equipmentIds.map((eId) => ({ photographerServiceId: id, equipmentId: eId })),
+                });
+            }
+        }
+        if (packages !== undefined) {
+            await this.prisma.photographerServicePackage.deleteMany({ where: { photographerServiceId: id } });
+            if (packages.length > 0) {
+                await this.prisma.photographerServicePackage.createMany({
+                    data: packages.map((p) => ({
+                        photographerServiceId: id,
+                        subTypeId: p.subTypeId,
+                        price: p.price,
+                        priceLabel: p.priceLabel,
+                    })),
                 });
             }
         }

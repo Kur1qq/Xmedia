@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Plus, X, Pencil, Trash2, ShieldCheck, User, Image as ImageIcon } from "lucide-react";
+import { Plus, X, Pencil, Trash2, ShieldCheck, User, Image as ImageIcon, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { fetchWithAuth, getAdminInfo, getToken } from "@/lib/auth";
 
@@ -9,22 +9,25 @@ const ROLES: Record<string, { label: string; color: string }> = {
     SUPER_ADMIN: { label: 'Дээд Админ', color: 'bg-red-500/10 text-red-400' },
     ADMIN: { label: 'Админ', color: 'bg-primary/10 text-primary' },
     MODERATOR: { label: 'Модератор', color: 'bg-blue-500/10 text-blue-400' },
+    EDITOR: { label: 'Эдитор', color: 'bg-green-500/10 text-green-500' },
+    CUSTOM: { label: 'Захиалгат', color: 'bg-violet-500/10 text-violet-400' },
 };
+
+interface PermissionRole { id: number; name: string; permissions: string[] }
 
 export default function AdminsPage() {
     const [admins, setAdmins] = useState<any[]>([]);
+    const [customRoles, setCustomRoles] = useState<PermissionRole[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModal, setIsModal] = useState(false);
     const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState<any | null>(null);
-    const [form, setForm] = useState({ username: "", password: "", role: "ADMIN", image: "", isActive: true });
+    const [form, setForm] = useState({ username: "", password: "", role: "ADMIN", image: "", isActive: true, customRoleId: "" });
     const [uploadingImg, setUploadingImg] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
     const [me, setMe] = useState<ReturnType<typeof getAdminInfo>>(null);
 
-    useEffect(() => {
-        setMe(getAdminInfo());
-    }, []);
+    useEffect(() => { setMe(getAdminInfo()); }, []);
 
     const fetchAdmins = async () => {
         try {
@@ -35,11 +38,25 @@ export default function AdminsPage() {
         finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchAdmins(); }, []);
+    const fetchRoles = async () => {
+        try {
+            const res = await fetchWithAuth('/admin/roles');
+            if (res.ok) setCustomRoles(await res.json());
+        } catch { /* silent */ }
+    };
+
+    useEffect(() => { fetchAdmins(); fetchRoles(); }, []);
 
     const openModal = (a: any = null) => {
         setEditing(a);
-        setForm({ username: a?.username || "", password: "", role: a?.role || "ADMIN", image: a?.image || "", isActive: a?.isActive ?? true });
+        setForm({
+            username: a?.username || "",
+            password: "",
+            role: a?.role || "ADMIN",
+            image: a?.image || "",
+            isActive: a?.isActive ?? true,
+            customRoleId: a?.customRoleId ? String(a.customRoleId) : "",
+        });
         setIsModal(true);
     };
 
@@ -58,8 +75,14 @@ export default function AdminsPage() {
     const save = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editing && !form.password) { toast.error("Нууц үг оруулна уу!"); return; }
+        if (form.role === 'CUSTOM' && !form.customRoleId) { toast.error("Захиалгат эрх сонгоно уу!"); return; }
         setSaving(true);
-        const payload: any = { username: form.username, role: form.role, isActive: form.isActive };
+        const payload: any = {
+            username: form.username,
+            role: form.role,
+            isActive: form.isActive,
+            customRoleId: form.role === 'CUSTOM' ? Number(form.customRoleId) : null,
+        };
         if (form.password) payload.password = form.password;
         if (form.image) payload.image = form.image;
 
@@ -123,7 +146,10 @@ export default function AdminsPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${ROLES[a.role]?.color || 'bg-muted text-muted-foreground'}`}>
-                                                <ShieldCheck className="w-3 h-3" /> {ROLES[a.role]?.label || a.role}
+                                                {a.role === 'CUSTOM' ? <KeyRound className="w-3 h-3" /> : <ShieldCheck className="w-3 h-3" />}
+                                                {a.role === 'CUSTOM' && a.customRole
+                                                    ? a.customRole.name
+                                                    : ROLES[a.role]?.label || a.role}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
@@ -150,7 +176,7 @@ export default function AdminsPage() {
 
             {isModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
+                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6 max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-lg font-semibold">{editing ? 'Админ засах' : 'Шинэ Админ нэмэх'}</h2>
                             <button onClick={() => setIsModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
@@ -172,13 +198,42 @@ export default function AdminsPage() {
                             <div className="space-y-1"><label className="text-sm font-medium">Нууц үг {editing && <span className="text-muted-foreground text-xs">(хоосон орхивол өөрчлөгдөхгүй)</span>}</label>
                                 <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" placeholder="••••••••" />
                             </div>
+
+                            {/* Role */}
                             <div className="space-y-1"><label className="text-sm font-medium">Эрхийн түвшин</label>
-                                <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value, customRoleId: "" })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
                                     <option value="MODERATOR">Модератор</option>
+                                    <option value="EDITOR">Эдитор</option>
                                     <option value="ADMIN">Админ</option>
                                     <option value="SUPER_ADMIN">Дээд Админ</option>
+                                    <option value="CUSTOM">Захиалгат эрх</option>
                                 </select>
                             </div>
+
+                            {/* Custom role picker */}
+                            {form.role === 'CUSTOM' && (
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Захиалгат эрх сонгох <span className="text-red-500">*</span></label>
+                                    {customRoles.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground p-2 rounded-md border border-dashed border-border/50">
+                                            Захиалгат эрх байхгүй. <a href="/roles" className="text-primary underline">Эрх удирдлага</a>-аас нэмнэ үү.
+                                        </p>
+                                    ) : (
+                                        <select
+                                            required
+                                            value={form.customRoleId}
+                                            onChange={e => setForm({ ...form, customRoleId: e.target.value })}
+                                            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                                        >
+                                            <option value="">-- Эрх сонгоно уу --</option>
+                                            {customRoles.map(r => (
+                                                <option key={r.id} value={r.id}>{r.name}</option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+                            )}
+
                             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} /> Идэвхтэй</label>
                             <div className="flex justify-end gap-2 pt-4 border-t border-border/50">
                                 <button type="button" onClick={() => setIsModal(false)} className="px-4 py-2 text-sm border border-border/50 rounded-md hover:bg-muted">Болих</button>

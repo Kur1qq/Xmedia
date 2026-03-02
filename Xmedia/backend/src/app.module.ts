@@ -18,6 +18,7 @@ import { PhotographerTypeModule } from './photographer-type/photographer-type.mo
 import { EditServiceModule } from './edit-service/edit-service.module';
 import { AdminModule } from './admin/admin.module';
 import { LogModule } from './log/log.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { LogModule } from './log/log.module';
     PhotographerTypeModule,
     EditServiceModule,
     AdminModule,
+    PortfolioModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

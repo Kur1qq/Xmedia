@@ -38,7 +38,7 @@ exports.AdminModule = AdminModule = __decorate([
         ],
         controllers: [admin_controller_1.AdminController],
         providers: [admin_service_1.AdminService, admin_log_service_1.AdminLogService, jwt_strategy_1.JwtStrategy],
-        exports: [admin_service_1.AdminService, admin_log_service_1.AdminLogService, jwt_1.JwtModule],
+        exports: [admin_service_1.AdminService, admin_log_service_1.AdminLogService, jwt_1.JwtModule, jwt_strategy_1.JwtStrategy, passport_1.PassportModule],
     }),
     __metadata("design:paramtypes", [admin_service_1.AdminService])
 ], AdminModule);

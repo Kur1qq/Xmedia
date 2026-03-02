@@ -25,6 +25,9 @@ let BookingsController = class BookingsController {
         this.log = log;
     }
     async findAll() { return this.bookingsService.findAll(); }
+    async createGuest(dto) {
+        return this.bookingsService.createGuestBooking(dto);
+    }
     async updateStatus(id, status, req) {
         const result = await this.bookingsService.updateStatus(id, status);
         this.log.log(req.user?.id ?? 0, 'BOOKING_STATUS_UPDATE', 'Booking', id, `status=${status}`, req.ip).catch(() => { });
@@ -38,6 +41,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "createGuest", null);
 __decorate([
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),

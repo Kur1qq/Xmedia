@@ -8,44 +8,44 @@ export declare class CategoryService {
         icon?: string;
     }): Promise<{
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         icon: string | null;
     }>;
     findAll(): Promise<({
         subCategories: {
             id: number;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
             categoryId: number;
         }[];
     } & {
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         icon: string | null;
     })[]>;
     findOne(id: number): Promise<{
         subCategories: {
             id: number;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
             categoryId: number;
         }[];
     } & {
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         icon: string | null;
     }>;
     update(id: number, data: {
@@ -54,18 +54,18 @@ export declare class CategoryService {
         icon?: string;
     }): Promise<{
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         icon: string | null;
     }>;
     remove(id: number): Promise<{
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         icon: string | null;
     }>;
 }

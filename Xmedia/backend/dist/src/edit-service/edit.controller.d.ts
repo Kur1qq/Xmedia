@@ -11,71 +11,71 @@ export declare class EditTypeController {
         };
         subTypes: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
             mainTypeId: number;
-            sortOrder: number;
         }[];
     } & {
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
-        sortOrder: number;
     })[]>;
     createMain(body: any, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
-        sortOrder: number;
     }>;
     updateMain(id: string, body: any, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
-        sortOrder: number;
     }>;
     removeMain(id: string, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
-        sortOrder: number;
     }>;
     createSub(body: any, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         mainTypeId: number;
-        sortOrder: number;
     }>;
     updateSub(id: string, body: any, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         mainTypeId: number;
-        sortOrder: number;
     }>;
     removeSub(id: string, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         mainTypeId: number;
-        sortOrder: number;
     }>;
 }
 export declare class EditServiceController {
@@ -83,175 +83,246 @@ export declare class EditServiceController {
     private readonly log;
     constructor(editServiceService: EditServiceService, log: AdminLogService);
     findAll(): Promise<({
-        category: {
+        packages: ({
+            subType: {
+                id: number;
+                description: string | null;
+                sortOrder: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                mainTypeId: number;
+            };
+        } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
+            editServiceId: number;
+            price: import("@prisma/client-runtime-utils").Decimal;
+            subTypeId: number;
+            priceLabel: string | null;
+        })[];
+        category: {
+            id: number;
             description: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
             icon: string | null;
         };
         mainType: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
-            sortOrder: number;
         };
         subType: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
             mainTypeId: number;
-            sortOrder: number;
         } | null;
     } & {
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
-        description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
-        priceUnit: string;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
         subTypeId: number | null;
     })[]>;
     findOne(id: string): Promise<{
-        category: {
+        packages: ({
+            subType: {
+                id: number;
+                description: string | null;
+                sortOrder: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                mainTypeId: number;
+            };
+        } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
+            editServiceId: number;
+            price: import("@prisma/client-runtime-utils").Decimal;
+            subTypeId: number;
+            priceLabel: string | null;
+        })[];
+        category: {
+            id: number;
             description: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
             icon: string | null;
         };
         mainType: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
-            sortOrder: number;
         };
         subType: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
             mainTypeId: number;
-            sortOrder: number;
         } | null;
     } & {
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
-        description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
-        priceUnit: string;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
         subTypeId: number | null;
     }>;
     create(body: any, req: any): Promise<{
-        category: {
+        packages: ({
+            subType: {
+                id: number;
+                description: string | null;
+                sortOrder: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                mainTypeId: number;
+            };
+        } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
+            editServiceId: number;
+            price: import("@prisma/client-runtime-utils").Decimal;
+            subTypeId: number;
+            priceLabel: string | null;
+        })[];
+        category: {
+            id: number;
             description: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
             icon: string | null;
         };
         mainType: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
-            sortOrder: number;
         };
         subType: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
             mainTypeId: number;
-            sortOrder: number;
         } | null;
     } & {
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
-        description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
-        priceUnit: string;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
         subTypeId: number | null;
     }>;
     update(id: string, body: any, req: any): Promise<{
-        category: {
+        packages: ({
+            subType: {
+                id: number;
+                description: string | null;
+                sortOrder: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                mainTypeId: number;
+            };
+        } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
+            editServiceId: number;
+            price: import("@prisma/client-runtime-utils").Decimal;
+            subTypeId: number;
+            priceLabel: string | null;
+        })[];
+        category: {
+            id: number;
             description: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
             icon: string | null;
         };
         mainType: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
-            sortOrder: number;
         };
         subType: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
             mainTypeId: number;
-            sortOrder: number;
         } | null;
     } & {
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
-        description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
-        priceUnit: string;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
         subTypeId: number | null;
     }>;
     remove(id: string, req: any): Promise<{
         id: number;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         image: string | null;
         isActive: boolean;
-        description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
-        priceUnit: string;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         categoryId: number;
         mainTypeId: number;
         subTypeId: number | null;

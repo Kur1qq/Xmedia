@@ -9,11 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadModule = void 0;
 const common_1 = require("@nestjs/common");
 const upload_controller_1 = require("./upload.controller");
+const admin_module_1 = require("../admin/admin.module");
 let UploadModule = class UploadModule {
 };
 exports.UploadModule = UploadModule;
 exports.UploadModule = UploadModule = __decorate([
     (0, common_1.Module)({
+        imports: [admin_module_1.AdminModule],
         controllers: [upload_controller_1.UploadController]
     })
 ], UploadModule);

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { saveLoginResult } from "@/lib/auth";
 
 const API = 'http://localhost:4000/api';
 
@@ -24,10 +25,7 @@ export default function LoginPage() {
             });
             if (res.ok) {
                 const data = await res.json();
-                localStorage.setItem('admin_token', data.token);
-                localStorage.setItem('admin_info', JSON.stringify(data.admin));
-                // Also set a cookie so the Next.js middleware can read it server-side
-                document.cookie = `admin_token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
+                await saveLoginResult(data.token, data.admin);
                 window.location.href = '/';
             } else {
                 const err = await res.json().catch(() => ({}));

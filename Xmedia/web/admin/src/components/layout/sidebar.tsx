@@ -2,36 +2,80 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, Settings, LogOut, Menu, X, Camera, Tv, Video, Film, BookOpen, Sliders, ShieldCheck, ScrollText, User } from "lucide-react";
+import { Home, Users, LogOut, Menu, X, Camera, Tv, Film, BookOpen, Sliders, ShieldCheck, ScrollText, User, KeyRound, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getAdminInfo, logout } from "@/lib/auth";
+import { getAdminInfo, getAdminPermissions, logout, fetchWithAuth } from "@/lib/auth";
 
-const ROLE_LABELS: Record<string, string> = { SUPER_ADMIN: 'Дээд Админ', ADMIN: 'Админ', MODERATOR: 'Модератор' };
+const ROLE_LABELS: Record<string, string> = {
+    SUPER_ADMIN: 'Дээд Админ', ADMIN: 'Админ', MODERATOR: 'Модератор', EDITOR: 'Эдитор', CUSTOM: 'Захиалгат эрх'
+};
+
+const ALL_NAV = [
+    { name: "Нүүр", href: "/", icon: Home },
+    { name: "Хэрэглэгчид", href: "/users", icon: Users },
+    { name: "Захиалга", href: "/bookings", icon: BookOpen },
+    { name: "Студио", href: "/studio", icon: Camera },
+    { name: "Шууд дамжуулалт", href: "/live", icon: Tv },
+    { name: "Зураглаач", href: "/photographer", icon: Camera },
+    { name: "Эдит", href: "/edit", icon: Film },
+    { name: "Өмнөх ажлууд", href: "/portfolio", icon: ImageIcon },
+    { name: "Админ удирдлага", href: "/admins", icon: ShieldCheck },
+    { name: "Эрх удирдлага", href: "/roles", icon: KeyRound },
+    { name: "Системийн лог", href: "/logs", icon: ScrollText },
+    { name: "Тохиргоо", href: "/settings", icon: Sliders },
+];
+
+const EDITOR_ALLOWED = ['/', '/edit', '/settings'];
+const SUPER_ADMIN_ONLY = ['/admins', '/roles', '/logs'];
 
 export function Sidebar() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
-    const [admin, setAdmin] = useState<{ username: string; image?: string; role: string } | null>(null);
+    const [admin, setAdmin] = useState<{ username: string; image?: string; role: string; customRoleId?: number | null } | null>(null);
+    const [customPermissions, setCustomPermissions] = useState<string[] | null>(null);
 
-    useEffect(() => { setAdmin(getAdminInfo()); }, []);
+    useEffect(() => {
+        const info = getAdminInfo();
+        setAdmin(info);
 
-    const isSuperOrAdmin = admin?.role === 'SUPER_ADMIN' || admin?.role === 'ADMIN';
+        if (info?.role === 'CUSTOM') {
+            const cached = getAdminPermissions();
+            if (cached && cached.length > 0) {
+                setCustomPermissions(cached);
+            } else if (info.customRoleId) {
+                // Stale session: fetch from API
+                fetchWithAuth('/admin/roles')
+                    .then(res => res.ok ? res.json() : [])
+                    .then((roles: { id: number; permissions: string[] }[]) => {
+                        const role = roles.find((r: { id: number }) => r.id === info.customRoleId);
+                        const perms: string[] = (role?.permissions as string[]) || ['/'];
+                        localStorage.setItem('admin_permissions', JSON.stringify(perms));
+                        setCustomPermissions(perms);
+                    })
+                    .catch(() => setCustomPermissions(['/']));
+            } else {
+                setCustomPermissions(['/']);
+            }
+        }
+    }, []);
 
-    const navigation = [
-        { name: "Нүүр", href: "/", icon: Home },
-        { name: "Хэрэглэгчид", href: "/users", icon: Users },
-        { name: "Захиалга", href: "/bookings", icon: BookOpen },
-        { name: "Студио", href: "/studio", icon: Camera },
-        { name: "Шууд дамжуулалт", href: "/live", icon: Tv },
-        { name: "Зураглаач", href: "/photographer", icon: Camera },
-        { name: "Видеограф", href: "/videographer", icon: Video },
-        { name: "Эдит", href: "/edit", icon: Film },
-        ...(isSuperOrAdmin ? [
-            { name: "Админ удирдлага", href: "/admins", icon: ShieldCheck },
-            { name: "Системийн лог", href: "/logs", icon: ScrollText },
-        ] : []),
-        { name: "Тохиргоо", href: "/settings", icon: Sliders },
-    ];
+    const navigation = ALL_NAV.filter(item => {
+        if (!admin) return false;
+        const { role } = admin;
+
+        if (role === 'EDITOR') return EDITOR_ALLOWED.includes(item.href);
+        if (role === 'SUPER_ADMIN') return true;
+        if (role === 'ADMIN') return item.href !== '/roles';
+        if (role === 'CUSTOM') {
+            const perms = customPermissions || [];
+            return perms.some(p =>
+                p === item.href ||
+                (p !== '/' && item.href.startsWith(p + '/'))
+            );
+        }
+        // MODERATOR
+        return !SUPER_ADMIN_ONLY.includes(item.href);
+    });
 
     return (
         <>
@@ -64,7 +108,7 @@ export function Sidebar() {
                         const Icon = item.icon;
                         return (
                             <Link
-                                key={item.name}
+                                key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive
                                     ? "bg-primary text-primary-foreground shadow-sm"
@@ -83,8 +127,8 @@ export function Sidebar() {
                 <div className="p-4 border-t border-border shrink-0">
                     {admin && (
                         <div className="flex items-center gap-3 mb-3 px-2">
-                            {admin.image
-                                ? <img src={admin.image} alt={admin.username} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                            {(admin as any).image
+                                ? <img src={(admin as any).image} alt={admin.username} className="w-8 h-8 rounded-full object-cover shrink-0" />
                                 : <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0"><User size={16} className="text-muted-foreground" /></div>}
                             <div className="overflow-hidden">
                                 <p className="text-sm font-medium truncate">{admin.username}</p>

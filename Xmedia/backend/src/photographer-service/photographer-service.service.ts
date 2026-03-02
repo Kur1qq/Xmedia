@@ -11,7 +11,7 @@ export class PhotographerServiceService {
             include: {
                 category: true,
                 mainType: true,
-                subType: true,
+                packages: { include: { subType: true } },
                 equipments: { include: { equipment: true } },
             },
         });
@@ -21,7 +21,8 @@ export class PhotographerServiceService {
         const item = await this.prisma.photographerService.findUnique({
             where: { id },
             include: {
-                category: true, mainType: true, subType: true,
+                category: true, mainType: true,
+                packages: { include: { subType: true } },
                 equipments: { include: { equipment: true } },
             },
         });
@@ -30,13 +31,21 @@ export class PhotographerServiceService {
     }
 
     async create(data: any) {
-        const { categoryId, mainTypeId, subTypeId, equipmentIds, ...rest } = data;
+        const { categoryId, mainTypeId, subTypeId, hourlyRate, dailyRate, equipmentIds, packages, ...rest } = data;
         return this.prisma.photographerService.create({
             data: {
                 ...rest,
                 category: { connect: { id: categoryId } },
                 mainType: { connect: { id: mainTypeId } },
-                ...(subTypeId ? { subType: { connect: { id: subTypeId } } } : {}),
+                ...(packages?.length ? {
+                    packages: {
+                        create: packages.map((p: any) => ({
+                            subTypeId: p.subTypeId,
+                            price: p.price,
+                            priceLabel: p.priceLabel,
+                        })),
+                    },
+                } : {}),
                 ...(equipmentIds?.length ? {
                     equipments: {
                         create: equipmentIds.map((eId: number) => ({ equipmentId: eId })),
@@ -44,7 +53,8 @@ export class PhotographerServiceService {
                 } : {}),
             },
             include: {
-                category: true, mainType: true, subType: true,
+                category: true, mainType: true,
+                packages: { include: { subType: true } },
                 equipments: { include: { equipment: true } },
             },
         });
@@ -52,24 +62,39 @@ export class PhotographerServiceService {
 
     async update(id: number, data: any) {
         await this.findOne(id);
-        const { categoryId, mainTypeId, subTypeId, equipmentIds, ...rest } = data;
+        const { categoryId, mainTypeId, subTypeId, hourlyRate, dailyRate, equipmentIds, packages, ...rest } = data;
 
-        // Always reset equipment if equipmentIds is provided
+        // Update the main record
         await this.prisma.photographerService.update({
             where: { id },
             data: {
                 ...rest,
                 ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
                 ...(mainTypeId ? { mainType: { connect: { id: mainTypeId } } } : {}),
-                ...(subTypeId === null ? { subType: { disconnect: true } } : subTypeId ? { subType: { connect: { id: subTypeId } } } : {}),
             },
         });
 
+        // Always reset equipment if equipmentIds is provided
         if (equipmentIds !== undefined) {
             await this.prisma.photographerServiceEquipment.deleteMany({ where: { photographerServiceId: id } });
             if (equipmentIds.length > 0) {
                 await this.prisma.photographerServiceEquipment.createMany({
                     data: equipmentIds.map((eId: number) => ({ photographerServiceId: id, equipmentId: eId })),
+                });
+            }
+        }
+
+        // Always reset packages if provided
+        if (packages !== undefined) {
+            await this.prisma.photographerServicePackage.deleteMany({ where: { photographerServiceId: id } });
+            if (packages.length > 0) {
+                await this.prisma.photographerServicePackage.createMany({
+                    data: packages.map((p: any) => ({
+                        photographerServiceId: id,
+                        subTypeId: p.subTypeId,
+                        price: p.price,
+                        priceLabel: p.priceLabel,
+                    })),
                 });
             }
         }

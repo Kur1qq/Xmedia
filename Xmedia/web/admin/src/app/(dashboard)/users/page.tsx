@@ -2,6 +2,10 @@
 
 import { Download, Filter, Plus, History, X, CheckSquare, Square, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
+import { fetchWithAuth } from "@/lib/auth";
+
+const EMPTY_FORM = { username: "", email: "", phone: "", password: "" };
 
 export default function UsersPage() {
     const [users, setUsers] = useState<any[]>([]);
@@ -13,24 +17,67 @@ export default function UsersPage() {
     // Modals state
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
     const [historyModalUser, setHistoryModalUser] = useState<any | null>(null);
+    const [addForm, setAddForm] = useState({ ...EMPTY_FORM });
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const res = await fetch('http://localhost:4000/api/users');
-                if (res.ok) {
-                    const data = await res.json();
-                    setUsers(data);
-                }
-            } catch (error) {
-                console.error("Error fetching users:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchUsers();
     }, []);
+
+    const fetchUsers = async () => {
+        try {
+            const res = await fetch('http://localhost:4000/api/users');
+            if (res.ok) setUsers(await res.json());
+        } catch (error) {
+            console.error("Error fetching users:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
+
+    const handleAddUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!addForm.username.trim() || !addForm.email.trim() || !addForm.password.trim()) {
+            toast.error("Нэр, имэйл, нууц үг заавал оруулах ёстой!");
+            return;
+        }
+        setSaving(true);
+        try {
+            // Hash password client-side via SubtleCrypto
+            const enc = new TextEncoder();
+            const hashBuffer = await crypto.subtle.digest('SHA-256', enc.encode(addForm.password));
+            const passwordHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            const res = await fetchWithAuth('/users', {
+                method: 'POST',
+                body: JSON.stringify({
+                    username: addForm.username.trim(),
+                    email: addForm.email.trim(),
+                    phone: addForm.phone.trim() || undefined,
+                    passwordHash,
+                }),
+            });
+            if (res.ok) {
+                const newUser = await res.json();
+                setUsers(prev => [...prev, newUser]);
+                setIsAddUserModalOpen(false);
+                setAddForm({ ...EMPTY_FORM });
+                toast.success('Хэрэглэгч амжилттай нэмэгдлээ!');
+            } else {
+                const err = await res.json().catch(() => ({}));
+                toast.error(err?.message || 'Хэрэглэгч нэмэхэд алдаа гарлаа.');
+            }
+        } catch {
+            toast.error('Сервертэй холбогдоход алдаа гарлаа.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const openAddModal = () => { setAddForm({ ...EMPTY_FORM }); setIsAddUserModalOpen(true); };
 
     // Close export menu when clicking outside
     useEffect(() => {
@@ -173,7 +220,7 @@ export default function UsersPage() {
                     </div>
 
                     <button
-                        onClick={() => setIsAddUserModalOpen(true)}
+                        onClick={openAddModal}
                         className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
                     >
                         <Plus size={16} />
@@ -310,42 +357,73 @@ export default function UsersPage() {
                     <div className="bg-background border border-border rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
                             <h3 className="text-lg font-semibold">Шинэ хэрэглэгч</h3>
-                            <button
-                                onClick={() => setIsAddUserModalOpen(false)}
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
+                            <button onClick={() => setIsAddUserModalOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1.5">Нэр</label>
-                                <input type="text" className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Ганбат Дорж" />
+                        <form onSubmit={handleAddUser}>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5">Нэр <span className="text-red-500">*</span></label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={addForm.username}
+                                        onChange={e => setAddForm({ ...addForm, username: e.target.value })}
+                                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                        placeholder="Ганбат Дорж"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5">Имэйл <span className="text-red-500">*</span></label>
+                                    <input
+                                        required
+                                        type="email"
+                                        value={addForm.email}
+                                        onChange={e => setAddForm({ ...addForm, email: e.target.value })}
+                                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                        placeholder="ganbat@email.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5">Утас</label>
+                                    <input
+                                        type="text"
+                                        value={addForm.phone}
+                                        onChange={e => setAddForm({ ...addForm, phone: e.target.value })}
+                                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                        placeholder="99001122"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5">Нууц үг <span className="text-red-500">*</span></label>
+                                    <input
+                                        required
+                                        type="password"
+                                        value={addForm.password}
+                                        onChange={e => setAddForm({ ...addForm, password: e.target.value })}
+                                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1.5">Имэйл</label>
-                                <input type="email" className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="ganbat@email.com" />
+                            <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3 bg-muted/20">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAddUserModalOpen(false)}
+                                    className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
+                                >
+                                    Цуцлах
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+                                >
+                                    {saving ? 'Хадгалж байна...' : 'Хадгалах'}
+                                </button>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1.5">Утас</label>
-                                <input type="text" className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="99001122" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1.5">Нууц үг</label>
-                                <input type="password" className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="********" />
-                            </div>
-                        </div>
-                        <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3 bg-muted/20">
-                            <button
-                                onClick={() => setIsAddUserModalOpen(false)}
-                                className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
-                            >
-                                Цуцлах
-                            </button>
-                            <button className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-                                Хадгалах
-                            </button>
-                        </div>
+                        </form>
                     </div>
                 </div>
             )}

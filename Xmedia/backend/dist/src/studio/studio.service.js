@@ -18,27 +18,33 @@ let StudioService = class StudioService {
         this.prisma = prisma;
     }
     async create(data) {
-        const { equipmentIds, ...studioData } = data;
+        const { equipmentIds, packages, ...studioData } = data;
         return this.prisma.studio.create({
             data: {
                 ...studioData,
                 equipment: equipmentIds?.length > 0 ? {
                     create: equipmentIds.map((id) => ({ equipmentId: id }))
+                } : undefined,
+                packages: packages?.length > 0 ? {
+                    create: packages.map((pkg) => ({
+                        hours: pkg.hours,
+                        price: pkg.price
+                    }))
                 } : undefined
             },
-            include: { equipment: { include: { equipment: true } } }
+            include: { equipment: { include: { equipment: true } }, packages: true }
         });
     }
     async findAll() {
         return this.prisma.studio.findMany({
             orderBy: { createdAt: 'desc' },
-            include: { equipment: { include: { equipment: true } } }
+            include: { equipment: { include: { equipment: true } }, packages: true }
         });
     }
     async findOne(id) {
         const studio = await this.prisma.studio.findUnique({
             where: { id },
-            include: { equipment: { include: { equipment: true } } }
+            include: { equipment: { include: { equipment: true } }, packages: true }
         });
         if (!studio) {
             throw new common_1.NotFoundException(`Studio with ID ${id} not found`);
@@ -47,9 +53,14 @@ let StudioService = class StudioService {
     }
     async update(id, data) {
         await this.findOne(id);
-        const { equipmentIds, ...studioData } = data;
+        const { equipmentIds, packages, ...studioData } = data;
         if (equipmentIds !== undefined) {
             await this.prisma.studioEquipment.deleteMany({
+                where: { studioId: id }
+            });
+        }
+        if (packages !== undefined) {
+            await this.prisma.studioPackage.deleteMany({
                 where: { studioId: id }
             });
         }
@@ -61,9 +72,17 @@ let StudioService = class StudioService {
                     equipment: {
                         create: equipmentIds.map((eid) => ({ equipmentId: eid }))
                     }
+                } : {}),
+                ...(packages !== undefined ? {
+                    packages: {
+                        create: packages.map((pkg) => ({
+                            hours: pkg.hours,
+                            price: pkg.price
+                        }))
+                    }
                 } : {})
             },
-            include: { equipment: { include: { equipment: true } } }
+            include: { equipment: { include: { equipment: true } }, packages: true }
         });
     }
     async remove(id) {

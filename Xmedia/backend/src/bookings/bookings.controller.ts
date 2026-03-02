@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch, Body, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Param, Patch, Body, ParseIntPipe, Req } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { BookingStatus } from '@prisma/client';
 import { AdminLogService } from '../admin/admin-log.service';
@@ -13,6 +13,12 @@ export class BookingsController {
     @Get()
     async findAll() { return this.bookingsService.findAll(); }
 
+    // Public guest booking — no auth required
+    @Post()
+    async createGuest(@Body() dto: any) {
+        return this.bookingsService.createGuestBooking(dto);
+    }
+
     @Patch(':id/status')
     async updateStatus(
         @Param('id', ParseIntPipe) id: number,
@@ -24,3 +30,4 @@ export class BookingsController {
         return result;
     }
 }
+

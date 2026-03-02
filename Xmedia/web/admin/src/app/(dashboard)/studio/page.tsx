@@ -17,7 +17,9 @@ export default function StudioPage() {
     const [editingStudio, setEditingStudio] = useState<any | null /* eslint-disable-line @typescript-eslint/no-explicit-any */>(null);
     const [studioFormData, setStudioFormData] = useState({
         name: "", description: "", address: "", sizeSqm: "", capacity: "",
-        hourlyRate: "", dailyRate: "", images: "", isAvailable: true, equipmentIds: [] as number[],
+        images: "", isAvailable: true, equipmentIds: [] as number[],
+        amenities: [] as string[],
+        packages: [] as { id?: number, hours: number | '', price: number | '' }[],
     });
 
     // --- EQUIPMENT STATE ---
@@ -111,15 +113,17 @@ export default function StudioPage() {
             setStudioFormData({
                 name: studio.name, description: studio.description || "", address: studio.address || "",
                 sizeSqm: studio.sizeSqm || "", capacity: studio.capacity || "",
-                hourlyRate: studio.hourlyRate || "", dailyRate: studio.dailyRate || "",
                 images: studio.images || "", isAvailable: studio.isAvailable,
                 equipmentIds: studio.equipment ? studio.equipment.map((e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => e.equipmentId) : [],
+                amenities: studio.amenities || [],
+                packages: studio.packages ? studio.packages.map((p: any) => ({ id: p.id, hours: p.hours, price: p.price })) : [],
             });
         } else {
             setEditingStudio(null);
             setStudioFormData({
                 name: "", description: "", address: "", sizeSqm: "", capacity: "",
-                hourlyRate: "", dailyRate: "", images: "", isAvailable: true, equipmentIds: [],
+                images: "", isAvailable: true, equipmentIds: [], amenities: [],
+                packages: [],
             });
         }
         setIsStudioModalOpen(true);
@@ -139,11 +143,14 @@ export default function StudioPage() {
                 address: studioFormData.address || undefined,
                 sizeSqm: studioFormData.sizeSqm ? parseFloat(studioFormData.sizeSqm) : undefined,
                 capacity: studioFormData.capacity ? parseInt(studioFormData.capacity) : undefined,
-                hourlyRate: studioFormData.hourlyRate ? parseFloat(studioFormData.hourlyRate) : 0,
-                dailyRate: studioFormData.dailyRate ? parseFloat(studioFormData.dailyRate) : undefined,
                 images: studioFormData.images || undefined,
                 isAvailable: studioFormData.isAvailable,
                 equipmentIds: studioFormData.equipmentIds,
+                amenities: studioFormData.amenities,
+                packages: studioFormData.packages.map(p => ({
+                    hours: Number(p.hours) || 0,
+                    price: Number(p.price) || 0
+                })),
             };
 
             const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -271,8 +278,8 @@ export default function StudioPage() {
                                 <tr>
                                     <th className="px-6 py-4 font-medium border-b w-[80px]">Зураг</th>
                                     <th className="px-6 py-4 font-medium border-b w-[200px]">Нэр</th>
-                                    <th className="px-6 py-4 font-medium border-b">Үнэ / Цаг</th>
-                                    <th className="px-6 py-4 font-medium border-b">Багтаамж</th>
+                                    <th className="px-6 py-4 font-medium border-b">Хаяг</th>
+                                    <th className="px-6 py-4 font-medium border-b">Багц үнэ</th>
                                     <th className="px-6 py-4 font-medium border-b w-[100px]">Төлөв</th>
                                     <th className="px-6 py-4 font-medium border-b text-right">Үйлдэл</th>
                                 </tr>
@@ -291,9 +298,21 @@ export default function StudioPage() {
                                                     ) : <div className="w-10 h-10 rounded bg-muted flex items-center justify-center"><ImageIcon className="w-4 h-4 text-muted-foreground" /></div>}
                                                 </td>
                                                 <td className="px-6 py-4 font-medium">{s.name}</td>
-                                                <td className="px-6 py-4">{Number(s.hourlyRate).toLocaleString()} ₮</td>
-                                                <td className="px-6 py-4">{s.capacity || '-'}</td>
-                                                <td className="px-6 py-4"><span className={`px-2 py-0.5 text-xs rounded-full ${s.isAvailable ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>{s.isAvailable ? 'Идэвхтэй' : 'Идэвхгүй'}</span></td>
+                                                <td className="px-6 py-4 truncate max-w-[200px]">{s.address || '-'}</td>
+                                                <td className="px-6 py-4">
+                                                    {s.packages && s.packages.length > 0
+                                                        ? s.packages.map((pkg: any) => (
+                                                            <div key={pkg.id} className="text-xs">
+                                                                {pkg.hours} цаг - {Number(pkg.price).toLocaleString()}₮
+                                                            </div>
+                                                        ))
+                                                        : <span className="text-muted-foreground">-</span>}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.isAvailable ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                                                        {s.isAvailable ? 'Нээлттэй' : 'Хаалттай'}
+                                                    </span>
+                                                </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-3">
                                                         <button onClick={() => handleOpenStudioModal(s)} className="text-muted-foreground hover:text-primary"><Pencil className="w-4 h-4" /></button>
@@ -399,19 +418,136 @@ export default function StudioPage() {
                                     <label className="text-sm font-medium">Багтаамж (хүн)</label>
                                     <input type="number" value={studioFormData.capacity} onChange={e => setStudioFormData({ ...studioFormData, capacity: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Цагийн үнэ (₮)</label>
-                                    <input type="number" value={studioFormData.hourlyRate} onChange={e => setStudioFormData({ ...studioFormData, hourlyRate: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                            </div>
+
+                            {/* Packages */}
+                            <div className="space-y-3 bg-muted/20 p-4 rounded-xl border border-border/50">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">Үнийн багцууд</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setStudioFormData(prev => ({
+                                                ...prev,
+                                                packages: [...prev.packages, { hours: '', price: '' }]
+                                            }));
+                                        }}
+                                        className="text-xs flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded hover:bg-primary/90 transition-colors"
+                                    >
+                                        <Plus className="w-3 h-3" /> Багц нэмэх
+                                    </button>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Өдрийн үнэ (₮)</label>
-                                    <input type="number" value={studioFormData.dailyRate} onChange={e => setStudioFormData({ ...studioFormData, dailyRate: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                <div className="space-y-3">
+                                    {studioFormData.packages.map((pkg, i) => (
+                                        <div key={i} className="flex gap-3 items-start bg-background p-3 rounded-lg border border-border/50 relative group">
+                                            <div className="flex-1 space-y-1">
+                                                <label className="text-xs text-muted-foreground uppercase font-semibold">Цаг (Hours)</label>
+                                                <input
+                                                    type="number"
+                                                    value={pkg.hours}
+                                                    onChange={e => {
+                                                        const newPkgs = [...studioFormData.packages];
+                                                        newPkgs[i].hours = e.target.value === '' ? '' : Number(e.target.value);
+                                                        setStudioFormData({ ...studioFormData, packages: newPkgs });
+                                                    }}
+                                                    placeholder="Жнь: 3"
+                                                    className="w-full h-9 px-3 rounded-md border border-input bg-background focus:ring-1 focus:ring-primary text-sm"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex-1 space-y-1">
+                                                <label className="text-xs text-muted-foreground uppercase font-semibold">Үнэ (Price ₮)</label>
+                                                <input
+                                                    type="number"
+                                                    value={pkg.price}
+                                                    onChange={e => {
+                                                        const newPkgs = [...studioFormData.packages];
+                                                        newPkgs[i].price = e.target.value === '' ? '' : Number(e.target.value);
+                                                        setStudioFormData({ ...studioFormData, packages: newPkgs });
+                                                    }}
+                                                    placeholder="Жнь: 440000"
+                                                    className="w-full h-9 px-3 rounded-md border border-input bg-background focus:ring-1 focus:ring-primary text-sm"
+                                                    required
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newPkgs = [...studioFormData.packages];
+                                                    newPkgs.splice(i, 1);
+                                                    setStudioFormData({ ...studioFormData, packages: newPkgs });
+                                                }}
+                                                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 shadow-sm"
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {studioFormData.packages.length === 0 && (
+                                        <p className="text-sm text-muted-foreground italic text-center py-4 bg-background/50 rounded border border-dashed border-border/50">
+                                            Үнийн багц нэмэгдээгүй байна
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <label className="text-sm font-medium">Тайлбар</label>
                                 <textarea value={studioFormData.description} onChange={e => setStudioFormData({ ...studioFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
                             </div>
+
+                            {/* Features / Amenities */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium block">Онцлог талууд (Features)</label>
+                                <div className="flex gap-2 mb-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Шинэ онцлог..."
+                                        className="flex-1 h-9 px-3 rounded-md border border-input bg-background text-sm"
+                                        id="new-amenity-input"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const val = (e.target as HTMLInputElement).value.trim();
+                                                if (val && !studioFormData.amenities.includes(val)) {
+                                                    setStudioFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
+                                                    (e.target as HTMLInputElement).value = '';
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const input = document.getElementById('new-amenity-input') as HTMLInputElement;
+                                            const val = input.value.trim();
+                                            if (val && !studioFormData.amenities.includes(val)) {
+                                                setStudioFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
+                                                input.value = '';
+                                            }
+                                        }}
+                                        className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-md text-sm border border-border/50 hover:bg-muted"
+                                    >
+                                        Нэмэх
+                                    </button>
+                                </div>
+                                {studioFormData.amenities.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 p-3 bg-muted/30 border border-border/50 rounded-md">
+                                        {studioFormData.amenities.map(amenity => (
+                                            <span key={amenity} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-background border border-border text-foreground rounded-full">
+                                                {amenity}
+                                                <button
+                                                    type="button"
+                                                    className="text-muted-foreground hover:text-red-500"
+                                                    onClick={() => setStudioFormData(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity) }))}
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="space-y-2">
                                 <label className="text-sm font-medium block">Дагалдах тоног төхөөрөмж</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 border border-border/50 rounded-md">
@@ -427,60 +563,63 @@ export default function StudioPage() {
                             <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsStudioModalOpen(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={isSavingStudio} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{isSavingStudio ? '...' : 'Хадгалах'}</button></div>
                         </form>
                     </div>
-                </div>
-            )}
+                </div >
+            )
+            }
 
             {/* ===================================== */}
             {/* EQUIPMENT MODAL */}
             {/* ===================================== */}
-            {isEquipmentModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-semibold">{editingEquipment ? 'Төхөөрөмж засах' : 'Төхөөрөмж үүсгэх'}</h2>
-                            <button onClick={() => setIsEquipmentModalOpen(false)}><X className="w-5 h-5 text-muted-foreground hover:text-foreground" /></button>
-                        </div>
-                        <form onSubmit={handleSaveEquipment} className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium flex items-center justify-between">
-                                    Төхөөрөмжийн зураг
-                                    {equipmentFormData.images && (
-                                        <button type="button" onClick={() => setEquipmentFormData(prev => ({ ...prev, images: "" }))} className="text-xs text-red-500 hover:underline">Зураг устгах</button>
-                                    )}
-                                </label>
-                                <div className="flex gap-4 items-start">
-                                    <div className="w-16 h-16 shrink-0 rounded-md border border-border/50 bg-muted flex items-center justify-center overflow-hidden">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        {equipmentFormData.images ? <img src={equipmentFormData.images} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-muted-foreground/30" />}
-                                    </div>
-                                    <div className="flex-1 space-y-2">
-                                        <button type="button" onClick={() => { setUploadTarget('equipment'); fileInputRef.current?.click(); }} disabled={isUploadingImage} className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-border/50 bg-background px-4 py-2 text-sm font-medium hover:bg-muted focus-visible:outline-none">
-                                            {isUploadingImage ? <span className="animate-pulse">Хуулж байна...</span> : <><UploadCloud className="w-4 h-4" /> Зураг сонгох</>}
-                                        </button>
+            {
+                isEquipmentModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                        <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-lg font-semibold">{editingEquipment ? 'Төхөөрөмж засах' : 'Төхөөрөмж үүсгэх'}</h2>
+                                <button onClick={() => setIsEquipmentModalOpen(false)}><X className="w-5 h-5 text-muted-foreground hover:text-foreground" /></button>
+                            </div>
+                            <form onSubmit={handleSaveEquipment} className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium flex items-center justify-between">
+                                        Төхөөрөмжийн зураг
+                                        {equipmentFormData.images && (
+                                            <button type="button" onClick={() => setEquipmentFormData(prev => ({ ...prev, images: "" }))} className="text-xs text-red-500 hover:underline">Зураг устгах</button>
+                                        )}
+                                    </label>
+                                    <div className="flex gap-4 items-start">
+                                        <div className="w-16 h-16 shrink-0 rounded-md border border-border/50 bg-muted flex items-center justify-center overflow-hidden">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            {equipmentFormData.images ? <img src={equipmentFormData.images} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-muted-foreground/30" />}
+                                        </div>
+                                        <div className="flex-1 space-y-2">
+                                            <button type="button" onClick={() => { setUploadTarget('equipment'); fileInputRef.current?.click(); }} disabled={isUploadingImage} className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-border/50 bg-background px-4 py-2 text-sm font-medium hover:bg-muted focus-visible:outline-none">
+                                                {isUploadingImage ? <span className="animate-pulse">Хуулж байна...</span> : <><UploadCloud className="w-4 h-4" /> Зураг сонгох</>}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
-                                <input required value={equipmentFormData.name} onChange={e => setEquipmentFormData({ ...equipmentFormData, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">Төрөл (Ангилал)</label>
-                                <select value={equipmentFormData.type} onChange={(e) => setEquipmentFormData({ ...equipmentFormData, type: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                                    {equipmentTypes.map(type => (
-                                        <option key={type.value} value={type.value}>{type.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">Тайлбар</label>
-                                <textarea value={equipmentFormData.description} onChange={e => setEquipmentFormData({ ...equipmentFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
-                            </div>
-                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsEquipmentModalOpen(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={isSavingEquipment} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{isSavingEquipment ? '...' : 'Хадгалах'}</button></div>
-                        </form>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
+                                    <input required value={equipmentFormData.name} onChange={e => setEquipmentFormData({ ...equipmentFormData, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Төрөл (Ангилал)</label>
+                                    <select value={equipmentFormData.type} onChange={(e) => setEquipmentFormData({ ...equipmentFormData, type: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                        {equipmentTypes.map(type => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium">Тайлбар</label>
+                                    <textarea value={equipmentFormData.description} onChange={e => setEquipmentFormData({ ...equipmentFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
+                                </div>
+                                <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsEquipmentModalOpen(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={isSavingEquipment} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{isSavingEquipment ? '...' : 'Хадгалах'}</button></div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

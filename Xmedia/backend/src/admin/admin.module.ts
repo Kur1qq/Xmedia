@@ -18,7 +18,7 @@ import { JwtStrategy, JWT_SECRET, JWT_EXPIRES_IN } from './jwt.strategy';
     ],
     controllers: [AdminController],
     providers: [AdminService, AdminLogService, JwtStrategy],
-    exports: [AdminService, AdminLogService, JwtModule],
+    exports: [AdminService, AdminLogService, JwtModule, JwtStrategy, PassportModule],
 })
 export class AdminModule implements OnModuleInit {
     constructor(private readonly adminService: AdminService) { }

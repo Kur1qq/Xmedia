@@ -4,10 +4,17 @@ import { useEffect, useState, useRef } from "react";
 import { Plus, X, Pencil, Trash2, Image as ImageIcon, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import * as Tabs from '@radix-ui/react-tabs';
+import { getToken } from "@/lib/auth";
 
 const API = 'http://localhost:4000/api';
 const tabCls = "px-5 h-[45px] flex items-center justify-center text-sm font-medium leading-none text-muted-foreground select-none hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary outline-none cursor-pointer transition-colors";
-const PRICE_UNITS = ["1ш", "1 цаг", "1 өдөр", "1 төсөл"];
+
+interface ServicePackage {
+    id: string;
+    subTypeId: string;
+    price: string;
+    priceLabel: string;
+}
 
 export default function EditPage() {
     const [loading, setLoading] = useState(true);
@@ -39,8 +46,9 @@ export default function EditPage() {
     const [savingSvc, setSavingSvc] = useState(false);
     const [editingSvc, setEditingSvc] = useState<any | null>(null);
     const [svcForm, setSvcForm] = useState({
-        name: "", categoryId: "", mainTypeId: "", subTypeId: "",
-        price: "", priceUnit: "1ш", description: "", image: "", isActive: true,
+        name: "", categoryId: "", mainTypeId: "", description: "", image: "", isActive: true,
+        packages: [] as ServicePackage[],
+        amenities: [] as string[]
     });
 
     const filteredSubTypes = mainTypes.find(m => m.id === parseInt(svcForm.mainTypeId))?.subTypes || [];
@@ -68,7 +76,11 @@ export default function EditPage() {
         setUploadingImg(true);
         const fd = new FormData(); fd.append('file', file);
         try {
-            const res = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+            const res = await fetch(`${API}/upload`, {
+                method: 'POST',
+                headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+                body: fd
+            });
             if (res.ok) { const d = await res.json(); setSvcForm(p => ({ ...p, image: d.url })); toast.success("Зураг хуулагдлаа!"); }
             else toast.error("Зураг хуулахад алдаа.");
         } catch { toast.error("Сервертэй алдаа."); }
@@ -124,17 +136,85 @@ export default function EditPage() {
     // ======= SERVICE =======
     const openSvcModal = (s: any = null) => {
         setEditingSvc(s);
-        setSvcForm({ name: s?.name || "", categoryId: s?.categoryId?.toString() || categories[0]?.id?.toString() || "", mainTypeId: s?.mainTypeId?.toString() || "", subTypeId: s?.subTypeId?.toString() || "", price: s?.price?.toString() || "", priceUnit: s?.priceUnit || "1ш", description: s?.description || "", image: s?.image || "", isActive: s?.isActive ?? true });
+
+        const pkgs = s?.packages?.map((p: any) => ({
+            id: p.id?.toString() || Date.now().toString() + Math.random(),
+            subTypeId: p.subTypeId?.toString() || "",
+            price: p.price?.toString() || "",
+            priceLabel: p.priceLabel || "",
+        })) || [{ id: Date.now().toString(), subTypeId: "", price: "", priceLabel: "" }];
+
+        setSvcForm({
+            name: s?.name || "",
+            categoryId: s?.categoryId?.toString() || categories[0]?.id?.toString() || "",
+            mainTypeId: s?.mainTypeId?.toString() || "",
+            description: s?.description || "",
+            image: s?.image || "",
+            isActive: s?.isActive ?? true,
+            packages: pkgs,
+            amenities: Array.isArray(s?.amenities) ? s.amenities : (s?.amenities ? [s.amenities] : []),
+        });
         setIsSvcModal(true);
     };
+
+    const addPackage = () => {
+        setSvcForm(prev => ({
+            ...prev,
+            packages: [...prev.packages, { id: Date.now().toString() + Math.random(), subTypeId: "", price: "", priceLabel: "" }]
+        }));
+    };
+
+    const removePackage = (idx: number) => {
+        setSvcForm(prev => ({
+            ...prev,
+            packages: prev.packages.filter((_, i) => i !== idx)
+        }));
+    };
+
+    const updatePackage = (idx: number, field: keyof ServicePackage, value: string) => {
+        setSvcForm(prev => {
+            const newPackages = [...prev.packages];
+            newPackages[idx] = { ...newPackages[idx], [field]: value };
+            return { ...prev, packages: newPackages };
+        });
+    };
+
+    const addAmenity = (val: string) => {
+        if (!val.trim()) return;
+        setSvcForm(prev => ({ ...prev, amenities: [...prev.amenities, val.trim()] }));
+    };
+
+    const removeAmenity = (index: number) => {
+        setSvcForm(prev => ({ ...prev, amenities: prev.amenities.filter((_, i) => i !== index) }));
+    };
+
     const saveSvc = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!svcForm.categoryId) { toast.error("Ангилал сонгоно уу!"); return; }
         if (!svcForm.mainTypeId) { toast.error("Үндсэн төрөл сонгоно уу!"); return; }
-        if (!svcForm.price) { toast.error("Үнэ оруулна уу!"); return; }
+
+        const validPackages = svcForm.packages.filter(p => p.subTypeId && p.price);
+        if (validPackages.length === 0) {
+            toast.error("Дор хаяж нэг үнийн багц оруулна уу!");
+            return;
+        }
+
         setSavingSvc(true);
         const url = editingSvc ? `${API}/edit-services/${editingSvc.id}` : `${API}/edit-services`;
-        const payload = { name: svcForm.name, categoryId: parseInt(svcForm.categoryId), mainTypeId: parseInt(svcForm.mainTypeId), subTypeId: svcForm.subTypeId ? parseInt(svcForm.subTypeId) : null, price: parseFloat(svcForm.price), priceUnit: svcForm.priceUnit, description: svcForm.description || undefined, image: svcForm.image || undefined, isActive: svcForm.isActive };
+        const payload = {
+            name: svcForm.name,
+            categoryId: parseInt(svcForm.categoryId),
+            mainTypeId: parseInt(svcForm.mainTypeId),
+            description: svcForm.description || undefined,
+            image: svcForm.image || undefined,
+            isActive: svcForm.isActive,
+            packages: validPackages.map(p => ({
+                subTypeId: parseInt(p.subTypeId),
+                price: parseFloat(p.price),
+                priceLabel: p.priceLabel || undefined
+            })),
+            amenities: svcForm.amenities,
+        };
         const res = await fetch(url, { method: editingSvc ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (res.ok) { await fetchData(); setIsSvcModal(false); toast.success("Хадгалагдлаа"); } else { const err = await res.json().catch(() => ({})); toast.error(err?.message || "Алдаа"); }
         setSavingSvc(false);
@@ -179,10 +259,8 @@ export default function EditPage() {
                                     <th className="px-4 py-4 font-medium border-b w-[60px]">Зураг</th>
                                     <th className="px-4 py-4 font-medium border-b">Нэр</th>
                                     <th className="px-4 py-4 font-medium border-b">Үндсэн төрөл</th>
-                                    <th className="px-4 py-4 font-medium border-b">Дэд төрөл</th>
+                                    <th className="px-4 py-4 font-medium border-b">Багцууд</th>
                                     <th className="px-4 py-4 font-medium border-b">Ангилал</th>
-                                    <th className="px-4 py-4 font-medium border-b">Үнэ</th>
-                                    <th className="px-4 py-4 font-medium border-b w-[90px]">Төлөв</th>
                                     <th className="px-4 py-4 font-medium border-b text-right">Үйлдэл</th>
                                 </tr>
                             </thead>
@@ -197,10 +275,18 @@ export default function EditPage() {
                                                 </td>
                                                 <td className="px-4 py-3 font-medium">{s.name}</td>
                                                 <td className="px-4 py-3">{s.mainType && <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{s.mainType.name}</span>}</td>
-                                                <td className="px-4 py-3">{s.subType && <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-semibold text-blue-400">{s.subType.name}</span>}</td>
-                                                <td className="px-4 py-3 text-muted-foreground text-xs">{s.category?.name || "—"}</td>
-                                                <td className="px-4 py-3 font-medium">{Number(s.price).toLocaleString()} ₮ <span className="text-muted-foreground text-xs">/ {s.priceUnit}</span></td>
-                                                <td className="px-4 py-3"><span className={`px-2 py-0.5 text-xs rounded-full ${s.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>{s.isActive ? 'Идэвхтэй' : 'Идэвхгүй'}</span></td>
+                                                <td className="px-4 py-3">
+                                                    {s.packages && s.packages.length > 0 ? (
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-xs text-muted-foreground">{s.packages.length} багцтай</span>
+                                                            <span className="font-semibold">{Math.min(...s.packages.map((p: any) => p.price)).toLocaleString()} ₮ -с</span>
+                                                        </div>
+                                                    ) : <span className="text-muted-foreground text-xs italic">Үнэгүй</span>}
+                                                </td>
+                                                <td className="px-4 py-3 text-muted-foreground text-xs">
+                                                    {s.category?.name || "—"}
+                                                    <div className={`mt-1 inline-flex px-2 py-0.5 text-[10px] rounded-full ${s.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>{s.isActive ? 'Идэвхтэй' : 'Идэвхгүй'}</div>
+                                                </td>
                                                 <td className="px-4 py-3 text-right">
                                                     <div className="flex justify-end gap-3">
                                                         <button onClick={() => openSvcModal(s)} className="text-muted-foreground hover:text-primary"><Pencil className="w-4 h-4" /></button>
@@ -383,38 +469,124 @@ export default function EditPage() {
                                 <input required value={svcForm.name} onChange={e => setSvcForm({ ...svcForm, name: e.target.value })} placeholder="Нэр..." className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
                             </div>
 
-                            {/* Main + Sub type */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1"><label className="text-sm font-medium">Үндсэн төрөл <span className="text-red-500">*</span></label>
-                                    <select required value={svcForm.mainTypeId} onChange={e => setSvcForm({ ...svcForm, mainTypeId: e.target.value, subTypeId: "" })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                                        <option value="" disabled>Сонгох...</option>
+                            {/* Main + Packages */}
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Үндсэн төрөл <span className="text-red-500">*</span></label>
+                                    <select
+                                        required
+                                        value={svcForm.mainTypeId}
+                                        onChange={e => setSvcForm({ ...svcForm, mainTypeId: e.target.value, packages: [{ id: Date.now().toString(), subTypeId: "", price: "", priceLabel: "" }] })}
+                                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                                    >
+                                        <option value="" disabled>— Үндсэн төрөл сонгох —</option>
                                         {mainTypes.map(mt => <option key={mt.id} value={mt.id}>{mt.name}</option>)}
                                     </select>
                                 </div>
-                                <div className="space-y-1"><label className="text-sm font-medium">Дэд төрөл</label>
-                                    <select value={svcForm.subTypeId} onChange={e => setSvcForm({ ...svcForm, subTypeId: e.target.value })} disabled={!svcForm.mainTypeId || filteredSubTypes.length === 0} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm disabled:opacity-50">
-                                        <option value="">— Сонгох —</option>
-                                        {filteredSubTypes.map((st: any) => <option key={st.id} value={st.id}>{st.name}</option>)}
-                                    </select>
-                                    {svcForm.mainTypeId && filteredSubTypes.length === 0 && <p className="text-xs text-muted-foreground mt-1">⚠️ Энэ төрөлд дэд төрөл байхгүй.</p>}
-                                </div>
-                            </div>
 
-                            {/* Price */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1"><label className="text-sm font-medium">Үнэ (₮) <span className="text-red-500">*</span></label>
-                                    <input required type="number" min={0} value={svcForm.price} onChange={e => setSvcForm({ ...svcForm, price: e.target.value })} placeholder="0" className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
-                                </div>
-                                <div className="space-y-1"><label className="text-sm font-medium">Нэгж</label>
-                                    <select value={svcForm.priceUnit} onChange={e => setSvcForm({ ...svcForm, priceUnit: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                                        {PRICE_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                                    </select>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium">Үнийн багцууд <span className="text-red-500">*</span></label>
+                                        <button type="button" onClick={addPackage} className="text-xs text-primary hover:underline flex items-center gap-1">
+                                            <Plus className="w-3 h-3" /> нэмэх
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-2 rounded-md border border-border/50 p-3 bg-muted/20">
+                                        {svcForm.packages.map((pkg, idx) => (
+                                            <div key={pkg.id || idx} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-center">
+                                                <div>
+                                                    <label className="text-xs text-muted-foreground mb-1 block">Контентийн төрөл</label>
+                                                    <select
+                                                        required
+                                                        value={pkg.subTypeId}
+                                                        onChange={e => updatePackage(idx, 'subTypeId', e.target.value)}
+                                                        className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                                                    >
+                                                        <option value="" disabled>Сонгох...</option>
+                                                        {filteredSubTypes.map((st: any) => <option key={st.id} value={st.id}>{st.name}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-muted-foreground mb-1 block">Нэршил (Сонголттой)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={pkg.priceLabel || ""}
+                                                        onChange={e => updatePackage(idx, 'priceLabel', e.target.value)}
+                                                        placeholder="Жишээ: Бичлэг + Эвлүүлэг..."
+                                                        className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-muted-foreground mb-1 block">Үнэ (₮)</label>
+                                                    <input
+                                                        type="number" min={0}
+                                                        value={pkg.price}
+                                                        onChange={e => updatePackage(idx, 'price', e.target.value)}
+                                                        className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                                                        required
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removePackage(idx)}
+                                                    disabled={svcForm.packages.length <= 1}
+                                                    className="mt-5 text-muted-foreground hover:text-red-500 disabled:opacity-30 flex justify-center"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {svcForm.mainTypeId && filteredSubTypes.length === 0 && (
+                                            <p className="text-xs text-amber-500 py-2 px-3">⚠️ Энэ үндсэн төрөлд дэд төрөл байхгүй байна. Эхлээд дэд төрөл нэмнэ үү.</p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Description */}
                             <div className="space-y-1"><label className="text-sm font-medium">Тайлбар</label>
                                 <textarea value={svcForm.description} onChange={e => setSvcForm({ ...svcForm, description: e.target.value })} placeholder="Тайлбар..." className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
+                            </div>
+
+                            {/* Amenities */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium block">Давуу талууд</label>
+                                <div className="flex gap-2 mb-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Шинэ давуу тал..."
+                                        className="flex-1 h-9 px-3 rounded-md border border-input bg-background text-sm"
+                                        id="new-amenity-input"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                addAmenity(e.currentTarget.value);
+                                                e.currentTarget.value = '';
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const input = document.getElementById('new-amenity-input') as HTMLInputElement;
+                                            if (input) { addAmenity(input.value); input.value = ''; }
+                                        }}
+                                        className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm border-none shrink-0"
+                                    >
+                                        Нэмэх
+                                    </button>
+                                </div>
+                                {svcForm.amenities.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {svcForm.amenities.map((amenity, idx) => (
+                                            <div key={idx} className="flex items-center gap-1.5 bg-muted/40 border border-border/50 px-2.5 py-1 rounded-md text-xs">
+                                                <span>{amenity}</span>
+                                                <button type="button" onClick={() => removeAmenity(idx)} className="text-muted-foreground hover:text-red-500 rounded-full hover:bg-white/10 p-0.5"><X className="w-3 h-3" /></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={svcForm.isActive} onChange={e => setSvcForm({ ...svcForm, isActive: e.target.checked })} /> Идэвхтэй</label>

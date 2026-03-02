@@ -10,79 +10,79 @@ export declare class PhotographerTypeController {
         };
         subTypes: {
             id: number;
+            description: string | null;
+            sortOrder: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
             mainTypeId: number;
-            sortOrder: number;
         }[];
     } & {
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
-        sortOrder: number;
     })[]>;
     createMain(body: any, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
-        sortOrder: number;
     }>;
     updateMain(id: string, body: any, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
-        sortOrder: number;
     }>;
     removeMain(id: string, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
-        sortOrder: number;
     }>;
     findSub(mainTypeId: string): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         mainTypeId: number;
-        sortOrder: number;
     }[]>;
     createSub(body: any, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         mainTypeId: number;
-        sortOrder: number;
     }>;
     updateSub(id: string, body: any, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         mainTypeId: number;
-        sortOrder: number;
     }>;
     removeSub(id: string, req: any): Promise<{
         id: number;
+        description: string | null;
+        sortOrder: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         mainTypeId: number;
-        sortOrder: number;
     }>;
 }

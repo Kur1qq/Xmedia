@@ -36,6 +36,22 @@ let AdminController = class AdminController {
             offset: offset ? parseInt(offset) : 0,
         });
     }
+    getRoles() { return this.adminService.findAllRoles(); }
+    async createRole(body, req) {
+        const result = await this.adminService.createRole(body);
+        await this.logService.log(req.user?.id, 'ROLE_CREATE', 'AdminPermissionRole', result.id, `name=${result.name}`, req.ip);
+        return result;
+    }
+    async updateRole(id, body, req) {
+        const result = await this.adminService.updateRole(+id, body);
+        await this.logService.log(req.user?.id, 'ROLE_UPDATE', 'AdminPermissionRole', +id, `name=${result.name}`, req.ip);
+        return result;
+    }
+    async removeRole(id, req) {
+        const result = await this.adminService.removeRole(+id);
+        await this.logService.log(req.user?.id, 'ROLE_DELETE', 'AdminPermissionRole', +id, undefined, req.ip);
+        return result;
+    }
     findAll() { return this.adminService.findAll(); }
     findOne(id) { return this.adminService.findOne(+id); }
     async create(body, req) {
@@ -73,6 +89,41 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "getLogs", null);
+__decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN')),
+    (0, common_1.Get)('roles'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getRoles", null);
+__decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN')),
+    (0, common_1.Post)('roles'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "createRole", null);
+__decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN')),
+    (0, common_1.Patch)('roles/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "updateRole", null);
+__decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN')),
+    (0, common_1.Delete)('roles/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "removeRole", null);
 __decorate([
     (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN')),
     (0, common_1.Get)(),

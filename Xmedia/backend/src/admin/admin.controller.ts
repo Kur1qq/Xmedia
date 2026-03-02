@@ -33,6 +33,35 @@ export class AdminController {
         });
     }
 
+    // ---- Role Management (BEFORE :id routes) ----
+    @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN'))
+    @Get('roles')
+    getRoles() { return this.adminService.findAllRoles(); }
+
+    @UseGuards(RolesGuard('SUPER_ADMIN'))
+    @Post('roles')
+    async createRole(@Body() body: { name: string; permissions: string[] }, @Req() req: any) {
+        const result = await this.adminService.createRole(body);
+        await this.logService.log(req.user?.id, 'ROLE_CREATE', 'AdminPermissionRole', result.id, `name=${result.name}`, req.ip);
+        return result;
+    }
+
+    @UseGuards(RolesGuard('SUPER_ADMIN'))
+    @Patch('roles/:id')
+    async updateRole(@Param('id') id: string, @Body() body: { name?: string; permissions?: string[] }, @Req() req: any) {
+        const result = await this.adminService.updateRole(+id, body);
+        await this.logService.log(req.user?.id, 'ROLE_UPDATE', 'AdminPermissionRole', +id, `name=${result.name}`, req.ip);
+        return result;
+    }
+
+    @UseGuards(RolesGuard('SUPER_ADMIN'))
+    @Delete('roles/:id')
+    async removeRole(@Param('id') id: string, @Req() req: any) {
+        const result = await this.adminService.removeRole(+id);
+        await this.logService.log(req.user?.id, 'ROLE_DELETE', 'AdminPermissionRole', +id, undefined, req.ip);
+        return result;
+    }
+
     // ---- Admin CRUD ----
     @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN'))
     @Get()

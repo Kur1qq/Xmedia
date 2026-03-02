@@ -26,6 +26,7 @@ const photographer_type_module_1 = require("./photographer-type/photographer-typ
 const edit_service_module_1 = require("./edit-service/edit-service.module");
 const admin_module_1 = require("./admin/admin.module");
 const log_module_1 = require("./log/log.module");
+const portfolio_module_1 = require("./portfolio/portfolio.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -47,6 +48,7 @@ exports.AppModule = AppModule = __decorate([
             photographer_type_module_1.PhotographerTypeModule,
             edit_service_module_1.EditServiceModule,
             admin_module_1.AdminModule,
+            portfolio_module_1.PortfolioModule,
         ],
         controllers: [app_controller_1.AppController, health_controller_1.HealthController],
         providers: [app_service_1.AppService],

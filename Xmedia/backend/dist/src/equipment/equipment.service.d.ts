@@ -10,30 +10,30 @@ export declare class EquipmentService {
         images?: string;
     }): Promise<{
         id: number;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     findAll(): Promise<{
         id: number;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     update(id: number, data: {
         name?: string;
@@ -42,20 +42,20 @@ export declare class EquipmentService {
         images?: string;
     }): Promise<{
         id: number;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     remove(id: number): Promise<{
         id: number;
+        description: string | null;
+        images: import("@prisma/client/runtime/client").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
 }
