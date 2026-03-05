@@ -23,34 +23,9 @@ async function bootstrap() {
   // Serve static files from the public directory
   app.use('/public', express.static(join(process.cwd(), 'public')));
 
-  // CORS тохиргоо — env-ийн тусламжтай
-  const corsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',').map(o => {
-      let trimmed = o.trim();
-      // Remove trailing slash if user accidentally added it
-      if (trimmed.endsWith('/')) {
-        trimmed = trimmed.slice(0, -1);
-      }
-      return trimmed;
-    })
-    : ['http://localhost:3000', 'http://localhost:3002'];
-
   app.enableCors({
-    origin: process.env.CORS_ORIGINS === '*' ? true : function (origin, callback) {
-      // If no origin (e.g. server-to-server) or origin matches our list, allow it
-      if (!origin || corsOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        // Also allow localhosts for dev
-        if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-          callback(null, true);
-        } else {
-          // Temporarily log blocked origins to help debugging
-          console.warn('Blocked CORS origin:', origin);
-          callback(null, true); // TEMPORARY FIX: Allow all origins to unblock frontend deployment, change to new Error('Not allowed by CORS') later.
-        }
-      }
-    },
+    origin: true, // Allow ALL origins bypass
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
