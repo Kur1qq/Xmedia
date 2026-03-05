@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Film, X, ArrowLeft, Phone, User, Loader2, Check, Info, GalleryVerticalEnd, Mail } from "lucide-react";
+import { Film, X, ArrowLeft, Phone, User, Loader2, Check, Info, GalleryVerticalEnd, Mail, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -11,8 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
+import { useCartStore } from "@/lib/store/cart";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -45,14 +44,10 @@ export default function VideoEditingPage() {
     const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, notes: "" });
+    const [form, setForm] = useState({ date: undefined as Date | undefined, notes: "" });
+    const { addItem } = useCartStore();
 
     useEffect(() => {
-        const savedInfo = loadCustomerInfo();
-        if (savedInfo) {
-            setForm(prev => ({ ...prev, name: savedInfo.name, phone: savedInfo.phone, email: savedInfo.email }));
-        }
-
         fetch(`${API}/edit-services`)
             .then(r => r.json())
             .then(data => setServices(Array.isArray(data) ? data : data.data ?? data.items ?? []))
@@ -65,43 +60,26 @@ export default function VideoEditingPage() {
         return Math.min(...s.packages.map(p => p.price));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return; }
-        setSubmitting(true);
-        try {
-            const res = await fetch(`${API}/bookings`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: form.name, phone: form.phone, email: form.email,
-                    date: format(form.date, "yyyy-MM-dd"),
-                    time: "09:00", duration: 1,
-                    serviceType: "EDIT_SERVICE", serviceId: selected!.id,
-                    unitPrice: selectedPackage ? selectedPackage.price : 0,
-                    notes: form.notes,
-                    serviceName: selected!.name,
-                }),
-            });
-            if (!res.ok) throw new Error();
 
-            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+        addItem({
+            serviceType: "EDIT_SERVICE",
+            serviceId: selected!.id,
+            serviceName: selected!.name,
+            date: format(form.date, "yyyy-MM-dd"),
+            time: "09:00", // Defaulting to start of day since edit service doesn't mandate specific time slots
+            duration: 1, // Quantity of service packages
+            unitPrice: Number(selectedPackage ? selectedPackage.price : 0),
+        });
 
-            const data = await res.json();
-            if (data.checkoutUrl) {
-                toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
-                window.location.href = data.checkoutUrl;
-                return;
-            }
-            toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: "Удахгүй холбогдох болно.", duration: 6000 });
-            setSelected(null); setIsBooking(false);
-            setForm({ name: "", phone: "", email: "", date: undefined, notes: "" });
-        } catch {
-            toast.error("Захиалга бүртгэхэд алдаа гарлаа.");
-        } finally { setSubmitting(false); }
+        toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү.", duration: 4000 });
+        setSelected(null); setIsBooking(false); setSelectedPackage(null);
+        setForm({ date: undefined, notes: "" });
     };
 
-    const close = () => { setSelected(null); setIsBooking(false); setSelectedPackage(null); };
+    const close = () => { setSelected(null); setIsBooking(false); setSelectedPackage(null); setForm({ date: undefined, notes: "" }); };
 
     return (
         <div className="pt-40 md:pt-48 pb-24 min-h-screen bg-black text-white">
@@ -241,9 +219,6 @@ export default function VideoEditingPage() {
                                                 <h2 className="text-xl font-bold">Захиалга — <span className="text-primary">{selected.name}</span></h2>
                                             </div>
                                             <form onSubmit={handleSubmit} className="space-y-4">
-                                                <div className="relative"><User className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required placeholder="Таны нэр" className="pl-10 bg-white/5 border-white/10 text-white" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-                                                <div className="relative"><Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required type="tel" placeholder="Утасны дугаар" className="pl-10 bg-white/5 border-white/10 text-white" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-                                                <div className="relative"><Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required type="email" placeholder="И-мэйл хаяг" className="pl-10 bg-white/5 border-white/10 text-white" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                         <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
@@ -264,7 +239,7 @@ export default function VideoEditingPage() {
                                                     <span className="text-xl font-bold text-primary">{selectedPackage ? selectedPackage.price.toLocaleString() : 0}₮</span>
                                                 </div>
                                                 <Button type="submit" disabled={submitting} className="w-full h-11 bg-primary hover:bg-red-600 font-semibold">
-                                                    {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Илгээж байна...</> : "Захиалга баталгаажуулах"}
+                                                    Сагсанд нэмэх
                                                 </Button>
                                             </form>
                                         </motion.div>

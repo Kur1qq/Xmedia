@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
+import { useCartStore } from "@/lib/store/cart";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 const TIMES = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
@@ -43,14 +43,10 @@ export default function PhotographersPage() {
     const [selectedPackage, setSelectedPackage] = useState<PhotographerServicePackage | null>(null);
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, time: "", duration: "1" });
+    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", duration: "1" });
+    const { addItem } = useCartStore();
 
     useEffect(() => {
-        const savedInfo = loadCustomerInfo();
-        if (savedInfo) {
-            setForm(prev => ({ ...prev, name: savedInfo.name, phone: savedInfo.phone, email: savedInfo.email }));
-        }
-
         fetch(`${API}/photographer-services`)
             .then(r => r.json())
             .then(data => setServices(Array.isArray(data) ? data : data.data ?? data.items ?? []))
@@ -58,43 +54,27 @@ export default function PhotographersPage() {
             .finally(() => setLoading(false));
     }, []);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.time) { toast.error("Цагаа сонгоно уу."); return; }
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return; }
-        setSubmitting(true);
-        try {
-            const res = await fetch(`${API}/bookings`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: form.name, phone: form.phone, email: form.email,
-                    date: format(form.date, "yyyy-MM-dd"), time: form.time,
-                    duration: parseInt(form.duration),
-                    serviceType: "PHOTOGRAPHER_SERVICE", serviceId: selected!.id,
-                    unitPrice: selectedPackage?.price || 0,
-                    serviceName: selected!.name,
-                }),
-            });
-            if (!res.ok) throw new Error();
 
-            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+        addItem({
+            serviceType: "PHOTOGRAPHER_SERVICE",
+            serviceId: selected!.id,
+            serviceName: selected!.name,
+            date: format(form.date, "yyyy-MM-dd"),
+            time: form.time,
+            duration: parseInt(form.duration),
+            unitPrice: Number(selectedPackage?.price || 0),
+        });
 
-            const data = await res.json();
-            if (data.checkoutUrl) {
-                toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
-                window.location.href = data.checkoutUrl;
-                return;
-            }
-            toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: "Удахгүй холбогдох болно.", duration: 6000 });
-            setSelected(null); setIsBooking(false);
-            setForm({ name: "", phone: "", email: "", date: undefined, time: "", duration: "1" });
-        } catch {
-            toast.error("Захиалга бүртгэхэд алдаа гарлаа.");
-        } finally { setSubmitting(false); }
+        toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү.", duration: 4000 });
+        setSelected(null); setIsBooking(false);
+        setForm({ date: undefined, time: "", duration: "1" });
     };
 
-    const close = () => { setSelected(null); setSelectedPackage(null); setIsBooking(false); };
+    const close = () => { setSelected(null); setSelectedPackage(null); setIsBooking(false); setForm({ date: undefined, time: "", duration: "1" }); };
 
     return (
         <div className="pt-40 md:pt-48 pb-24 min-h-screen bg-black text-white">
@@ -251,9 +231,6 @@ export default function PhotographersPage() {
                                                 <h2 className="text-xl font-bold">Захиалга — <span className="text-primary">{selected.name}</span></h2>
                                             </div>
                                             <form onSubmit={handleSubmit} className="space-y-4">
-                                                <div className="relative"><User className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required placeholder="Таны нэр" className="pl-10 bg-white/5 border-white/10 text-white" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-                                                <div className="relative"><Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required type="tel" placeholder="Утасны дугаар" className="pl-10 bg-white/5 border-white/10 text-white" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-                                                <div className="relative"><Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required type="email" placeholder="И-мэйл хаяг" className="pl-10 bg-white/5 border-white/10 text-white" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                         <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
@@ -278,7 +255,7 @@ export default function PhotographersPage() {
                                                     <span className="text-xl font-bold text-primary">{((Number(selectedPackage?.price || 0)) * parseInt(form.duration || "0")).toLocaleString()}₮</span>
                                                 </div>
                                                 <Button type="submit" disabled={submitting} className="w-full h-11 bg-primary hover:bg-red-600 font-semibold">
-                                                    {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Илгээж байна...</> : "Захиалга баталгаажуулах"}
+                                                    Сагсанд нэмэх
                                                 </Button>
                                             </form>
                                         </motion.div>

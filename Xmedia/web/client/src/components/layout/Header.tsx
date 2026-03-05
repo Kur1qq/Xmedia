@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { motion } from "framer-motion";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 export function Header() {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -39,6 +40,7 @@ export function Header() {
 
                     {/* Desktop: right buttons */}
                     <div className="hidden md:flex items-center gap-3">
+                        <CartDrawer />
                         <Link href="/contact">
                             <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-primary hover:bg-white/10">
                                 Холбоо барих
@@ -52,37 +54,40 @@ export function Header() {
                     </div>
 
                     {/* Mobile hamburger */}
-                    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="shrink-0 md:hidden text-white hover:bg-white/10">
-                                <Menu className="h-6 w-6" />
-                                <span className="sr-only">Toggle navigation menu</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="right">
-                            <SheetHeader>
-                                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                                <SheetDescription className="sr-only">Access site navigation links</SheetDescription>
-                            </SheetHeader>
-                            <nav className="grid gap-6 text-lg font-medium">
-                                <Link href="#" className="flex items-center gap-2 text-xl font-bold">
-                                    {siteConfig.name}
-                                </Link>
-                                {siteConfig.nav.map((item) => (
-                                    <Link key={item.href} href={item.href} className="hover:text-foreground" onClick={() => setIsOpen(false)}>
-                                        {item.label}
+                    <div className="flex items-center gap-2 md:hidden">
+                        <CartDrawer />
+                        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="shrink-0 text-white hover:bg-white/10">
+                                    <Menu className="h-6 w-6" />
+                                    <span className="sr-only">Toggle navigation menu</span>
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="right">
+                                <SheetHeader>
+                                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                                    <SheetDescription className="sr-only">Access site navigation links</SheetDescription>
+                                </SheetHeader>
+                                <nav className="grid gap-6 text-lg font-medium">
+                                    <Link href="#" className="flex items-center gap-2 text-xl font-bold">
+                                        {siteConfig.name}
                                     </Link>
-                                ))}
-                                <hr className="my-4" />
-                                <Link href="/contact" onClick={() => setIsOpen(false)}>
-                                    <Button variant="outline" className="w-full">Холбоо барих</Button>
-                                </Link>
-                                <Link href="/booking" onClick={() => setIsOpen(false)}>
-                                    <Button className="w-full">Захиалга өгөх</Button>
-                                </Link>
-                            </nav>
-                        </SheetContent>
-                    </Sheet>
+                                    {siteConfig.nav.map((item) => (
+                                        <Link key={item.href} href={item.href} className="hover:text-foreground" onClick={() => setIsOpen(false)}>
+                                            {item.label}
+                                        </Link>
+                                    ))}
+                                    <hr className="my-4" />
+                                    <Link href="/contact" onClick={() => setIsOpen(false)}>
+                                        <Button variant="outline" className="w-full">Холбоо барих</Button>
+                                    </Link>
+                                    <Link href="/booking" onClick={() => setIsOpen(false)}>
+                                        <Button className="w-full">Захиалга өгөх</Button>
+                                    </Link>
+                                </nav>
+                            </SheetContent>
+                        </Sheet>
+                    </div>
                 </div>
             </motion.header>
 

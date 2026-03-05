@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
+import { useCartStore } from "@/lib/store/cart";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -42,15 +42,11 @@ export default function StudiosPage() {
     const [selectedPackage, setSelectedPackage] = useState<StudioPackage | null>(null);
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, time: "" });
+    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "" });
     const [faqOpen, setFaqOpen] = useState<number | null>(0); // Default open first FAQ
+    const { addItem } = useCartStore();
 
     useEffect(() => {
-        const savedInfo = loadCustomerInfo();
-        if (savedInfo) {
-            setForm(prev => ({ ...prev, name: savedInfo.name, phone: savedInfo.phone, email: savedInfo.email }));
-        }
-
         fetch(`${API}/studio`)
             .then(r => r.json())
             .then(data => setStudios(Array.isArray(data) ? data : data.data ?? data.items ?? []))
@@ -72,52 +68,28 @@ export default function StudiosPage() {
         return "";
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.time) { toast.error("Цагаа сонгоно уу."); return; }
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return; }
-        setSubmitting(true);
-        try {
-            const res = await fetch(`${API}/bookings`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: form.name,
-                    phone: form.phone,
-                    email: form.email,
-                    date: format(form.date, "yyyy-MM-dd"),
-                    time: form.time,
-                    duration: selectedPackage ? selectedPackage.hours : 1,
-                    serviceType: "STUDIO",
-                    serviceId: selected!.id,
-                    unitPrice: selectedPackage ? Number(selectedPackage.price) : 0,
-                    serviceName: selected!.name,
-                }),
-            });
-            if (!res.ok) throw new Error();
+        if (!selectedPackage) { toast.error("Багц сонгоно уу."); return; }
 
-            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+        addItem({
+            serviceType: "STUDIO",
+            serviceId: selected!.id,
+            serviceName: selected!.name,
+            date: format(form.date, "yyyy-MM-dd"),
+            time: form.time,
+            duration: selectedPackage.hours,
+            unitPrice: Number(selectedPackage.price) / selectedPackage.hours, // Calculate hourly rate
+        });
 
-            const data = await res.json();
-            if (data.checkoutUrl) {
-                toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
-                window.location.href = data.checkoutUrl;
-                return;
-            }
-            toast.success("Захиалга амжилттай бүртгэгдлээ!", {
-                description: `${format(form.date!, "yyyy-MM-dd")}-ний ${form.time} цагт "${selected?.name}" захиалагдлаа. Удахгүй холбогдох болно.`,
-                duration: 6000,
-            });
-            setSelected(null); setIsBooking(false); setSelectedPackage(null);
-            setForm({ name: "", phone: "", email: "", date: undefined, time: "" });
-        } catch {
-            toast.error("Захиалга бүртгэхэд алдаа гарлаа. Дахин оролдно уу.");
-        } finally {
-            setSubmitting(false);
-        }
+        toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү.", duration: 4000 });
+        setSelected(null); setIsBooking(false); setSelectedPackage(null);
+        setForm({ date: undefined, time: "" });
     };
 
-    const close = () => { setSelected(null); setIsBooking(false); setSelectedPackage(null); };
+    const close = () => { setSelected(null); setIsBooking(false); setSelectedPackage(null); setForm({ date: undefined, time: "" }); };
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
@@ -392,18 +364,6 @@ export default function StudiosPage() {
                                                 <h2 className="text-xl font-bold text-white">Захиалга өгөх — <span className="text-primary">{selected.name}</span></h2>
                                             </div>
                                             <form onSubmit={handleSubmit} className="space-y-4">
-                                                <div className="relative">
-                                                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                                                    <Input required placeholder="Таны нэр" className="pl-10 bg-white/5 border-white/10 text-white focus-visible:ring-primary" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-                                                </div>
-                                                <div className="relative">
-                                                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                                                    <Input required type="tel" placeholder="Утасны дугаар" className="pl-10 bg-white/5 border-white/10 text-white focus-visible:ring-primary" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-                                                </div>
-                                                <div className="relative">
-                                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                                                    <Input required type="email" placeholder="И-мэйл хаяг" className="pl-10 bg-white/5 border-white/10 text-white focus-visible:ring-primary" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                                                </div>
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                         <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
@@ -429,7 +389,7 @@ export default function StudiosPage() {
                                                     <span className="text-xl font-bold text-primary">{selectedPackage ? Number(selectedPackage.price).toLocaleString() : 0}₮</span>
                                                 </div>
                                                 <Button type="submit" disabled={submitting} className="w-full h-11 bg-primary hover:bg-red-600 text-white font-semibold">
-                                                    {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Илгээж байна...</> : "Захиалга баталгаажуулах"}
+                                                    Сагсанд нэмэх
                                                 </Button>
                                             </form>
                                         </motion.div>
