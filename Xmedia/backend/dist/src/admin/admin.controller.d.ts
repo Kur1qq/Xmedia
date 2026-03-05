@@ -80,11 +80,11 @@ export declare class AdminController {
     findAll(): Promise<{
         id: number;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
-        createdAt: Date;
         customRole: {
             id: number;
             name: string;
@@ -94,11 +94,11 @@ export declare class AdminController {
     findOne(id: string): Promise<{
         id: number;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
-        createdAt: Date;
         customRole: {
             id: number;
             name: string;
@@ -108,11 +108,11 @@ export declare class AdminController {
     create(body: any, req: any): Promise<{
         id: number;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
-        createdAt: Date;
         customRole: {
             id: number;
             name: string;
@@ -122,11 +122,11 @@ export declare class AdminController {
     update(id: string, body: any, req: any): Promise<{
         id: number;
         username: string;
+        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
-        createdAt: Date;
         customRole: {
             id: number;
             name: string;
@@ -136,12 +136,12 @@ export declare class AdminController {
     remove(id: string, req: any): Promise<{
         id: number;
         username: string;
+        createdAt: Date;
+        updatedAt: Date;
         password: string;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

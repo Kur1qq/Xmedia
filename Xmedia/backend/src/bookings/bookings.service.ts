@@ -82,12 +82,15 @@ export class BookingsService {
 
         // Create Byl checkout
         try {
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: total,
                 serviceName: dto.serviceName || dto.serviceType,
                 quantity: 1,
                 customerEmail: dto.email,
+                successUrl: `${clientBaseUrl}/booking/success?bookingId=${booking.id}`,
+                cancelUrl: `${clientBaseUrl}/booking/cancel`,
             });
 
             // Save checkout ID in payment record
@@ -174,12 +177,15 @@ export class BookingsService {
 
         // Create Byl checkout
         try {
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: totalAmount,
                 serviceName: `Xmedia багц (${dto.items.length} үйлчилгээ)`,
                 quantity: 1,
                 customerEmail: dto.email,
+                successUrl: `${clientBaseUrl}/booking/success?bookingId=${booking.id}`,
+                cancelUrl: `${clientBaseUrl}/booking/cancel`,
             });
 
             // Save checkout ID in payment record
