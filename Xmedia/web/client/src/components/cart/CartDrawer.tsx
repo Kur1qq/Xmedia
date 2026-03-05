@@ -52,6 +52,7 @@ export function CartDrawer() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...customer,
+                    paymentType,
                     items: items.map(i => ({
                         date: i.date,
                         time: i.time,

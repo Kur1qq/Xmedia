@@ -106,6 +106,7 @@ export default function VideoEditingPage() {
                     serviceType: "EDIT_SERVICE", serviceId: selected!.id,
                     unitPrice: Number(selectedPackage ? selectedPackage.price : 0),
                     serviceName: selected!.name,
+                    paymentType,
                 }),
             });
             if (!res.ok) throw new Error();

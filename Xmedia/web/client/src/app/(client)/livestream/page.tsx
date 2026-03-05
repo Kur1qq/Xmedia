@@ -118,6 +118,7 @@ export default function LivestreamPage() {
                     serviceType: "LIVE_SERVICE", serviceId: selected!.id,
                     unitPrice: Number(unitPrice),
                     serviceName: selected!.name,
+                    paymentType,
                 }),
             });
             if (!res.ok) throw new Error();

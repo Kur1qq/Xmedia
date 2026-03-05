@@ -129,6 +129,7 @@ export default function StudiosPage() {
                     serviceType: "STUDIO", serviceId: selected!.id,
                     unitPrice: Number(selectedPackage!.price) / selectedPackage!.hours,
                     serviceName: selected!.name,
+                    paymentType,
                 }),
             });
             if (!res.ok) throw new Error();

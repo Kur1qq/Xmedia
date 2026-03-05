@@ -1,13 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { BookingStatus, ItemType, PaymentStatus } from '@prisma/client';
 import { BylPaymentService } from './byl-payment.service';
+import { MailService } from './mail.service';
+import { InvoiceService } from './invoice.service';
 
 @Injectable()
 export class BookingsService {
+    private readonly logger = new Logger(BookingsService.name);
     constructor(
         private prisma: PrismaService,
         private bylPayment: BylPaymentService,
+        private mailService: MailService,
+        private invoiceService: InvoiceService,
     ) { }
 
     // Find all bookings (only PAID — for admin bookings section)
@@ -76,6 +81,7 @@ export class BookingsService {
         unitPrice: number;
         notes?: string;
         serviceName?: string;
+        paymentType?: 'qpay' | 'invoice'; // new
     }) {
         // Find or create a guest user by phone
         let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
@@ -121,7 +127,17 @@ export class BookingsService {
             include: { items: true }
         });
 
-        // Create Byl checkout
+        // Invoice path — skip Byl, email PDF directly
+        if (dto.paymentType === 'invoice') {
+            await this.sendInvoiceForBooking(
+                booking.id, dto.name, dto.email, dto.phone,
+                [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }],
+                dto.date,
+            );
+            return { ...booking, checkoutUrl: null };
+        }
+
+        // QPay path — create Byl checkout
         try {
             const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
@@ -146,8 +162,13 @@ export class BookingsService {
 
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
         } catch (error) {
-            // If Byl fails, still return booking but without checkout URL
-            return { ...booking, checkoutUrl: null, paymentError: error.message };
+            // Byl failed — send invoice PDF by email instead
+            await this.sendInvoiceForBooking(
+                booking.id, dto.name, dto.email, dto.phone,
+                [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }],
+                dto.date,
+            );
+            return { ...booking, checkoutUrl: null };
         }
     }
 
@@ -166,6 +187,7 @@ export class BookingsService {
             unitPrice: number;
             serviceName?: string;
         }>;
+        paymentType?: 'qpay' | 'invoice'; // new
     }) {
         // Find or create a user by phone
         let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
@@ -216,7 +238,22 @@ export class BookingsService {
             include: { items: true }
         });
 
-        // Create Byl checkout
+        // Invoice path — skip Byl, send invoice PDF directly
+        if (dto.paymentType === 'invoice') {
+            const invoiceItems = dto.items.map(i => ({
+                description: i.serviceName || i.serviceType,
+                quantity: i.duration,
+                unitPrice: i.unitPrice,
+                totalPrice: i.unitPrice * i.duration,
+            }));
+            await this.sendInvoiceForBooking(
+                booking.id, dto.name, dto.email, dto.phone,
+                invoiceItems, dto.items[0]?.date || new Date().toISOString().slice(0, 10),
+            );
+            return { ...booking, checkoutUrl: null };
+        }
+
+        // QPay path — create Byl checkout
         try {
             const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
@@ -241,7 +278,72 @@ export class BookingsService {
 
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
         } catch (error) {
-            return { ...booking, checkoutUrl: null, paymentError: error.message };
+            // Byl failed — send invoice PDF by email instead
+            const invoiceItems = dto.items.map(i => ({
+                description: i.serviceName || i.serviceType,
+                quantity: i.duration,
+                unitPrice: i.unitPrice,
+                totalPrice: i.unitPrice * i.duration,
+            }));
+            await this.sendInvoiceForBooking(
+                booking.id, dto.name, dto.email, dto.phone,
+                invoiceItems, dto.items[0]?.date || new Date().toISOString().slice(0, 10),
+            );
+            return { ...booking, checkoutUrl: null };
+        }
+    }
+
+    // ─── Private: send invoice PDF email ────────────────────────────────────
+    private async sendInvoiceForBooking(
+        bookingId: number,
+        buyerName: string,
+        buyerEmail: string | undefined,
+        buyerPhone: string,
+        items: { description: string; quantity: number; unitPrice: number; totalPrice: number }[],
+        invoiceDate: string,
+    ) {
+        if (!buyerEmail || !buyerEmail.includes('@') || buyerEmail.includes('@xmedia.guest')) {
+            this.logger.warn(`No valid email for booking #${bookingId}, skipping invoice email`);
+            return;
+        }
+        try {
+            const pdfBuffer = await this.invoiceService.generateInvoicePdf({
+                invoiceNumber: String(bookingId).padStart(5, '0'),
+                invoiceDate,
+                payByDate: '14 хоног',
+                sellerName: process.env.COMPANY_NAME || 'Xmedia Media Production',
+                sellerAddress: process.env.COMPANY_ADDRESS || 'Улаанбаатар хот',
+                sellerPhone: process.env.COMPANY_PHONE || '99001100',
+                sellerBank: process.env.COMPANY_BANK || 'Хаан банк',
+                sellerAccount: process.env.COMPANY_ACCOUNT || '5000000000',
+                sellerReg: process.env.COMPANY_REG || '1234567',
+                buyerName,
+                buyerEmail,
+                buyerPhone,
+                items,
+            });
+            const filename = `invoice-${bookingId}.pdf`;
+            const total = items.reduce((s, i) => s + i.totalPrice, 0);
+            await this.mailService.sendInvoiceEmail(
+                buyerEmail,
+                `Нэхэмжлэх #${String(bookingId).padStart(5, '0')} — Xmedia`,
+                `
+                    <div style="font-family:sans-serif;font-size:15px;color:#222;">
+                        <h2 style="color:#e11d48;">Xmedia — Нэхэмжлэх</h2>
+                        <p>Сайн байна уу, <strong>${buyerName}</strong>!</p>
+                        <p>Таны <strong>₮${total.toLocaleString()}</strong> дүнтэй нэхэмжлэхийг хавсаргав.</p>
+                        <p>Нэхэмжлэхийн дугаар: <strong>#${String(bookingId).padStart(5, '0')}</strong></p>
+                        <p>Холбоо барих: <strong>99001100</strong></p>
+                        <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+                        <p style="font-size:12px;color:#888;">Энэхүү имэйл автоматаар үүссэн. Асуух зүйл байвал бидэнтэй холбогдоно уу.</p>
+                    </div>
+                `,
+                pdfBuffer,
+                filename,
+            );
+            this.logger.log(`Invoice email sent for booking #${bookingId}`);
+        } catch (err) {
+            this.logger.error(`Invoice email failed for booking #${bookingId}`, err);
         }
     }
 
