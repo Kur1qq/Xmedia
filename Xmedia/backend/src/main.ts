@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as express from 'express';
 import { join } from 'path';
+import * as fs from 'fs';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
@@ -19,6 +20,12 @@ async function bootstrap() {
 
   // Global exception filter — stack trace-ийг клиент рүү явуулахгүй
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Ensure upload directory exists
+  const uploadDir = join(process.cwd(), 'public', 'uploads');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
 
   // Serve static files from the public directory
   app.use('/public', express.static(join(process.cwd(), 'public')));
