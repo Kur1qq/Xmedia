@@ -140,16 +140,16 @@ export default function StudiosPage() {
             {/* Background Glows */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-primary/20 hover:bg-primary/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
 
-            <div className="pt-40 md:pt-48 pb-24 relative z-10">
+            <div className="pt-24 md:pt-48 pb-12 md:pb-24 relative z-10">
                 <div className="container mx-auto px-4 lg:px-8">
                     {/* Header — same as other pages */}
-                    <div className="mb-18 flex items-start justify-between gap-4 flex-wrap">
+                    <div className="mb-8 md:mb-18 flex items-start justify-between gap-4 flex-wrap">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold mb-4">Мэргэжлийн <span className="text-primary">Студио</span></h1>
-                            <p className="text-gray-400 text-lg">Олон улсын стандартын шаардлага хангасан, бүрэн тоноглогдсон тухтай орчинд уран бүтээлээ туурвих боломж.</p>
+                            <h1 className="text-xl md:text-3xl font-bold mb-2 md:mb-4">Мэргэжлийн <span className="text-primary">Студио</span></h1>
+                            <p className="text-gray-400 text-sm md:text-lg max-w-lg leading-snug md:leading-normal">Олон улсын стандартын шаардлага хангасан, бүрэн тоноглогдсон тухтай орчинд уран бүтээлээ туурвих боломж.</p>
                         </div>
-                        <Link href="/portfolio/studio">
-                            <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white gap-2">
+                        <Link href="/portfolio/studio" className="w-full md:w-auto">
+                            <Button variant="outline" className="w-full md:w-auto border-white/10 bg-white/5 hover:bg-white/10 text-white gap-2">
                                 <GalleryVerticalEnd className="w-4 h-4 text-primary" />
                                 Өмнөх ажлууд харах
                             </Button>
