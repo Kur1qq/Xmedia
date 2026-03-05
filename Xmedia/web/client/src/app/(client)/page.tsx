@@ -127,7 +127,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-16 w-full grid grid-cols-2 sm:grid-cols-4 gap-3 px-2"
+            className="mt-16 w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 gap-6 px-4"
           >
             {[
               { icon: Camera, label: "Студио", desc: "Мэргэжлийн зураг авалт", href: "/studios" },
@@ -138,13 +138,13 @@ export default function Home() {
               <Link
                 key={label}
                 href={href}
-                className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md hover:bg-white/10 hover:border-primary/40 transition-all duration-300"
+                className="group flex flex-col items-center justify-center gap-3 p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:bg-white/10 hover:border-primary/40 transition-all duration-300"
               >
-                <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300">
-                  <Icon className="w-5 h-5 text-primary" />
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 mb-2">
+                  <Icon className="w-7 h-7 text-primary" />
                 </div>
-                <p className="text-white text-sm font-semibold">{label}</p>
-                <p className="text-white/50 text-xs text-center leading-snug">{desc}</p>
+                <p className="text-white text-lg font-semibold">{label}</p>
+                <p className="text-white/50 text-sm text-center leading-snug">{desc}</p>
               </Link>
             ))}
           </motion.div>
