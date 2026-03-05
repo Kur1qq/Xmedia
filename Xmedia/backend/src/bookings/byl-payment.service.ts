@@ -25,7 +25,10 @@ export class BylPaymentService {
         successUrl?: string;
         cancelUrl?: string;
     }): Promise<{ checkoutId: number; checkoutUrl: string }> {
-        const clientBaseUrl = process.env.CORS_ORIGINS?.split(',')[1] || 'http://localhost:3002';
+        // Prefer explicit CLIENT_URL, then CORS_ORIGINS first entry, then hardcoded Vercel prod URL
+        const clientBaseUrl = process.env.CLIENT_URL
+            || (process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',')[0] : null)
+            || 'https://xmedia-six.vercel.app';
 
         const body = {
             success_url: params.successUrl || `${clientBaseUrl}/booking/success?bookingId=${params.bookingId}`,
