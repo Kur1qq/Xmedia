@@ -56,7 +56,7 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-full flex items-start overflow-hidden pt-40">
+      <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20">
         {/* Background Slider */}
         <AnimatePresence mode="popLayout">
           <motion.div
