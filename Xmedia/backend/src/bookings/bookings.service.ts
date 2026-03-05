@@ -22,6 +22,18 @@ export class BookingsService {
         });
     }
 
+    // Find bookings by user ID
+    async findByUserId(userId: number) {
+        return this.prisma.booking.findMany({
+            where: { userId },
+            include: {
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                payments: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
     // Guest booking — no auth required, returns checkout URL
     async createGuestBooking(dto: {
         name: string;

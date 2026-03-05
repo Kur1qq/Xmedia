@@ -19,6 +19,18 @@ export default function UsersPage() {
     const [historyModalUser, setHistoryModalUser] = useState<any | null>(null);
     const [addForm, setAddForm] = useState({ ...EMPTY_FORM });
     const [saving, setSaving] = useState(false);
+    const [userBookings, setUserBookings] = useState<any[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+
+    useEffect(() => {
+        if (!historyModalUser) return;
+        setLoadingHistory(true);
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/bookings/user/${historyModalUser.id}`)
+            .then(r => r.ok ? r.json() : [])
+            .then(data => setUserBookings(Array.isArray(data) ? data : []))
+            .catch(() => setUserBookings([]))
+            .finally(() => setLoadingHistory(false));
+    }, [historyModalUser]);
 
     useEffect(() => {
         fetchUsers();
@@ -443,60 +455,74 @@ export default function UsersPage() {
                                 </p>
                             </div>
                             <button
-                                onClick={() => setHistoryModalUser(null)}
+                                onClick={() => { setHistoryModalUser(null); setUserBookings([]); }}
                                 className="text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="p-0 overflow-x-auto">
+                        <div className="p-0 overflow-x-auto max-h-[60vh] overflow-y-auto">
                             <table className="w-full text-sm text-left whitespace-nowrap">
-                                <thead className="text-xs text-muted-foreground uppercase bg-muted/30 border-b border-border">
+                                <thead className="text-xs text-muted-foreground uppercase bg-muted/30 border-b border-border sticky top-0">
                                     <tr>
                                         <th className="px-6 py-3 font-medium">Огноо</th>
                                         <th className="px-6 py-3 font-medium">Үйлчилгээ</th>
+                                        <th className="px-6 py-3 font-medium">Төлбөр</th>
                                         <th className="px-6 py-3 font-medium">Төлөв</th>
                                         <th className="px-6 py-3 font-medium text-right">Үнэ</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
-                                    {/* Placeholder data (Backend холбоогүй тул dummy харуулж байна) */}
-                                    <tr className="hover:bg-muted/20 transition-colors">
-                                        <td className="px-6 py-4 text-muted-foreground">2026.02.25</td>
-                                        <td className="px-6 py-4 font-medium">Шууд дамжуулалт (2 цаг)</td>
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-wider">
-                                                Баталгаажсан
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-foreground">500,000₮</td>
-                                    </tr>
-                                    <tr className="hover:bg-muted/20 transition-colors">
-                                        <td className="px-6 py-4 text-muted-foreground">2026.02.10</td>
-                                        <td className="px-6 py-4 font-medium">Студи түрээс (1 цаг)</td>
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground border border-border uppercase tracking-wider">
-                                                Дууссан
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-foreground">45,000₮</td>
-                                    </tr>
-                                    <tr className="hover:bg-muted/20 transition-colors">
-                                        <td className="px-6 py-4 text-muted-foreground">2026.01.05</td>
-                                        <td className="px-6 py-4 font-medium">Лого анимаци эдит</td>
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase tracking-wider">
-                                                Цуцлагдсан
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-muted-foreground line-through">120,000₮</td>
-                                    </tr>
+                                    {loadingHistory ? (
+                                        <tr><td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">Уншиж байна...</td></tr>
+                                    ) : userBookings.length === 0 ? (
+                                        <tr><td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">Захиалга олдсонгүй.</td></tr>
+                                    ) : userBookings.map((b: any) => {
+                                        const itemNames = (b.items || []).map((item: any) => {
+                                            if (item.studio) return `Студи: ${item.studio.name}`;
+                                            if (item.liveService) return `Live: ${item.liveService.name}`;
+                                            if (item.photographerService) return `Зураглаач: ${item.photographerService.name}`;
+                                            if (item.editService) return `Эдит: ${item.editService.name}`;
+                                            if (item.service) return item.service.name;
+                                            return item.itemType;
+                                        }).join(', ');
+
+                                        const statusMap: Record<string, { label: string; cls: string }> = {
+                                            CONFIRMED: { label: 'Баталгаажсан', cls: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+                                            COMPLETED: { label: 'Дууссан', cls: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
+                                            CANCELLED: { label: 'Цуцлагдсан', cls: 'bg-rose-500/10 text-rose-500 border-rose-500/20' },
+                                            PENDING: { label: 'Хүлээгдэж буй', cls: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
+                                        };
+                                        const paymentMap: Record<string, { label: string; cls: string }> = {
+                                            PAID: { label: 'Төлөгдсөн', cls: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
+                                            UNPAID: { label: 'Төлөгдөөгүй', cls: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
+                                            REFUNDED: { label: 'Буцаагдсан', cls: 'bg-gray-500/10 text-gray-400 border-gray-500/20' },
+                                        };
+                                        const st = statusMap[b.status] || statusMap.PENDING;
+                                        const pt = paymentMap[b.paymentStatus] || paymentMap.UNPAID;
+
+                                        return (
+                                            <tr key={b.id} className="hover:bg-muted/20 transition-colors">
+                                                <td className="px-6 py-4 text-muted-foreground">{new Date(b.createdAt).toLocaleDateString('mn-MN')}</td>
+                                                <td className="px-6 py-4 font-medium max-w-[200px] truncate">{itemNames || '—'}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border uppercase tracking-wider ${pt.cls}`}>{pt.label}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border uppercase tracking-wider ${st.cls}`}>{st.label}</span>
+                                                </td>
+                                                <td className={`px-6 py-4 text-right font-medium ${b.status === 'CANCELLED' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                                    {Number(b.totalAmount).toLocaleString()}₮
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
                         <div className="px-6 py-4 border-t border-border bg-muted/20 flex justify-end">
                             <button
-                                onClick={() => setHistoryModalUser(null)}
+                                onClick={() => { setHistoryModalUser(null); setUserBookings([]); }}
                                 className="px-4 py-2 text-sm font-medium bg-background border border-border hover:bg-muted rounded-lg transition-colors"
                             >
                                 Хаах
