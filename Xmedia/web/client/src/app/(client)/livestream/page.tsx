@@ -13,9 +13,9 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
 import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
+import { fetchBookedSlots, isTimeDisabled, ALL_TIMES } from "@/lib/booking-slots";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-const TIMES = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
 
 interface CameraTier {
     id: number;
@@ -45,6 +45,8 @@ export default function LivestreamPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, time: "", duration: "1", tierId: "" });
+    const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
     const { addItem } = useCartStore();
 
     useEffect(() => {
@@ -58,6 +60,16 @@ export default function LivestreamPage() {
             .catch(() => toast.error("Мэдээлэл татахад алдаа гарлаа."))
             .finally(() => setLoading(false));
     }, []);
+
+    // Fetch booked slots when date or selected service changes
+    useEffect(() => {
+        if (!form.date || !selected) { setBookedTimes([]); return; }
+        setLoadingSlots(true);
+        setForm(prev => ({ ...prev, time: "" }));
+        fetchBookedSlots("LIVE_SERVICE", selected.id, format(form.date, "yyyy-MM-dd"))
+            .then(setBookedTimes)
+            .finally(() => setLoadingSlots(false));
+    }, [form.date, selected?.id]);
 
     const validateForm = () => {
         if (!form.name || !form.phone || !form.email) { toast.error("Хэрэглэгчийн мэдээллээ бүрэн оруулна уу."); return false; }
@@ -288,8 +300,27 @@ export default function LivestreamPage() {
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <p className="text-sm text-gray-400 mb-2">Эхлэх цаг</p>
-                                                    <div className="grid grid-cols-4 gap-2">{TIMES.map(t => (<button key={t} type="button" onClick={() => setForm({ ...form, time: t })} className={`py-2 text-xs rounded-lg border transition-all ${form.time === t ? "bg-red-500/10 border-red-500 text-red-500" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>{t}</button>))}</div>
+                                                    <p className="text-sm text-gray-400 mb-2">
+                                                        Эхлэх цаг
+                                                        {loadingSlots && <span className="ml-2 text-xs text-gray-500">Шалгаж байна...</span>}
+                                                    </p>
+                                                    <div className="grid grid-cols-4 gap-2">
+                                                        {ALL_TIMES.map(t => {
+                                                            const disabled = isTimeDisabled(t, bookedTimes, parseInt(form.duration || "1"));
+                                                            return (
+                                                                <button key={t} type="button"
+                                                                    disabled={disabled}
+                                                                    onClick={() => !disabled && setForm({ ...form, time: t })}
+                                                                    title={disabled ? "Захиалагдсан" : undefined}
+                                                                    className={`py-2 text-xs rounded-lg border transition-all ${disabled
+                                                                            ? "bg-white/5 border-white/5 text-gray-600 cursor-not-allowed opacity-40 line-through"
+                                                                            : form.time === t
+                                                                                ? "bg-red-500/10 border-red-500 text-red-500"
+                                                                                : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                                                                        }`}>{t}</button>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <p className="text-sm text-gray-400 mb-2">Хугацаа (цаг)</p>

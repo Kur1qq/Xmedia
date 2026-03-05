@@ -282,6 +282,61 @@ export class BookingsService {
         };
     }
 
+    // Get booked time slots for a service on a given date
+    async getBookedSlots(
+        serviceType: 'STUDIO' | 'LIVE_SERVICE' | 'PHOTOGRAPHER_SERVICE' | 'EDIT_SERVICE',
+        serviceId: number,
+        date: string, // 'YYYY-MM-DD'
+    ): Promise<string[]> {
+        const bookingDate = new Date(date);
+
+        // Build where clause for the specific service
+        const serviceWhere: any = { itemType: serviceType, bookingDate };
+        if (serviceType === 'STUDIO') serviceWhere.studioId = serviceId;
+        if (serviceType === 'LIVE_SERVICE') serviceWhere.liveServiceId = serviceId;
+        if (serviceType === 'PHOTOGRAPHER_SERVICE') serviceWhere.photographerServiceId = serviceId;
+        if (serviceType === 'EDIT_SERVICE') serviceWhere.serviceId = serviceId;
+
+        const items = await this.prisma.bookingItem.findMany({
+            where: {
+                ...serviceWhere,
+                booking: { status: { not: 'CANCELLED' } },
+                startTime: { not: null },
+                endTime: { not: null },
+            },
+            select: { startTime: true, endTime: true },
+        });
+
+        // All possible time slots (09:00 – 21:00)
+        const ALL_TIMES = [
+            '09:00', '10:00', '11:00', '12:00', '13:00',
+            '14:00', '15:00', '16:00', '17:00', '18:00',
+            '19:00', '20:00', '21:00',
+        ];
+
+        const bookedTimes: string[] = [];
+
+        for (const time of ALL_TIMES) {
+            const [h, m] = time.split(':').map(Number);
+            const slotStart = h * 60 + m; // minutes from midnight
+            const slotEnd = slotStart + 60; // 1-hour slot
+
+            const overlaps = items.some(item => {
+                if (!item.startTime || !item.endTime) return false;
+                const s = item.startTime as Date;
+                const e = item.endTime as Date;
+                const bookedStart = s.getHours() * 60 + s.getMinutes();
+                const bookedEnd = e.getHours() * 60 + e.getMinutes();
+                // Overlap: slot starts before booking ends AND slot ends after booking starts
+                return slotStart < bookedEnd && slotEnd > bookedStart;
+            });
+
+            if (overlaps) bookedTimes.push(time);
+        }
+
+        return bookedTimes;
+    }
+
     // Update booking status
     async updateStatus(id: number, status: BookingStatus) {
         const booking = await this.prisma.booking.findUnique({ where: { id } });

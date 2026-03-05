@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Patch, Body, ParseIntPipe, Req, Headers, RawBodyRequest, Logger, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Param, Patch, Body, ParseIntPipe, Req, Headers, RawBodyRequest, Logger, HttpCode, Query } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { BookingStatus } from '@prisma/client';
 import { AdminLogService } from '../admin/admin-log.service';
@@ -20,6 +20,17 @@ export class BookingsController {
     @Get('user/:userId')
     async findByUser(@Param('userId', ParseIntPipe) userId: number) {
         return this.bookingsService.findByUserId(userId);
+    }
+
+    // Available time slots for a service on a specific date
+    @Get('available-slots')
+    async getAvailableSlots(
+        @Query('serviceType') serviceType: 'STUDIO' | 'LIVE_SERVICE' | 'PHOTOGRAPHER_SERVICE' | 'EDIT_SERVICE',
+        @Query('serviceId') serviceId: string,
+        @Query('date') date: string,
+    ) {
+        const bookedTimes = await this.bookingsService.getBookedSlots(serviceType, Number(serviceId), date);
+        return { bookedTimes };
     }
 
     // Multi-item cart booking

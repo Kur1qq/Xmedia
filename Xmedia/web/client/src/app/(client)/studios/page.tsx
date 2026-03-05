@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
 import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
+import { fetchBookedSlots, isTimeDisabled, ALL_TIMES } from "@/lib/booking-slots";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -34,7 +35,7 @@ interface Studio {
     packages: StudioPackage[];
 }
 
-const TIMES = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+
 
 export default function StudiosPage() {
     const [studios, setStudios] = useState<Studio[]>([]);
@@ -44,7 +45,9 @@ export default function StudiosPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, time: "" });
-    const [faqOpen, setFaqOpen] = useState<number | null>(0); // Default open first FAQ
+    const [faqOpen, setFaqOpen] = useState<number | null>(0);
+    const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
     const { addItem } = useCartStore();
 
     useEffect(() => {
@@ -58,6 +61,16 @@ export default function StudiosPage() {
             .catch(() => toast.error("Студиудын мэдээлэл татахад алдаа гарлаа."))
             .finally(() => setLoading(false));
     }, []);
+
+    // Fetch booked slots when date or selected studio changes
+    useEffect(() => {
+        if (!form.date || !selected) { setBookedTimes([]); return; }
+        setLoadingSlots(true);
+        setForm(prev => ({ ...prev, time: "" })); // reset time on date change
+        fetchBookedSlots("STUDIO", selected.id, format(form.date, "yyyy-MM-dd"))
+            .then(setBookedTimes)
+            .finally(() => setLoadingSlots(false));
+    }, [form.date, selected?.id]);
 
     const minPrice = (s: Studio) => {
         if (!s.packages || s.packages.length === 0) return 0;
@@ -424,12 +437,29 @@ export default function StudiosPage() {
                                                     </PopoverContent>
                                                 </Popover>
                                                 <div>
-                                                    <p className="text-sm text-gray-400 mb-2">Эхлэх цаг</p>
+                                                    <p className="text-sm text-gray-400 mb-2">
+                                                        Эхлэх цаг
+                                                        {loadingSlots && <span className="ml-2 text-xs text-gray-500">Шалгаж байна...</span>}
+                                                    </p>
                                                     <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                                                        {TIMES.map(t => (
-                                                            <button key={t} type="button" onClick={() => setForm({ ...form, time: t })}
-                                                                className={`py-2 text-xs rounded-lg border transition-all ${form.time === t ? "bg-primary border-primary text-white" : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:text-white"}`}>{t}</button>
-                                                        ))}
+                                                        {ALL_TIMES.map(t => {
+                                                            const disabled = isTimeDisabled(t, bookedTimes, selectedPackage?.hours ?? 1);
+                                                            return (
+                                                                <button
+                                                                    key={t}
+                                                                    type="button"
+                                                                    disabled={disabled}
+                                                                    onClick={() => !disabled && setForm({ ...form, time: t })}
+                                                                    title={disabled ? "Захиалагдсан" : undefined}
+                                                                    className={`py-2 text-xs rounded-lg border transition-all relative ${disabled
+                                                                            ? "bg-white/5 border-white/5 text-gray-600 cursor-not-allowed opacity-40 line-through"
+                                                                            : form.time === t
+                                                                                ? "bg-primary border-primary text-white"
+                                                                                : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:text-white"
+                                                                        }`}
+                                                                >{t}</button>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                                 <div className="pt-4 border-t border-white/10 flex items-center justify-between mb-2">
