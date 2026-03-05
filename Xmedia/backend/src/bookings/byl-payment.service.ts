@@ -34,8 +34,8 @@ export class BylPaymentService {
         }
 
         const body = {
-            success_url: params.successUrl || `${clientBaseUrl}/booking/success?bookingId=${params.bookingId}`,
-            cancel_url: params.cancelUrl || `${clientBaseUrl}/booking/cancel?bookingId=${params.bookingId}`,
+            success_url: params.successUrl || `${clientBaseUrl}/`,
+            cancel_url: params.cancelUrl || `${clientBaseUrl}/`,
             client_reference_id: String(params.bookingId),
             customer_email: params.customerEmail || undefined,
             items: [
