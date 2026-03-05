@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
+const byl_payment_service_1 = require("./byl-payment.service");
 let BookingsService = class BookingsService {
     prisma;
-    constructor(prisma) {
+    bylPayment;
+    constructor(prisma, bylPayment) {
         this.prisma = prisma;
+        this.bylPayment = bylPayment;
     }
     async findAll() {
         return this.prisma.booking.findMany({
@@ -33,7 +36,7 @@ let BookingsService = class BookingsService {
             user = await this.prisma.user.create({
                 data: {
                     username: dto.name,
-                    email: `guest_${dto.phone}@xmedia.guest`,
+                    email: dto.email || `guest_${dto.phone}@xmedia.guest`,
                     phone: dto.phone,
                     passwordHash: 'GUEST',
                 }
@@ -61,7 +64,7 @@ let BookingsService = class BookingsService {
             itemData.photographerServiceId = dto.serviceId;
         if (dto.serviceType === 'EDIT_SERVICE')
             itemData.serviceId = dto.serviceId;
-        return this.prisma.booking.create({
+        const booking = await this.prisma.booking.create({
             data: {
                 userId: user.id,
                 totalAmount: total,
@@ -70,6 +73,73 @@ let BookingsService = class BookingsService {
             },
             include: { items: true }
         });
+        try {
+            const checkout = await this.bylPayment.createCheckout({
+                bookingId: booking.id,
+                amount: total,
+                serviceName: dto.serviceName || dto.serviceType,
+                quantity: 1,
+                customerEmail: dto.email,
+            });
+            await this.prisma.payment.create({
+                data: {
+                    bookingId: booking.id,
+                    invoiceId: String(checkout.checkoutId),
+                    amount: total,
+                    status: 'UNPAID',
+                }
+            });
+            return { ...booking, checkoutUrl: checkout.checkoutUrl };
+        }
+        catch (error) {
+            return { ...booking, checkoutUrl: null, paymentError: error.message };
+        }
+    }
+    async confirmPayment(bylCheckoutId) {
+        const payment = await this.prisma.payment.findUnique({
+            where: { invoiceId: bylCheckoutId },
+            include: { booking: true },
+        });
+        if (!payment) {
+            throw new common_1.NotFoundException(`Payment with Byl checkout ID ${bylCheckoutId} not found`);
+        }
+        await this.prisma.payment.update({
+            where: { id: payment.id },
+            data: {
+                status: 'PAID',
+                paidAt: new Date(),
+            },
+        });
+        await this.prisma.booking.update({
+            where: { id: payment.bookingId },
+            data: {
+                paymentStatus: 'PAID',
+                status: 'CONFIRMED',
+            },
+        });
+        return { success: true, bookingId: payment.bookingId };
+    }
+    async verifyAndConfirmPayment(bookingId) {
+        const payment = await this.prisma.payment.findFirst({
+            where: { bookingId },
+            include: { booking: true },
+        });
+        if (!payment) {
+            throw new common_1.NotFoundException(`Payment for booking #${bookingId} not found`);
+        }
+        if (payment.status === 'PAID') {
+            return { success: true, bookingId, alreadyPaid: true };
+        }
+        const bylStatus = await this.bylPayment.getCheckoutStatus(payment.invoiceId);
+        if (bylStatus.status === 'complete') {
+            return this.confirmPayment(payment.invoiceId);
+        }
+        return {
+            success: false,
+            bookingId,
+            bylStatus: bylStatus.status,
+            message: `Checkout status: ${bylStatus.status}`,
+        };
     }
     async updateStatus(id, status) {
         const booking = await this.prisma.booking.findUnique({ where: { id } });
@@ -89,6 +159,7 @@ let BookingsService = class BookingsService {
 exports.BookingsService = BookingsService;
 exports.BookingsService = BookingsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        byl_payment_service_1.BylPaymentService])
 ], BookingsService);
 //# sourceMappingURL=bookings.service.js.map

@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { X, CheckCircle, Clock, XCircle, ChevronDown, Package, CalendarDays, List, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { X, CheckCircle, Clock, XCircle, ChevronDown, Package, CalendarDays, List, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 
 // ---- Booking service type detection ----
-// We classify each booking by whether it includes studio items, live, photographer, or edit bookings.
-// Since backings may not yet include a `type` field, we infer from itemType + service category names.
 function detectBookingType(booking: any): string {
     const items: any[] = booking.items || [];
     for (const item of items) {
@@ -15,7 +13,6 @@ function detectBookingType(booking: any): string {
         if (catName.includes('эдит') || catName.includes('edit')) return 'edit';
         if (catName.includes('зурагла') || catName.includes('photo') || catName.includes('camera')) return 'photographer';
     }
-    // fallback from booking.type if ever present
     const t = (booking.type || '').toLowerCase();
     if (t.includes('studio')) return 'studio';
     if (t.includes('live')) return 'live';
@@ -31,7 +28,26 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; dot: string; label
 };
 
 const WEEKDAYS = ['Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя', 'Ня'];
+const WEEKDAYS_FULL = ['Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба', 'Ням'];
 const MONTHS_MN = ['1-р сар', '2-р сар', '3-р сар', '4-р сар', '5-р сар', '6-р сар', '7-р сар', '8-р сар', '9-р сар', '10-р сар', '11-р сар', '12-р сар'];
+
+// Hours displayed in day view
+const DAY_HOURS = Array.from({ length: 15 }, (_, i) => i + 8); // 08:00 – 22:00
+
+/** Get Monday of the week containing `date` */
+function getMonday(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay(); // 0=Sun
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+/** Format short date like "3/2" */
+function shortDate(d: Date) {
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+}
 
 export default function BookingsPage() {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -43,7 +59,21 @@ export default function BookingsPage() {
     // Calendar state
     const today = new Date();
     const [calYear, setCalYear] = useState(today.getFullYear());
-    const [calMonth, setCalMonth] = useState(today.getMonth()); // 0-indexed
+    const [calMonth, setCalMonth] = useState(today.getMonth());
+
+    // Drill-down state
+    const [calendarMode, setCalendarMode] = useState<'month' | 'week' | 'day'>('month');
+    const [selectedWeekStart, setSelectedWeekStart] = useState<Date | null>(null);
+    const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+
+    // Animation
+    const [animKey, setAnimKey] = useState(0);
+    const [animDirection, setAnimDirection] = useState<'forward' | 'backward'>('forward');
+
+    const triggerTransition = useCallback((direction: 'forward' | 'backward') => {
+        setAnimDirection(direction);
+        setAnimKey(k => k + 1);
+    }, []);
 
     const fetchBookings = async () => {
         try {
@@ -68,54 +98,182 @@ export default function BookingsPage() {
         finally { setIsSaving(false); }
     };
 
-    // Build calendar grid
+    // Build calendar grid (month view)
     const calendarDays = useMemo(() => {
         const firstDay = new Date(calYear, calMonth, 1);
-        // Monday=0 based offset
         let startOffset = firstDay.getDay() - 1;
         if (startOffset < 0) startOffset = 6;
         const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
         const days: (number | null)[] = [];
         for (let i = 0; i < startOffset; i++) days.push(null);
         for (let d = 1; d <= daysInMonth; d++) days.push(d);
-        // pad to full weeks
         while (days.length % 7 !== 0) days.push(null);
         return days;
     }, [calYear, calMonth]);
 
-    // Map booking items to calendar dates
-    const bookingsByDay = useMemo(() => {
+    // Bookings indexed by "YYYY-MM-DD" for efficient lookup
+    const bookingsByDateKey = useMemo(() => {
         const map: Record<string, any[]> = {};
         for (const b of bookings) {
             const type = detectBookingType(b);
             const items: any[] = b.items || [];
             if (items.length === 0) {
-                // fallback to createdAt
                 const d = new Date(b.createdAt);
-                if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
-                    const key = d.getDate().toString();
-                    map[key] = map[key] || [];
-                    map[key].push({ ...b, _type: type });
-                }
+                const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                map[key] = map[key] || [];
+                map[key].push({ ...b, _type: type });
                 continue;
             }
             for (const item of items) {
                 const d = new Date(item.bookingDate || b.createdAt);
-                if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
-                    const key = d.getDate().toString();
-                    map[key] = map[key] || [];
-                    map[key].push({ ...b, _type: type });
+                const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                map[key] = map[key] || [];
+                map[key].push({ ...b, _type: type, _item: item });
+            }
+        }
+        return map;
+    }, [bookings]);
+
+    // Helper to get bookings for a specific date
+    const getBookingsForDate = useCallback((date: Date) => {
+        const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        const found = bookingsByDateKey[key] || [];
+        // deduplicate by booking id
+        return found.filter((b, idx, arr) => arr.findIndex(x => x.id === b.id) === idx);
+    }, [bookingsByDateKey]);
+
+    // Week days array (7 dates starting from selectedWeekStart)
+    const weekDays = useMemo(() => {
+        if (!selectedWeekStart) return [];
+        return Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(selectedWeekStart);
+            d.setDate(d.getDate() + i);
+            return d;
+        });
+    }, [selectedWeekStart]);
+
+    // Day view: bookings grouped by hour
+    const dayBookingsByHour = useMemo(() => {
+        if (!selectedDay) return {};
+        const allBookings = getBookingsForDate(selectedDay);
+        const map: Record<number, any[]> = {};
+        for (const b of allBookings) {
+            const item = b._item;
+            if (item?.startTime) {
+                const startHour = new Date(item.startTime).getHours();
+                const endHour = item.endTime ? new Date(item.endTime).getHours() : startHour + 1;
+                for (let h = startHour; h < endHour; h++) {
+                    map[h] = map[h] || [];
+                    if (!map[h].find((x: any) => x.id === b.id)) {
+                        map[h].push(b);
+                    }
+                }
+            } else {
+                // No time info, put at 9am
+                map[9] = map[9] || [];
+                if (!map[9].find((x: any) => x.id === b.id)) {
+                    map[9].push(b);
                 }
             }
         }
         return map;
-    }, [bookings, calYear, calMonth]);
+    }, [selectedDay, getBookingsForDate]);
 
     const prevMonth = () => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); };
     const nextMonth = () => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); };
 
+    // Drill-down handlers
+    const handleMonthDayClick = (day: number) => {
+        const clickedDate = new Date(calYear, calMonth, day);
+        const monday = getMonday(clickedDate);
+        setSelectedWeekStart(monday);
+        setCalendarMode('week');
+        triggerTransition('forward');
+    };
+
+    const handleWeekDayClick = (date: Date) => {
+        setSelectedDay(new Date(date));
+        setCalendarMode('day');
+        triggerTransition('forward');
+    };
+
+    const handleBackToMonth = () => {
+        setCalendarMode('month');
+        setSelectedWeekStart(null);
+        setSelectedDay(null);
+        triggerTransition('backward');
+    };
+
+    const handleBackToWeek = () => {
+        setCalendarMode('week');
+        setSelectedDay(null);
+        triggerTransition('backward');
+    };
+
+    // Navigate week
+    const prevWeek = () => {
+        if (!selectedWeekStart) return;
+        const d = new Date(selectedWeekStart);
+        d.setDate(d.getDate() - 7);
+        setSelectedWeekStart(d);
+        triggerTransition('backward');
+    };
+    const nextWeek = () => {
+        if (!selectedWeekStart) return;
+        const d = new Date(selectedWeekStart);
+        d.setDate(d.getDate() + 7);
+        setSelectedWeekStart(d);
+        triggerTransition('forward');
+    };
+
+    // Navigate day
+    const prevDay = () => {
+        if (!selectedDay) return;
+        const d = new Date(selectedDay);
+        d.setDate(d.getDate() - 1);
+        setSelectedDay(d);
+        triggerTransition('backward');
+    };
+    const nextDay = () => {
+        if (!selectedDay) return;
+        const d = new Date(selectedDay);
+        d.setDate(d.getDate() + 1);
+        setSelectedDay(d);
+        triggerTransition('forward');
+    };
+
+    // CSS animation class based on direction
+    const animClass = animDirection === 'forward' ? 'cal-slide-forward' : 'cal-slide-backward';
+
     return (
         <div className="space-y-6">
+            {/* CSS for calendar transitions */}
+            <style>{`
+                @keyframes slideForward {
+                    from { opacity: 0; transform: translateX(60px); }
+                    to   { opacity: 1; transform: translateX(0); }
+                }
+                @keyframes slideBackward {
+                    from { opacity: 0; transform: translateX(-60px); }
+                    to   { opacity: 1; transform: translateX(0); }
+                }
+                .cal-slide-forward {
+                    animation: slideForward 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+                }
+                .cal-slide-backward {
+                    animation: slideBackward 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+                }
+                .cal-day-cell {
+                    transition: background-color 0.15s ease, transform 0.15s ease;
+                }
+                .cal-day-cell:hover {
+                    transform: scale(1.02);
+                }
+                .cal-hour-row {
+                    transition: background-color 0.15s ease;
+                }
+            `}</style>
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -128,7 +286,7 @@ export default function BookingsPage() {
                     <button onClick={() => setView('list')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${view === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                         <List className="w-4 h-4" /> Жагсаалт
                     </button>
-                    <button onClick={() => setView('calendar')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${view === 'calendar' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                    <button onClick={() => { setView('calendar'); setCalendarMode('month'); setSelectedWeekStart(null); setSelectedDay(null); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${view === 'calendar' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                         <CalendarDays className="w-4 h-4" /> Календарь
                     </button>
                 </div>
@@ -206,55 +364,210 @@ export default function BookingsPage() {
             {/* ================= CALENDAR VIEW ================= */}
             {view === 'calendar' && (
                 <div className="rounded-lg border border-border/50 bg-card overflow-hidden">
-                    {/* Month navigation */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
-                        <button onClick={prevMonth} className="p-1.5 rounded-md hover:bg-muted transition-colors"><ChevronLeft className="w-5 h-5" /></button>
-                        <h2 className="font-semibold text-lg">{calYear} оны {MONTHS_MN[calMonth]}</h2>
-                        <button onClick={nextMonth} className="p-1.5 rounded-md hover:bg-muted transition-colors"><ChevronRight className="w-5 h-5" /></button>
-                    </div>
 
-                    {/* Weekday header */}
-                    <div className="grid grid-cols-7 border-b border-border/50">
-                        {WEEKDAYS.map(w => (
-                            <div key={w} className="py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">{w}</div>
-                        ))}
-                    </div>
+                    {/* ===== MONTH VIEW ===== */}
+                    {calendarMode === 'month' && (
+                        <div key={`month-${calYear}-${calMonth}-${animKey}`} className={animKey > 0 ? animClass : ''}>
+                            {/* Month navigation */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+                                <button onClick={prevMonth} className="p-1.5 rounded-md hover:bg-muted transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+                                <h2 className="font-semibold text-lg">{calYear} оны {MONTHS_MN[calMonth]}</h2>
+                                <button onClick={nextMonth} className="p-1.5 rounded-md hover:bg-muted transition-colors"><ChevronRight className="w-5 h-5" /></button>
+                            </div>
 
-                    {/* Calendar grid */}
-                    <div className="grid grid-cols-7 divide-x divide-y divide-border/30">
-                        {calendarDays.map((day, i) => {
-                            const isToday = day !== null && day === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
-                            const dayBookings: any[] = day !== null ? (bookingsByDay[day.toString()] || []) : [];
-                            // deduplicate by booking id
-                            const uniqueBookings = dayBookings.filter((b, idx, arr) => arr.findIndex(x => x.id === b.id) === idx);
+                            {/* Weekday header */}
+                            <div className="grid grid-cols-7 border-b border-border/50">
+                                {WEEKDAYS.map(w => (
+                                    <div key={w} className="py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">{w}</div>
+                                ))}
+                            </div>
 
-                            return (
-                                <div key={i} className={`min-h-[100px] p-2 ${day === null ? 'bg-muted/10' : 'hover:bg-muted/20 transition-colors'}`}>
-                                    {day !== null && (
-                                        <>
-                                            <div className={`w-7 h-7 flex items-center justify-center text-sm font-medium mb-1 rounded-full ${isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'}`}>
-                                                {day}
+                            {/* Calendar grid */}
+                            <div className="grid grid-cols-7 divide-x divide-y divide-border/30">
+                                {calendarDays.map((day, i) => {
+                                    const isToday = day !== null && day === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+                                    const dayDate = day !== null ? new Date(calYear, calMonth, day) : null;
+                                    const uniqueBookings = dayDate ? getBookingsForDate(dayDate) : [];
+
+                                    return (
+                                        <div
+                                            key={i}
+                                            onClick={() => day !== null && handleMonthDayClick(day)}
+                                            className={`cal-day-cell min-h-[100px] p-2 ${day === null ? 'bg-muted/10' : 'hover:bg-muted/20 cursor-pointer'}`}
+                                        >
+                                            {day !== null && (
+                                                <>
+                                                    <div className={`w-7 h-7 flex items-center justify-center text-sm font-medium mb-1 rounded-full ${isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'}`}>
+                                                        {day}
+                                                    </div>
+                                                    <div className="space-y-0.5">
+                                                        {uniqueBookings.slice(0, 3).map((b, idx) => {
+                                                            const col = TYPE_COLORS[b._type] || TYPE_COLORS.photographer;
+                                                            return (
+                                                                <button key={idx} onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }} className={`w-full text-left rounded px-1.5 py-0.5 text-xs truncate ${col.bg} ${col.text} hover:opacity-80 transition-opacity`}>
+                                                                    <span className={`inline-block w-1.5 h-1.5 rounded-full ${col.dot} mr-1 align-middle`} />
+                                                                    {b.user?.username || `#${b.id}`}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        {uniqueBookings.length > 3 && (
+                                                            <p className="text-xs text-muted-foreground pl-1">+{uniqueBookings.length - 3} дахин</p>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ===== WEEK VIEW ===== */}
+                    {calendarMode === 'week' && selectedWeekStart && (
+                        <div key={`week-${selectedWeekStart.toISOString()}-${animKey}`} className={animClass}>
+                            {/* Week navigation */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+                                <div className="flex items-center gap-3">
+                                    <button onClick={handleBackToMonth} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                        <ArrowLeft className="w-4 h-4" />
+                                        <span>Сар</span>
+                                    </button>
+                                    <div className="w-px h-5 bg-border/50" />
+                                    <button onClick={prevWeek} className="p-1.5 rounded-md hover:bg-muted transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+                                </div>
+                                <h2 className="font-semibold text-lg">
+                                    {selectedWeekStart.getFullYear()} оны {MONTHS_MN[selectedWeekStart.getMonth()]} — {shortDate(selectedWeekStart)} ~ {shortDate(weekDays[6])}
+                                </h2>
+                                <button onClick={nextWeek} className="p-1.5 rounded-md hover:bg-muted transition-colors"><ChevronRight className="w-5 h-5" /></button>
+                            </div>
+
+                            {/* Weekday header */}
+                            <div className="grid grid-cols-7 border-b border-border/50">
+                                {weekDays.map((d, i) => {
+                                    const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+                                    return (
+                                        <div key={i} className="py-3 text-center">
+                                            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{WEEKDAYS[i]}</div>
+                                            <div className={`mt-1 w-8 h-8 mx-auto flex items-center justify-center text-sm font-bold rounded-full ${isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'}`}>
+                                                {d.getDate()}
                                             </div>
-                                            <div className="space-y-0.5">
-                                                {uniqueBookings.slice(0, 3).map((b, idx) => {
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Week grid — taller cells for more detail */}
+                            <div className="grid grid-cols-7 divide-x divide-border/30">
+                                {weekDays.map((d, i) => {
+                                    const dayBookings = getBookingsForDate(d);
+                                    const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+                                    return (
+                                        <div
+                                            key={i}
+                                            onClick={() => handleWeekDayClick(d)}
+                                            className={`cal-day-cell min-h-[280px] p-3 cursor-pointer ${isToday ? 'bg-primary/5' : 'hover:bg-muted/20'}`}
+                                        >
+                                            <div className="space-y-1">
+                                                {dayBookings.map((b, idx) => {
                                                     const col = TYPE_COLORS[b._type] || TYPE_COLORS.photographer;
+                                                    const item = b._item;
+                                                    const timeStr = item?.startTime
+                                                        ? new Date(item.startTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })
+                                                        : '';
                                                     return (
-                                                        <button key={idx} onClick={() => setSelectedBooking(b)} className={`w-full text-left rounded px-1.5 py-0.5 text-xs truncate ${col.bg} ${col.text} hover:opacity-80 transition-opacity`}>
-                                                            <span className={`inline-block w-1.5 h-1.5 rounded-full ${col.dot} mr-1 align-middle`} />
-                                                            {b.user?.username || `#${b.id}`}
+                                                        <button
+                                                            key={idx}
+                                                            onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }}
+                                                            className={`w-full text-left rounded-md px-2 py-1.5 text-xs ${col.bg} ${col.text} hover:opacity-80 transition-opacity`}
+                                                        >
+                                                            <div className="flex items-center gap-1">
+                                                                <span className={`inline-block w-1.5 h-1.5 rounded-full ${col.dot} shrink-0`} />
+                                                                <span className="font-medium truncate">{b.user?.username || `#${b.id}`}</span>
+                                                            </div>
+                                                            {timeStr && <div className="text-[10px] opacity-70 mt-0.5 pl-2.5">{timeStr}</div>}
                                                         </button>
                                                     );
                                                 })}
-                                                {uniqueBookings.length > 3 && (
-                                                    <p className="text-xs text-muted-foreground pl-1">+{uniqueBookings.length - 3} дахин</p>
+                                                {dayBookings.length === 0 && (
+                                                    <p className="text-xs text-muted-foreground/50 text-center mt-8">—</p>
                                                 )}
                                             </div>
-                                        </>
-                                    )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ===== DAY VIEW ===== */}
+                    {calendarMode === 'day' && selectedDay && (
+                        <div key={`day-${selectedDay.toISOString()}-${animKey}`} className={animClass}>
+                            {/* Day navigation */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+                                <div className="flex items-center gap-3">
+                                    <button onClick={handleBackToWeek} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                        <ArrowLeft className="w-4 h-4" />
+                                        <span>Долоо хоног</span>
+                                    </button>
+                                    <div className="w-px h-5 bg-border/50" />
+                                    <button onClick={prevDay} className="p-1.5 rounded-md hover:bg-muted transition-colors"><ChevronLeft className="w-5 h-5" /></button>
                                 </div>
-                            );
-                        })}
-                    </div>
+                                <h2 className="font-semibold text-lg">
+                                    {selectedDay.getFullYear()} оны {MONTHS_MN[selectedDay.getMonth()]} {selectedDay.getDate()} — {WEEKDAYS_FULL[selectedDay.getDay() === 0 ? 6 : selectedDay.getDay() - 1]}
+                                </h2>
+                                <button onClick={nextDay} className="p-1.5 rounded-md hover:bg-muted transition-colors"><ChevronRight className="w-5 h-5" /></button>
+                            </div>
+
+                            {/* Hourly schedule */}
+                            <div className="divide-y divide-border/30">
+                                {DAY_HOURS.map(hour => {
+                                    const hourBookings = dayBookingsByHour[hour] || [];
+                                    const isNow = today.getDate() === selectedDay.getDate() && today.getMonth() === selectedDay.getMonth() && today.getFullYear() === selectedDay.getFullYear() && today.getHours() === hour;
+                                    return (
+                                        <div key={hour} className={`cal-hour-row flex min-h-[60px] ${isNow ? 'bg-primary/5' : 'hover:bg-muted/10'}`}>
+                                            {/* Time label */}
+                                            <div className="w-20 shrink-0 flex items-start justify-end pr-4 pt-2">
+                                                <span className={`text-xs font-medium ${isNow ? 'text-primary' : 'text-muted-foreground'}`}>
+                                                    {hour.toString().padStart(2, '0')}:00
+                                                </span>
+                                            </div>
+                                            <div className="border-l border-border/30 flex-1 p-2">
+                                                <div className="space-y-1">
+                                                    {hourBookings.map((b, idx) => {
+                                                        const col = TYPE_COLORS[b._type] || TYPE_COLORS.photographer;
+                                                        const item = b._item;
+                                                        const startStr = item?.startTime
+                                                            ? new Date(item.startTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })
+                                                            : '';
+                                                        const endStr = item?.endTime
+                                                            ? new Date(item.endTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })
+                                                            : '';
+                                                        return (
+                                                            <button
+                                                                key={idx}
+                                                                onClick={() => setSelectedBooking(b)}
+                                                                className={`w-full text-left rounded-md px-3 py-2 text-sm ${col.bg} ${col.text} hover:opacity-80 transition-opacity flex items-center justify-between`}
+                                                            >
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <span className={`inline-block w-2 h-2 rounded-full ${col.dot} shrink-0`} />
+                                                                    <span className="font-medium truncate">{b.user?.username || `#${b.id}`}</span>
+                                                                    <span className="text-xs opacity-60">{col.label}</span>
+                                                                </div>
+                                                                {startStr && (
+                                                                    <span className="text-xs opacity-70 shrink-0 ml-2">{startStr}{endStr ? ` – ${endStr}` : ''}</span>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 

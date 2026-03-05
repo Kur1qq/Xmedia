@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { BookingStatus, ItemType } from '@prisma/client';
+import { BookingStatus, ItemType, PaymentStatus } from '@prisma/client';
+import { BylPaymentService } from './byl-payment.service';
 
 @Injectable()
 export class BookingsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private bylPayment: BylPaymentService,
+    ) { }
 
     // Find all bookings
     async findAll() {
@@ -18,10 +22,11 @@ export class BookingsService {
         });
     }
 
-    // Guest booking — no auth required
+    // Guest booking — no auth required, returns checkout URL
     async createGuestBooking(dto: {
         name: string;
         phone: string;
+        email?: string;
         date: string;     // 'YYYY-MM-DD'
         time: string;     // 'HH:MM'
         duration: number; // hours
@@ -29,6 +34,7 @@ export class BookingsService {
         serviceId: number;
         unitPrice: number;
         notes?: string;
+        serviceName?: string;
     }) {
         // Find or create a guest user by phone
         let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
@@ -36,7 +42,7 @@ export class BookingsService {
             user = await this.prisma.user.create({
                 data: {
                     username: dto.name,
-                    email: `guest_${dto.phone}@xmedia.guest`,
+                    email: dto.email || `guest_${dto.phone}@xmedia.guest`,
                     phone: dto.phone,
                     passwordHash: 'GUEST',
                 }
@@ -64,7 +70,7 @@ export class BookingsService {
         if (dto.serviceType === 'PHOTOGRAPHER_SERVICE') itemData.photographerServiceId = dto.serviceId;
         if (dto.serviceType === 'EDIT_SERVICE') itemData.serviceId = dto.serviceId;
 
-        return this.prisma.booking.create({
+        const booking = await this.prisma.booking.create({
             data: {
                 userId: user.id,
                 totalAmount: total,
@@ -73,6 +79,98 @@ export class BookingsService {
             },
             include: { items: true }
         });
+
+        // Create Byl checkout
+        try {
+            const checkout = await this.bylPayment.createCheckout({
+                bookingId: booking.id,
+                amount: total,
+                serviceName: dto.serviceName || dto.serviceType,
+                quantity: 1,
+                customerEmail: dto.email,
+            });
+
+            // Save checkout ID in payment record
+            await this.prisma.payment.create({
+                data: {
+                    bookingId: booking.id,
+                    invoiceId: String(checkout.checkoutId),
+                    amount: total,
+                    status: 'UNPAID',
+                }
+            });
+
+            return { ...booking, checkoutUrl: checkout.checkoutUrl };
+        } catch (error) {
+            // If Byl fails, still return booking but without checkout URL
+            return { ...booking, checkoutUrl: null, paymentError: error.message };
+        }
+    }
+
+    // Confirm payment from webhook
+    async confirmPayment(bylCheckoutId: string) {
+        // Find payment by Byl checkout ID (stored as invoiceId)
+        const payment = await this.prisma.payment.findUnique({
+            where: { invoiceId: bylCheckoutId },
+            include: { booking: true },
+        });
+
+        if (!payment) {
+            throw new NotFoundException(`Payment with Byl checkout ID ${bylCheckoutId} not found`);
+        }
+
+        // Update payment status
+        await this.prisma.payment.update({
+            where: { id: payment.id },
+            data: {
+                status: 'PAID',
+                paidAt: new Date(),
+            },
+        });
+
+        // Update booking status
+        await this.prisma.booking.update({
+            where: { id: payment.bookingId },
+            data: {
+                paymentStatus: 'PAID',
+                status: 'CONFIRMED',
+            },
+        });
+
+        return { success: true, bookingId: payment.bookingId };
+    }
+
+    // Verify payment status from Byl.mn API and confirm if paid
+    async verifyAndConfirmPayment(bookingId: number) {
+        // Find the payment record for this booking
+        const payment = await this.prisma.payment.findFirst({
+            where: { bookingId },
+            include: { booking: true },
+        });
+
+        if (!payment) {
+            throw new NotFoundException(`Payment for booking #${bookingId} not found`);
+        }
+
+        // Already paid — no need to check again
+        if (payment.status === 'PAID') {
+            return { success: true, bookingId, alreadyPaid: true };
+        }
+
+        // Check status from Byl.mn API
+        const bylStatus = await this.bylPayment.getCheckoutStatus(payment.invoiceId);
+
+        if (bylStatus.status === 'complete') {
+            // Confirm the payment
+            return this.confirmPayment(payment.invoiceId);
+        }
+
+        return {
+            success: false,
+            bookingId,
+            bylStatus: bylStatus.status,
+            message: `Checkout status: ${bylStatus.status}`,
+        };
     }
 
     // Update booking status

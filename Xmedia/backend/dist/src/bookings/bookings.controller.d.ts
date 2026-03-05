@@ -1,10 +1,13 @@
 import { BookingsService } from './bookings.service';
 import { BookingStatus } from '@prisma/client';
 import { AdminLogService } from '../admin/admin-log.service';
+import { BylPaymentService } from './byl-payment.service';
 export declare class BookingsController {
     private readonly bookingsService;
     private readonly log;
-    constructor(bookingsService: BookingsService, log: AdminLogService);
+    private readonly bylPayment;
+    private readonly logger;
+    constructor(bookingsService: BookingsService, log: AdminLogService, bylPayment: BylPaymentService);
     findAll(): Promise<({
         user: {
             id: number;
@@ -13,55 +16,44 @@ export declare class BookingsController {
             phone: string | null;
         };
         items: ({
+            service: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                categoryId: number;
+                subCategoryId: number | null;
+                description: string | null;
+                price: import("@prisma/client-runtime-utils").Decimal;
+                priceUnit: string;
+                durationMinutes: number | null;
+                portfolioImages: string | null;
+                isActive: boolean;
+            } | null;
             studio: {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
                 capacity: number | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
                 isAvailable: boolean;
-            } | null;
-            service: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                isActive: boolean;
-                description: string | null;
-                price: import("@prisma/client-runtime-utils").Decimal;
-                priceUnit: string;
-                durationMinutes: number | null;
-                portfolioImages: string | null;
-                categoryId: number;
-                subCategoryId: number | null;
-            } | null;
-            liveService: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                image: string | null;
-                isActive: boolean;
-                description: string | null;
-                amenities: import("@prisma/client/runtime/client").JsonValue | null;
-                categoryId: number;
             } | null;
             photographerService: {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
-                description: string | null;
-                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 categoryId: number;
+                description: string | null;
+                isActive: boolean;
+                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 mainTypeId: number;
+                image: string | null;
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
@@ -69,37 +61,48 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
-                description: string | null;
-                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 categoryId: number;
+                description: string | null;
+                isActive: boolean;
+                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 mainTypeId: number;
+                image: string | null;
                 subTypeId: number | null;
+            } | null;
+            liveService: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                categoryId: number;
+                description: string | null;
+                isActive: boolean;
+                amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                image: string | null;
             } | null;
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            bookingId: number;
             itemType: import("@prisma/client").$Enums.ItemType;
+            studioId: number | null;
+            serviceId: number | null;
+            photographerServiceId: number | null;
+            editServiceId: number | null;
+            liveServiceId: number | null;
             quantity: number;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
             startTime: Date | null;
             endTime: Date | null;
-            studioId: number | null;
-            serviceId: number | null;
-            photographerServiceId: number | null;
-            editServiceId: number | null;
-            liveServiceId: number | null;
-            bookingId: number;
         })[];
         payments: {
             id: number;
+            status: import("@prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import("@prisma/client").$Enums.PaymentStatus;
             bookingId: number;
             invoiceId: string;
             qpayQrText: string | null;
@@ -110,79 +113,137 @@ export declare class BookingsController {
         }[];
     } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         userId: number;
         totalAmount: import("@prisma/client-runtime-utils").Decimal;
         status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     })[]>;
     createGuest(dto: any): Promise<{
+        checkoutUrl: string;
         items: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            bookingId: number;
             itemType: import("@prisma/client").$Enums.ItemType;
+            studioId: number | null;
+            serviceId: number | null;
+            photographerServiceId: number | null;
+            editServiceId: number | null;
+            liveServiceId: number | null;
             quantity: number;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
             startTime: Date | null;
             endTime: Date | null;
-            studioId: number | null;
-            serviceId: number | null;
-            photographerServiceId: number | null;
-            editServiceId: number | null;
-            liveServiceId: number | null;
-            bookingId: number;
         }[];
-    } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         userId: number;
         totalAmount: import("@prisma/client-runtime-utils").Decimal;
         status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | {
+        checkoutUrl: null;
+        paymentError: any;
+        items: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            bookingId: number;
+            itemType: import("@prisma/client").$Enums.ItemType;
+            studioId: number | null;
+            serviceId: number | null;
+            photographerServiceId: number | null;
+            editServiceId: number | null;
+            liveServiceId: number | null;
+            quantity: number;
+            unitPrice: import("@prisma/client-runtime-utils").Decimal;
+            totalPrice: import("@prisma/client-runtime-utils").Decimal;
+            bookingDate: Date;
+            startTime: Date | null;
+            endTime: Date | null;
+        }[];
+        id: number;
+        userId: number;
+        totalAmount: import("@prisma/client-runtime-utils").Decimal;
+        status: import("@prisma/client").$Enums.BookingStatus;
+        paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
+        notes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    verifyPayment(id: number): Promise<{
+        success: boolean;
+        bookingId: number;
+    } | {
+        success: boolean;
+        bookingId: number;
+        alreadyPaid: boolean;
+        bylStatus?: undefined;
+        message?: undefined;
+    } | {
+        success: boolean;
+        bookingId: number;
+        bylStatus: string;
+        message: string;
+        alreadyPaid?: undefined;
+    }>;
+    bylWebhook(body: any, signature: string): Promise<{
+        success: boolean;
+        error?: undefined;
+        message?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        message?: undefined;
+    } | {
+        success: boolean;
+        message: string;
+        error?: undefined;
     }>;
     updateStatus(id: number, status: BookingStatus, req: any): Promise<{
         user: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             username: string;
             email: string;
             phone: string | null;
             passwordHash: string;
-            createdAt: Date;
-            updatedAt: Date;
         };
         items: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            bookingId: number;
             itemType: import("@prisma/client").$Enums.ItemType;
+            studioId: number | null;
+            serviceId: number | null;
+            photographerServiceId: number | null;
+            editServiceId: number | null;
+            liveServiceId: number | null;
             quantity: number;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
             startTime: Date | null;
             endTime: Date | null;
-            studioId: number | null;
-            serviceId: number | null;
-            photographerServiceId: number | null;
-            editServiceId: number | null;
-            liveServiceId: number | null;
-            bookingId: number;
         }[];
     } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         userId: number;
         totalAmount: import("@prisma/client-runtime-utils").Decimal;
         status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

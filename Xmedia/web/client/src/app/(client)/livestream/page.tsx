@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Radio, X, Check, Info, ArrowLeft, Calendar as CalendarIcon, Phone, User, Loader2, GalleryVerticalEnd } from "lucide-react";
+import { Radio, X, Check, Info, ArrowLeft, Calendar as CalendarIcon, Phone, User, Loader2, GalleryVerticalEnd, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,7 @@ export default function LivestreamPage() {
     const [selected, setSelected] = useState<LiveService | null>(null);
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ name: "", phone: "", date: undefined as Date | undefined, time: "", duration: "1", tierId: "" });
+    const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, time: "", duration: "1", tierId: "" });
 
     useEffect(() => {
         fetch(`${API}/live-services`)
@@ -59,27 +59,34 @@ export default function LivestreamPage() {
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return; }
         setSubmitting(true);
         try {
-            const res = await fetch(`${API}/api/bookings`, {
+            const res = await fetch(`${API}/bookings`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    name: form.name, phone: form.phone,
+                    name: form.name, phone: form.phone, email: form.email,
                     date: format(form.date, "yyyy-MM-dd"), time: form.time,
                     duration: parseInt(form.duration),
                     serviceType: "LIVE_SERVICE", serviceId: selected!.id,
                     unitPrice: selected!.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0,
+                    serviceName: selected!.name,
                 }),
             });
             if (!res.ok) throw new Error();
+            const data = await res.json();
+            if (data.checkoutUrl) {
+                toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
+                window.location.href = data.checkoutUrl;
+                return;
+            }
             toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: "Удахгүй холбогдох болно.", duration: 6000 });
             setSelected(null); setIsBooking(false);
-            setForm({ name: "", phone: "", date: undefined, time: "", duration: "1", tierId: "" });
+            setForm({ name: "", phone: "", email: "", date: undefined, time: "", duration: "1", tierId: "" });
         } catch {
             toast.error("Захиалга бүртгэхэд алдаа гарлаа.");
         } finally { setSubmitting(false); }
     };
 
-    const close = () => { setSelected(null); setIsBooking(false); setForm({ name: "", phone: "", date: undefined, time: "", duration: "1", tierId: "" }); };
+    const close = () => { setSelected(null); setIsBooking(false); setForm({ name: "", phone: "", email: "", date: undefined, time: "", duration: "1", tierId: "" }); };
 
     const getStartingPrice = (svc: LiveService) => {
         if (!svc.priceTiers || svc.priceTiers.length === 0) return 0;
@@ -217,10 +224,12 @@ export default function LivestreamPage() {
                                             <form onSubmit={handleSubmit} className="space-y-4">
                                                 <div className="relative"><User className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required placeholder="Таны нэр" className="pl-10 bg-white/5 border-white/10 text-white" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
                                                 <div className="relative"><Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required type="tel" placeholder="Утасны дугаар" className="pl-10 bg-white/5 border-white/10 text-white" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+                                                <div className="relative"><Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required type="email" placeholder="И-мэйл хаяг" className="pl-10 bg-white/5 border-white/10 text-white" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
                                                 <Popover>
                                                     <PopoverTrigger asChild>
-                                                        <Button variant="outline" className={cn("w-full justify-start pl-10 relative bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white", !form.date && "text-gray-500")}>
-                                                            <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-gray-500" />{form.date ? format(form.date, "yyyy-MM-dd") : "Огноо сонгох"}
+                                                        <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
+                                                            <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" />
+                                                            <span>{form.date ? format(form.date, "yyyy-MM-dd") : "Огноо сонгох"}</span>
                                                         </Button>
                                                     </PopoverTrigger>
                                                     <PopoverContent className="w-auto p-0 bg-[#111] border-white/10 z-[200]" align="start">
