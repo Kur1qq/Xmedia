@@ -194,16 +194,16 @@ export default function StudiosPage() {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="p-6 pt-4 flex flex-col h-[200px]">
+                                    <div className="p-5 sm:p-6 pt-4 flex flex-col flex-1">
                                         <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{studio.name}</h3>
-                                        <p className="text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed flex-1">{studio.description}</p>
+                                        <p className="text-gray-400 text-xs sm:text-sm mb-4 line-clamp-2 sm:line-clamp-3 leading-relaxed flex-1">{studio.description}</p>
                                         <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
                                             <div className="flex flex-col flex-1">
                                                 <span className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold">Эхлэх үнэ</span>
-                                                <span className="text-white font-extrabold text-lg">{minPrice(studio).toLocaleString()}₮</span>
+                                                <span className="text-white font-extrabold text-base sm:text-lg">{minPrice(studio).toLocaleString()}₮</span>
                                             </div>
-                                            <Button size="sm" className="bg-white/5 border border-white/10 text-white hover:bg-primary hover:border-primary group-hover:text-white font-semibold transition-all shadow-none">
-                                                Дэлгэрэнгүй <ArrowRight className="w-4 h-4 ml-1.5 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                                            <Button size="sm" className="bg-white/5 border border-white/10 text-white hover:bg-primary hover:border-primary group-hover:text-white font-semibold transition-all shadow-none text-xs px-3">
+                                                Дэлгэрэнгүй <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1.5 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
                                             </Button>
                                         </div>
                                     </div>
