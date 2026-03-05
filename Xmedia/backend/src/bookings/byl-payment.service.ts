@@ -25,10 +25,13 @@ export class BylPaymentService {
         successUrl?: string;
         cancelUrl?: string;
     }): Promise<{ checkoutId: number; checkoutUrl: string }> {
-        // Prefer explicit CLIENT_URL, then CORS_ORIGINS first entry, then hardcoded Vercel prod URL
-        const clientBaseUrl = process.env.CLIENT_URL
-            || (process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',')[0] : null)
-            || 'https://xmedia-six.vercel.app';
+        // Prefer explicit CLIENT_URL, then try to find a non-local URL in CORS_ORIGINS, then hardcode Vercel prod
+        let clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
+        if (process.env.CORS_ORIGINS && !process.env.CLIENT_URL) {
+            const origins = process.env.CORS_ORIGINS.split(',');
+            const remoteOrigin = origins.find(o => !o.includes('localhost') && !o.includes('127.0.0.1'));
+            if (remoteOrigin) clientBaseUrl = remoteOrigin.trim();
+        }
 
         const body = {
             success_url: params.successUrl || `${clientBaseUrl}/booking/success?bookingId=${params.bookingId}`,
