@@ -1,4 +1,4 @@
-import { Controller, Post, UploadedFile, UseInterceptors, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors, UseGuards, BadRequestException, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -25,11 +25,22 @@ export class UploadController {
             cb(null, true);
         },
     }))
-    uploadFile(@UploadedFile() file: Express.Multer.File) {
+    uploadFile(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
         if (!file) {
             return { error: 'No file uploaded' };
         }
-        const baseUrl = process.env.APP_URL || 'http://localhost:4000';
+
+        // Remove accidental quotes from APP_URL if it was set like APP_URL="http://..."
+        let baseUrl = process.env.APP_URL;
+        if (baseUrl) {
+            baseUrl = baseUrl.replace(/['"]+/g, '');
+            if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+        } else {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+            const host = req.get('host') || 'localhost:4000';
+            baseUrl = `${protocol}://${host}`;
+        }
+
         return {
             url: `${baseUrl}/public/uploads/${file.filename}`
         };
