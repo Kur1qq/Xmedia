@@ -13,9 +13,18 @@ export class AdminController {
     // ---- Auth (public) ----
     @Post('login')
     async login(@Body() body: { username: string; password: string }, @Req() req: any) {
-        const result = await this.adminService.login(body.username, body.password);
-        await this.logService.log(result.admin.id, 'LOGIN', 'Admin', result.admin.id, undefined, req.ip);
-        return result;
+        try {
+            const result = await this.adminService.login(body.username, body.password);
+            try {
+                await this.logService.log(result.admin.id, 'LOGIN', 'Admin', result.admin.id, undefined, req.ip);
+            } catch (logErr) {
+                console.error('Login log failed:', logErr);
+            }
+            return result;
+        } catch (err) {
+            console.error('Login error:', err);
+            throw err;
+        }
     }
 
     // ---- Logs (must come BEFORE :id routes to avoid routing conflict) ----
