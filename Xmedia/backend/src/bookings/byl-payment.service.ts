@@ -25,13 +25,9 @@ export class BylPaymentService {
         successUrl?: string;
         cancelUrl?: string;
     }): Promise<{ checkoutId: number; checkoutUrl: string }> {
-        // Prefer explicit CLIENT_URL, then try to find a non-local URL in CORS_ORIGINS, then hardcode Vercel prod
-        let clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
-        if (process.env.CORS_ORIGINS && !process.env.CLIENT_URL) {
-            const origins = process.env.CORS_ORIGINS.split(',');
-            const remoteOrigin = origins.find(o => !o.includes('localhost') && !o.includes('127.0.0.1'));
-            if (remoteOrigin) clientBaseUrl = remoteOrigin.trim();
-        }
+        // Strictly use CLIENT_URL or fallback to the explicit Vercel frontend app URL.
+        // We do not parse CORS_ORIGINS here because it might contain the Admin panel URL instead of the Client.
+        const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
 
         const body = {
             success_url: params.successUrl || `${clientBaseUrl}/`,
