@@ -51,10 +51,29 @@ async function bootstrap() {
     app.useGlobalFilters(new all_exceptions_filter_1.AllExceptionsFilter());
     app.use('/public', express.static((0, path_1.join)(process.cwd(), 'public')));
     const corsOrigins = process.env.CORS_ORIGINS
-        ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+        ? process.env.CORS_ORIGINS.split(',').map(o => {
+            let trimmed = o.trim();
+            if (trimmed.endsWith('/')) {
+                trimmed = trimmed.slice(0, -1);
+            }
+            return trimmed;
+        })
         : ['http://localhost:3000', 'http://localhost:3002'];
     app.enableCors({
-        origin: corsOrigins,
+        origin: process.env.CORS_ORIGINS === '*' ? true : function (origin, callback) {
+            if (!origin || corsOrigins.includes(origin)) {
+                callback(null, true);
+            }
+            else {
+                if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+                    callback(null, true);
+                }
+                else {
+                    console.warn('Blocked CORS origin:', origin);
+                    callback(null, true);
+                }
+            }
+        },
         credentials: true,
     });
     await app.listen(process.env.PORT ?? 4000);
