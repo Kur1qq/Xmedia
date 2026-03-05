@@ -65,7 +65,7 @@ export default function AdminsPage() {
         setUploadingImg(true);
         const fd = new FormData(); fd.append('file', file);
         try {
-            const res = await fetch('http://localhost:4000/api/upload', { method: 'POST', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: fd });
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/upload`, { method: 'POST', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: fd });
             if (res.ok) { const d = await res.json(); setForm(p => ({ ...p, image: d.url })); toast.success("Зураг хуулагдлаа!"); }
             else toast.error("Зураг хуулахад алдаа.");
         } catch { toast.error("Сервертэй алдаа."); }

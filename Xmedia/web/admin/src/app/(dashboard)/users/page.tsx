@@ -26,7 +26,7 @@ export default function UsersPage() {
 
     const fetchUsers = async () => {
         try {
-            const res = await fetch('http://localhost:4000/api/users');
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/users`);
             if (res.ok) setUsers(await res.json());
         } catch (error) {
             console.error("Error fetching users:", error);

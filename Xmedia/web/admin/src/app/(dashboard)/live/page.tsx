@@ -43,9 +43,9 @@ export default function LivePage() {
     const fetchData = async () => {
         try {
             const [resCategories, resServices, resEquipments] = await Promise.all([
-                fetch('http://localhost:4000/api/categories'),
-                fetch('http://localhost:4000/api/live-services'),
-                fetch('http://localhost:4000/api/equipment'),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/categories`),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/live-services`),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/equipment`),
             ]);
             if (resCategories.ok) setCategories(await resCategories.json());
             if (resServices.ok) setLiveServices(await resServices.json());
@@ -66,7 +66,7 @@ export default function LivePage() {
         const fd = new FormData();
         fd.append('file', file);
         try {
-            const res = await fetch('http://localhost:4000/api/upload', { method: 'POST', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: fd });
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/upload`, { method: 'POST', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: fd });
             if (res.ok) {
                 const data = await res.json();
                 setServiceFormData(prev => ({ ...prev, image: data.url }));
@@ -90,7 +90,7 @@ export default function LivePage() {
         setIsSavingCategory(true);
         try {
             const method = editingCategory ? 'PATCH' : 'POST';
-            const url = editingCategory ? `http://localhost:4000/api/categories/${editingCategory.id}` : 'http://localhost:4000/api/categories';
+            const url = editingCategory ? `${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/categories/${editingCategory.id}` : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/categories`;
             const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(categoryFormData) });
             if (res.ok) { await fetchData(); setIsCategoryModalOpen(false); toast.success("Ангилал хадгалагдлаа"); }
             else toast.error("Алдаа гарлаа");
@@ -101,7 +101,7 @@ export default function LivePage() {
     const handleDeleteCategory = async (id: number) => {
         if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
         try {
-            const res = await fetch(`http://localhost:4000/api/categories/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/categories/${id}`, { method: 'DELETE' });
             if (res.ok) { setCategories(categories.filter(c => c.id !== id)); toast.success("Ангилал устгагдлаа"); }
             else toast.error("Алдаа гарлаа.");
         } catch { toast.error("Сервертэй холбогдоход алдаа гарлаа."); }
@@ -171,7 +171,7 @@ export default function LivePage() {
         setIsSavingService(true);
         try {
             const method = editingService ? 'PATCH' : 'POST';
-            const url = editingService ? `http://localhost:4000/api/live-services/${editingService.id}` : 'http://localhost:4000/api/live-services';
+            const url = editingService ? `${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/live-services/${editingService.id}` : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/live-services`;
 
             const payload = {
                 name: serviceFormData.name,
@@ -198,7 +198,7 @@ export default function LivePage() {
     const handleDeleteService = async (id: number) => {
         if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
         try {
-            const res = await fetch(`http://localhost:4000/api/live-services/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/live-services/${id}`, { method: 'DELETE' });
             if (res.ok) { setLiveServices(liveServices.filter(s => s.id !== id)); toast.success("Устгагдлаа"); }
             else toast.error("Алдаа гарлаа.");
         } catch { toast.error("Сервертэй холбогдоход алдаа гарлаа."); }

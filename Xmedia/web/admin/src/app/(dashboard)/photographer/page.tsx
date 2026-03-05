@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import * as Tabs from '@radix-ui/react-tabs';
 import { getToken } from "@/lib/auth";
 
-const API = 'http://localhost:4000/api';
+const API = process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`;
 const tabCls = "px-5 h-[45px] flex items-center justify-center text-sm font-medium leading-none text-muted-foreground select-none hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary outline-none cursor-pointer transition-colors";
 
 interface ServicePackage {

@@ -77,7 +77,7 @@ export default function BookingsPage() {
 
     const fetchBookings = async () => {
         try {
-            const res = await fetch('http://localhost:4000/api/bookings');
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/bookings`);
             if (res.ok) setBookings(await res.json());
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
@@ -89,7 +89,7 @@ export default function BookingsPage() {
         if (!selectedBooking) return;
         setIsSaving(true);
         try {
-            const res = await fetch(`http://localhost:4000/api/bookings/${selectedBooking.id}/status`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/bookings/${selectedBooking.id}/status`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }),
             });
             if (res.ok) { await fetchBookings(); setSelectedBooking({ ...selectedBooking, status }); }

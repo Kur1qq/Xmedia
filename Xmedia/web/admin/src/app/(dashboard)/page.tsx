@@ -16,7 +16,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await fetch('http://localhost:4000/api/dashboard/summary');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/dashboard/summary`);
         if (res.ok) {
           const data = await res.json();
           setStats(data);

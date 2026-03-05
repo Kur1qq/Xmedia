@@ -49,8 +49,8 @@ export default function StudioPage() {
     const fetchData = async () => {
         try {
             const [resStudios, resEquipments] = await Promise.all([
-                fetch('http://localhost:4000/api/studio'),
-                fetch('http://localhost:4000/api/equipment'),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/studio`),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/equipment`),
             ]);
 
             if (resStudios.ok) setStudios(await resStudios.json());
@@ -75,7 +75,7 @@ export default function StudioPage() {
         uploadData.append('file', file);
 
         try {
-            const res = await fetch('http://localhost:4000/api/upload', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/upload`, {
                 method: 'POST',
                 headers: {
                     ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
@@ -135,7 +135,7 @@ export default function StudioPage() {
 
         try {
             const method = editingStudio ? 'PATCH' : 'POST';
-            const url = editingStudio ? `http://localhost:4000/api/studio/${editingStudio.id}` : 'http://localhost:4000/api/studio';
+            const url = editingStudio ? `${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/studio/${editingStudio.id}` : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/studio`;
 
             const payload = {
                 name: studioFormData.name,
@@ -172,7 +172,7 @@ export default function StudioPage() {
     const handleDeleteStudio = async (id: number) => {
         if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
         try {
-            const res = await fetch(`http://localhost:4000/api/studio/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/studio/${id}`, { method: 'DELETE' });
             if (res.ok) { setStudios(studios.filter(st => st.id !== id)); toast.success("Устгагдлаа"); }
             else toast.error("Устгахад алдаа гарлаа.");
         } catch (error) { toast.error("Сервертэй холбогдоход алдаа гарлаа."); }
@@ -214,7 +214,7 @@ export default function StudioPage() {
 
         try {
             const method = editingEquipment ? 'PATCH' : 'POST';
-            const url = editingEquipment ? `http://localhost:4000/api/equipment/${editingEquipment.id}` : 'http://localhost:4000/api/equipment';
+            const url = editingEquipment ? `${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/equipment/${editingEquipment.id}` : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/equipment`;
 
             const payload = { ...equipmentFormData, images: equipmentFormData.images || undefined };
             const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -231,7 +231,7 @@ export default function StudioPage() {
     const handleDeleteEquipment = async (id: number) => {
         if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
         try {
-            const res = await fetch(`http://localhost:4000/api/equipment/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/equipment/${id}`, { method: 'DELETE' });
             if (res.ok) { setEquipments(equipments.filter(e => e.id !== id)); toast.success("Төхөөрөмж устгагдлаа"); }
             else toast.error("Алдаа гарлаа.");
         } catch (error) { toast.error("Сервертэй холбогдоход алдаа гарлаа."); }
