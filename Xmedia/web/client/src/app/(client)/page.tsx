@@ -55,8 +55,8 @@ export default function Home() {
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative min-h-[60vh] sm:min-h-[80vh] flex items-center justify-center pt-24 pb-16 overflow-hidden">
+      {/* Hero Section - Hidden on mobile, visible on sm and up */}
+      <section className="relative hidden sm:flex min-h-[60vh] sm:min-h-[80vh] items-center justify-center pt-24 pb-16 overflow-hidden">
         {/* Background Slider */}
         <AnimatePresence mode="popLayout">
           <motion.div
@@ -124,9 +124,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="py-12 sm:py-20 bg-background relative z-20">
-        <div className="container mx-auto px-4">
+      {/* Services Section - Full height & centered on mobile, normal on desktop */}
+      <section className="py-20 sm:py-20 bg-background relative z-20 min-h-[100dvh] sm:min-h-0 flex items-center">
+        <div className="container mx-auto px-4 w-full pt-16 sm:pt-0">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
