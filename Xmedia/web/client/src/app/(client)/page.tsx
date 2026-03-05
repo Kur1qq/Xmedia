@@ -56,76 +56,76 @@ export default function Home() {
   return (
     <>
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
-      <section className="relative hidden sm:flex min-h-[60vh] sm:min-h-[80vh] items-center justify-center pt-24 pb-16 overflow-hidden">
-        {/* Background Slider */}
-        <AnimatePresence mode="popLayout">
-          <motion.div
-            key={slides[currentSlide].id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-            className="absolute inset-0 -z-10"
-          >
-            <div
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-105"
-              style={{ backgroundImage: `url('${slides[currentSlide].image}')`, transform: "scale(1.05)" }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="container relative z-10 flex flex-col items-center text-center px-4">
-          <AnimatePresence mode="wait">
+      <div className="hidden sm:block">
+        <section className="relative min-h-[60vh] sm:min-h-[80vh] flex items-center justify-center pt-24 pb-16 overflow-hidden">
+          {/* Background Slider */}
+          <AnimatePresence mode="popLayout">
             <motion.div
               key={slides[currentSlide].id}
-              initial={{ opacity: 0, filter: "blur(10px)" }}
-              animate={{ opacity: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, filter: "blur(10px)" }}
-              transition={{ duration: 0.7, ease: "easeInOut" }}
-              className="max-w-4xl mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="absolute inset-0 -z-10"
             >
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 font-sans leading-tight">
-                {slides[currentSlide].title} <span className="text-primary">{slides[currentSlide].highlight}</span> <br />
-                {slides[currentSlide].subTitle}
-              </h1>
-              <p className="mt-3 max-w-xl mx-auto text-base sm:text-lg text-gray-300 mb-10 leading-relaxed">
-                {slides[currentSlide].description}
-              </p>
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-105"
+                style={{ backgroundImage: `url('${slides[currentSlide].image}')`, transform: "scale(1.05)" }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
             </motion.div>
           </AnimatePresence>
 
-
-
-          {/* Slider Progress Bar & Indicators */}
-          <div className="mt-8 w-full flex flex-col items-center gap-4">
-            {/* Progress Bar */}
-            <div className="w-full max-w-md h-1 bg-white/20 rounded-full overflow-hidden">
+          <div className="container relative z-10 flex flex-col items-center text-center px-4">
+            <AnimatePresence mode="wait">
               <motion.div
-                key={currentSlide}
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 10, ease: "linear" }}
-                className="h-full bg-primary"
-              />
-            </div>
+                key={slides[currentSlide].id}
+                initial={{ opacity: 0, filter: "blur(10px)" }}
+                animate={{ opacity: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, filter: "blur(10px)" }}
+                transition={{ duration: 0.7, ease: "easeInOut" }}
+                className="max-w-4xl mx-auto"
+              >
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 font-sans leading-tight">
+                  {slides[currentSlide].title} <span className="text-primary">{slides[currentSlide].highlight}</span> <br />
+                  {slides[currentSlide].subTitle}
+                </h1>
+                <p className="mt-3 max-w-xl mx-auto text-base sm:text-lg text-gray-300 mb-10 leading-relaxed">
+                  {slides[currentSlide].description}
+                </p>
+              </motion.div>
+            </AnimatePresence>
 
-            {/* Dot Indicators */}
-            <div className="flex gap-3">
-              {slides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${index === currentSlide ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white"}`}
+            {/* Slider Progress Bar & Indicators */}
+            <div className="mt-8 w-full flex flex-col items-center gap-4">
+              {/* Progress Bar */}
+              <div className="w-full max-w-md h-1 bg-white/20 rounded-full overflow-hidden">
+                <motion.div
+                  key={currentSlide}
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 10, ease: "linear" }}
+                  className="h-full bg-primary"
                 />
-              ))}
+              </div>
+
+              {/* Dot Indicators */}
+              <div className="flex gap-3">
+                {slides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${index === currentSlide ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white"}`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* Services Section - Full height & centered on mobile, normal on desktop */}
-      <section className="py-20 sm:py-20 bg-background relative z-20 min-h-[100dvh] sm:min-h-0 flex items-center">
+      <section className="py-0 sm:py-20 bg-background relative z-20 min-h-[100dvh] sm:min-h-0 flex items-center">
         <div className="container mx-auto px-4 w-full pt-16 sm:pt-0">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
