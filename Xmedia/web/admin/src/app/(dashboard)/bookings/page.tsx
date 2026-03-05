@@ -51,8 +51,10 @@ function shortDate(d: Date) {
 
 export default function BookingsPage() {
     const [bookings, setBookings] = useState<any[]>([]);
+    const [pendingBookings, setPendingBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<'list' | 'calendar'>('list');
+    const [tab, setTab] = useState<'paid' | 'pending'>('paid');
     const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -75,15 +77,24 @@ export default function BookingsPage() {
         setAnimKey(k => k + 1);
     }, []);
 
+    const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
     const fetchBookings = async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/bookings`);
-            if (res.ok) setBookings(await res.json());
+            const [paidRes, pendingRes] = await Promise.all([
+                fetch(`${API}/bookings`),
+                fetch(`${API}/bookings/pending`),
+            ]);
+            if (paidRes.ok) setBookings(await paidRes.json());
+            if (pendingRes.ok) setPendingBookings(await pendingRes.json());
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     };
 
     useEffect(() => { fetchBookings(); }, []);
+
+    // Current tab's bookings
+    const activeBookings = tab === 'paid' ? bookings : pendingBookings;
 
     const updateBookingStatus = async (status: string) => {
         if (!selectedBooking) return;
@@ -114,7 +125,7 @@ export default function BookingsPage() {
     // Bookings indexed by "YYYY-MM-DD" for efficient lookup
     const bookingsByDateKey = useMemo(() => {
         const map: Record<string, any[]> = {};
-        for (const b of bookings) {
+        for (const b of activeBookings) {
             const type = detectBookingType(b);
             const items: any[] = b.items || [];
             if (items.length === 0) {
@@ -278,7 +289,7 @@ export default function BookingsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Захиалгууд</h1>
-                    <p className="text-muted-foreground mt-1">Системд бүртгэгдсэн бүх захиалгын жагсаалт ба удирдлага.</p>
+                    <p className="text-muted-foreground mt-1">Зөвхөн төлбөр төлсөн захиалгууд харагдана.</p>
                 </div>
 
                 {/* View toggle */}
@@ -302,6 +313,28 @@ export default function BookingsPage() {
                 ))}
             </div>
 
+            {/* Payment status tabs */}
+            <div className="flex items-center gap-1 self-start rounded-lg border border-border/50 bg-muted/30 p-1">
+                <button
+                    onClick={() => setTab('paid')}
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === 'paid' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                >
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Төлөсөн
+                    {bookings.length > 0 && <span className="ml-1 bg-green-500/20 text-green-600 text-xs font-bold px-1.5 py-0.5 rounded-full">{bookings.length}</span>}
+                </button>
+                <button
+                    onClick={() => setTab('pending')}
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === 'pending' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                >
+                    <Clock className="w-4 h-4 text-yellow-500" />
+                    Нэхэмжлэл хүлээж буй
+                    {pendingBookings.length > 0 && <span className="ml-1 bg-yellow-500/20 text-yellow-600 text-xs font-bold px-1.5 py-0.5 rounded-full">{pendingBookings.length}</span>}
+                </button>
+            </div>
+
             {/* ================= LIST VIEW ================= */}
             {view === 'list' && (
                 <div className="rounded-md border border-border/50 bg-card overflow-hidden">
@@ -321,8 +354,8 @@ export default function BookingsPage() {
                             </thead>
                             <tbody className="divide-y divide-border/50">
                                 {loading ? (<tr><td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">Уншиж байна...</td></tr>)
-                                    : bookings.length === 0 ? (<tr><td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">Захиалга алга.</td></tr>)
-                                        : bookings.map((booking) => {
+                                    : activeBookings.length === 0 ? (<tr><td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">{tab === 'paid' ? 'Төлөгдсөн захиалга алга.' : 'Нэхэмжлэл хүлээж буй захиалга алга.'}</td></tr>)
+                                        : activeBookings.map((booking) => {
                                             const btype = detectBookingType(booking);
                                             const col = TYPE_COLORS[btype];
                                             return (

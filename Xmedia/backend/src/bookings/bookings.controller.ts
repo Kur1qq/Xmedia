@@ -17,6 +17,11 @@ export class BookingsController {
     @Get()
     async findAll() { return this.bookingsService.findAll(); }
 
+    @Get('pending')
+    async getPendingBookings() {
+        return this.bookingsService.findPending();
+    }
+
     @Get('user/:userId')
     async findByUser(@Param('userId', ParseIntPipe) userId: number) {
         return this.bookingsService.findByUserId(userId);

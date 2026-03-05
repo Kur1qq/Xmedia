@@ -10,9 +10,38 @@ export class BookingsService {
         private bylPayment: BylPaymentService,
     ) { }
 
-    // Find all bookings
+    // Find all bookings (only PAID — for admin bookings section)
     async findAll() {
         return this.prisma.booking.findMany({
+            where: { paymentStatus: 'PAID' },
+            include: {
+                user: { select: { id: true, username: true, email: true, phone: true } },
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                payments: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    // Find ALL bookings regardless of payment status (internal use)
+    async findAllRaw() {
+        return this.prisma.booking.findMany({
+            include: {
+                user: { select: { id: true, username: true, email: true, phone: true } },
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                payments: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    // Find pending (invoice/unpaid) bookings
+    async findPending() {
+        return this.prisma.booking.findMany({
+            where: {
+                paymentStatus: { not: 'PAID' },
+                status: { not: 'CANCELLED' },
+            },
             include: {
                 user: { select: { id: true, username: true, email: true, phone: true } },
                 items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
