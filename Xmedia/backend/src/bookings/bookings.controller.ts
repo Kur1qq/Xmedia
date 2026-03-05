@@ -17,7 +17,13 @@ export class BookingsController {
     @Get()
     async findAll() { return this.bookingsService.findAll(); }
 
-    // Public guest booking — no auth required
+    // Multi-item cart booking
+    @Post('cart')
+    async createCartBooking(@Body() dto: any) {
+        return this.bookingsService.createCartBooking(dto);
+    }
+
+    // Public guest booking — no auth required (single item)
     @Post()
     async createGuest(@Body() dto: any) {
         return this.bookingsService.createGuestBooking(dto);

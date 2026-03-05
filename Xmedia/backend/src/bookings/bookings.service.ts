@@ -107,6 +107,97 @@ export class BookingsService {
         }
     }
 
+    // Cart booking — multi-items, guest or auth
+    async createCartBooking(dto: {
+        name: string;
+        phone: string;
+        email?: string;
+        notes?: string;
+        items: Array<{
+            date: string;     // 'YYYY-MM-DD'
+            time: string;     // 'HH:MM'
+            duration: number; // hours
+            serviceType: 'STUDIO' | 'LIVE_SERVICE' | 'PHOTOGRAPHER_SERVICE' | 'EDIT_SERVICE';
+            serviceId: number;
+            unitPrice: number;
+            serviceName?: string;
+        }>;
+    }) {
+        // Find or create a user by phone
+        let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        if (!user) {
+            user = await this.prisma.user.create({
+                data: {
+                    username: dto.name,
+                    email: dto.email || `guest_${dto.phone}@xmedia.guest`,
+                    phone: dto.phone,
+                    passwordHash: 'GUEST',
+                }
+            });
+        }
+
+        let totalAmount = 0;
+        const prismaItems = dto.items.map(item => {
+            const bookingDate = new Date(item.date);
+            const startTime = new Date(`1970-01-01T${item.time}:00`);
+            const endTime = new Date(startTime.getTime() + item.duration * 3600000);
+            const total = item.unitPrice * item.duration;
+            totalAmount += total;
+
+            const itemData: any = {
+                itemType: item.serviceType as ItemType,
+                quantity: item.duration,
+                unitPrice: item.unitPrice,
+                totalPrice: total,
+                bookingDate,
+                startTime,
+                endTime,
+            };
+
+            if (item.serviceType === 'STUDIO') itemData.studioId = item.serviceId;
+            if (item.serviceType === 'LIVE_SERVICE') itemData.liveServiceId = item.serviceId;
+            if (item.serviceType === 'PHOTOGRAPHER_SERVICE') itemData.photographerServiceId = item.serviceId;
+            if (item.serviceType === 'EDIT_SERVICE') itemData.serviceId = item.serviceId;
+
+            return itemData;
+        });
+
+        const booking = await this.prisma.booking.create({
+            data: {
+                userId: user.id,
+                totalAmount,
+                notes: dto.notes,
+                items: { create: prismaItems },
+            },
+            include: { items: true }
+        });
+
+        // Create Byl checkout
+        try {
+            const checkout = await this.bylPayment.createCheckout({
+                bookingId: booking.id,
+                amount: totalAmount,
+                serviceName: `Xmedia багц (${dto.items.length} үйлчилгээ)`,
+                quantity: 1,
+                customerEmail: dto.email,
+            });
+
+            // Save checkout ID in payment record
+            await this.prisma.payment.create({
+                data: {
+                    bookingId: booking.id,
+                    invoiceId: String(checkout.checkoutId),
+                    amount: totalAmount,
+                    status: 'UNPAID',
+                }
+            });
+
+            return { ...booking, checkoutUrl: checkout.checkoutUrl };
+        } catch (error) {
+            return { ...booking, checkoutUrl: null, paymentError: error.message };
+        }
+    }
+
     // Confirm payment from webhook
     async confirmPayment(bylCheckoutId: string) {
         // Find payment by Byl checkout ID (stored as invoiceId)
