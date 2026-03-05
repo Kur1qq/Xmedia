@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "npx prisma generate && npx tsc -p tsconfig.build.json",
+    "build": "npx prisma generate && npx prisma db push && npx tsc -p tsconfig.build.json",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "npm run start:prod",
     "start:dev": "nest start --watch",
