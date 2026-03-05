@@ -56,7 +56,7 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20">
+      <section className="relative min-h-[100dvh] flex items-center justify-center pt-24 sm:pt-32 pb-16">
         {/* Background Slider */}
         <AnimatePresence mode="popLayout">
           <motion.div
@@ -127,7 +127,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-16 w-full max-w-6xl grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 px-4"
+            className="mt-6 sm:mt-16 w-full max-w-6xl grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 px-4"
           >
             {[
               { icon: Camera, label: "Студио", desc: "Мэргэжлийн зураг авалт", href: "/studios" },
