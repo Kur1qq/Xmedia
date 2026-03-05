@@ -125,8 +125,8 @@ export default function Home() {
       </div>
 
       {/* Services Section - Full height & centered on mobile, normal on desktop */}
-      <section className="py-0 sm:py-20 bg-background relative z-20 min-h-[100dvh] sm:min-h-0 flex items-center">
-        <div className="container mx-auto px-4 w-full pt-16 sm:pt-0">
+      <section className="py-12 sm:py-20 bg-background relative z-20 min-h-[100dvh] sm:min-h-0 flex sm:block items-center">
+        <div className="container mx-auto px-4 w-full">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
