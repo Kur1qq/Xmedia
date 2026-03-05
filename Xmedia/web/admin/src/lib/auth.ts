@@ -1,4 +1,4 @@
-const API = process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`;
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 // Sets both localStorage and a cookie (middleware reads the cookie server-side)
 function setCookieToken(token: string) {
