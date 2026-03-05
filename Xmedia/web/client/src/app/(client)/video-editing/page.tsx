@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -47,6 +48,11 @@ export default function VideoEditingPage() {
     const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, notes: "" });
 
     useEffect(() => {
+        const savedInfo = loadCustomerInfo();
+        if (savedInfo) {
+            setForm(prev => ({ ...prev, name: savedInfo.name, phone: savedInfo.phone, email: savedInfo.email }));
+        }
+
         fetch(`${API}/edit-services`)
             .then(r => r.json())
             .then(data => setServices(Array.isArray(data) ? data : data.data ?? data.items ?? []))
@@ -78,6 +84,9 @@ export default function VideoEditingPage() {
                 }),
             });
             if (!res.ok) throw new Error();
+
+            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+
             const data = await res.json();
             if (data.checkoutUrl) {
                 toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });

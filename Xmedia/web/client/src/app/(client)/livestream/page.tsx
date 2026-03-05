@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 const TIMES = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
@@ -45,6 +46,12 @@ export default function LivestreamPage() {
     const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, time: "", duration: "1", tierId: "" });
 
     useEffect(() => {
+        // Load saved customer info
+        const savedInfo = loadCustomerInfo();
+        if (savedInfo) {
+            setForm(prev => ({ ...prev, name: savedInfo.name, phone: savedInfo.phone, email: savedInfo.email }));
+        }
+
         fetch(`${API}/live-services`)
             .then(r => r.json())
             .then(data => setServices(Array.isArray(data) ? data : data.data ?? data.items ?? []))
@@ -72,6 +79,10 @@ export default function LivestreamPage() {
                 }),
             });
             if (!res.ok) throw new Error();
+
+            // Save customer info for future bookings
+            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+
             const data = await res.json();
             if (data.checkoutUrl) {
                 toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });

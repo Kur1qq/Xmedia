@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -45,6 +46,11 @@ export default function StudiosPage() {
     const [faqOpen, setFaqOpen] = useState<number | null>(0); // Default open first FAQ
 
     useEffect(() => {
+        const savedInfo = loadCustomerInfo();
+        if (savedInfo) {
+            setForm(prev => ({ ...prev, name: savedInfo.name, phone: savedInfo.phone, email: savedInfo.email }));
+        }
+
         fetch(`${API}/studio`)
             .then(r => r.json())
             .then(data => setStudios(Array.isArray(data) ? data : data.data ?? data.items ?? []))
@@ -89,6 +95,9 @@ export default function StudiosPage() {
                 }),
             });
             if (!res.ok) throw new Error();
+
+            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+
             const data = await res.json();
             if (data.checkoutUrl) {
                 toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
