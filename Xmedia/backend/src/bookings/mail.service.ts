@@ -18,20 +18,20 @@ export class MailService {
         });
     }
 
-    async sendInvoiceEmail(to: string, subject: string, html: string, pdfBuffer: Buffer, filename: string) {
+    async sendInvoiceEmail(to: string, subject: string, html: string, pdfBuffer: Buffer | null, filename: string | null) {
         try {
+            const attachments = pdfBuffer && filename ? [{
+                filename,
+                content: pdfBuffer,
+                contentType: 'application/pdf',
+            }] : [];
+
             await this.transporter.sendMail({
                 from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
                 to,
                 subject,
                 html,
-                attachments: [
-                    {
-                        filename,
-                        content: pdfBuffer,
-                        contentType: 'application/pdf',
-                    },
-                ],
+                attachments,
             });
             this.logger.log(`Invoice email sent to ${to}`);
         } catch (error) {

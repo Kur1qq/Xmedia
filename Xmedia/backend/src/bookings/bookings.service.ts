@@ -302,48 +302,62 @@ export class BookingsService {
         items: { description: string; quantity: number; unitPrice: number; totalPrice: number }[],
         invoiceDate: string,
     ) {
-        if (!buyerEmail || !buyerEmail.includes('@') || buyerEmail.includes('@xmedia.guest')) {
-            this.logger.warn(`No valid email for booking #${bookingId}, skipping invoice email`);
+        if (!buyerEmail || !buyerEmail.includes('@')) {
+            this.logger.warn(`No valid email for booking #${bookingId} (email: ${buyerEmail}), skipping`);
             return;
         }
+
+        const invoiceData = {
+            invoiceNumber: String(bookingId).padStart(5, '0'),
+            invoiceDate,
+            payByDate: '14 хоног',
+            sellerName: process.env.COMPANY_NAME || 'Xmedia Media Production',
+            sellerAddress: process.env.COMPANY_ADDRESS || 'Улаанбаатар хот',
+            sellerPhone: process.env.COMPANY_PHONE || '99001100',
+            sellerBank: process.env.COMPANY_BANK || 'Хаан банк',
+            sellerAccount: process.env.COMPANY_ACCOUNT || '5000000000',
+            sellerReg: process.env.COMPANY_REG || '1234567',
+            buyerName,
+            buyerEmail,
+            buyerPhone,
+            items,
+        };
+
+        const total = items.reduce((s, i) => s + i.totalPrice, 0);
+        const subject = `Нэхэмжлэх #${invoiceData.invoiceNumber} — Xmedia`;
+
+        // Build HTML body (always available)
+        const htmlBody = `
+            <div style="font-family:Arial,sans-serif;color:#222;max-width:620px;margin:0 auto">
+                <h2 style="color:#e11d48">Xmedia — Нэхэмжлэх</h2>
+                <p>Сайн байна уу, <b>${buyerName}</b>!</p>
+                <p>Таны <b>₮${total.toLocaleString()}</b> дүнтэй нэхэмжлэхийг хавсаргав (PDF хавсарлаасаа харна уу).</p>
+                <p>Нэхэмжлэхийн дугаар: <b>#${invoiceData.invoiceNumber}</b></p>
+                <p>Банк: <b>${invoiceData.sellerBank}</b>, Данс: <b>${invoiceData.sellerAccount}</b></p>
+                <p>Холбоо барих: <b>${invoiceData.sellerPhone}</b></p>
+                <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
+                ${this.invoiceService.generateInvoiceHtml(invoiceData)}
+            </div>`;
+
+        // Try to generate PDF, fall back to HTML-only if it fails
+        let pdfBuffer: Buffer | null = null;
         try {
-            const pdfBuffer = await this.invoiceService.generateInvoicePdf({
-                invoiceNumber: String(bookingId).padStart(5, '0'),
-                invoiceDate,
-                payByDate: '14 хоног',
-                sellerName: process.env.COMPANY_NAME || 'Xmedia Media Production',
-                sellerAddress: process.env.COMPANY_ADDRESS || 'Улаанбаатар хот',
-                sellerPhone: process.env.COMPANY_PHONE || '99001100',
-                sellerBank: process.env.COMPANY_BANK || 'Хаан банк',
-                sellerAccount: process.env.COMPANY_ACCOUNT || '5000000000',
-                sellerReg: process.env.COMPANY_REG || '1234567',
-                buyerName,
-                buyerEmail,
-                buyerPhone,
-                items,
-            });
-            const filename = `invoice-${bookingId}.pdf`;
-            const total = items.reduce((s, i) => s + i.totalPrice, 0);
-            await this.mailService.sendInvoiceEmail(
-                buyerEmail,
-                `Нэхэмжлэх #${String(bookingId).padStart(5, '0')} — Xmedia`,
-                `
-                    <div style="font-family:sans-serif;font-size:15px;color:#222;">
-                        <h2 style="color:#e11d48;">Xmedia — Нэхэмжлэх</h2>
-                        <p>Сайн байна уу, <strong>${buyerName}</strong>!</p>
-                        <p>Таны <strong>₮${total.toLocaleString()}</strong> дүнтэй нэхэмжлэхийг хавсаргав.</p>
-                        <p>Нэхэмжлэхийн дугаар: <strong>#${String(bookingId).padStart(5, '0')}</strong></p>
-                        <p>Холбоо барих: <strong>99001100</strong></p>
-                        <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
-                        <p style="font-size:12px;color:#888;">Энэхүү имэйл автоматаар үүссэн. Асуух зүйл байвал бидэнтэй холбогдоно уу.</p>
-                    </div>
-                `,
-                pdfBuffer,
-                filename,
-            );
-            this.logger.log(`Invoice email sent for booking #${bookingId}`);
-        } catch (err) {
-            this.logger.error(`Invoice email failed for booking #${bookingId}`, err);
+            pdfBuffer = await this.invoiceService.generateInvoicePdf(invoiceData);
+            this.logger.log(`PDF generated for booking #${bookingId}, size=${pdfBuffer.length}`);
+        } catch (pdfErr) {
+            this.logger.error(`PDF generation failed for #${bookingId}: ${pdfErr.message}`);
+        }
+
+        try {
+            if (pdfBuffer) {
+                await this.mailService.sendInvoiceEmail(buyerEmail, subject, htmlBody, pdfBuffer, `invoice-${bookingId}.pdf`);
+            } else {
+                // HTML-only fallback (no attachment)
+                await this.mailService.sendInvoiceEmail(buyerEmail, subject, htmlBody, null, null);
+            }
+            this.logger.log(`Invoice email sent to ${buyerEmail} for booking #${bookingId}`);
+        } catch (mailErr) {
+            this.logger.error(`SMTP failed for booking #${bookingId}: ${mailErr.message}`);
         }
     }
 

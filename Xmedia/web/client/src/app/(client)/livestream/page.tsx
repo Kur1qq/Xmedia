@@ -126,12 +126,16 @@ export default function LivestreamPage() {
             saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
 
             const data = await res.json();
+            setShowPaymentModal(false);
             if (paymentType === "qpay" && data.checkoutUrl) {
                 toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
                 window.location.href = data.checkoutUrl;
                 return;
             }
-            toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: "Удахгүй холбогдох болно.", duration: 6000 });
+            const desc = paymentType === "invoice"
+                ? "Нэхэмжлэхийг таны имэйл рүү явууллаа. Хэрэв имэйл оруулаагүй бол бидэнтэй холбогдоно уу."
+                : "Удахгүй холбогдох болно.";
+            toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: desc, duration: 6000 });
             close();
         } catch {
             toast.error("Захиалга бүртгэхэд алдаа гарлаа.");
