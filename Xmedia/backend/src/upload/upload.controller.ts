@@ -30,15 +30,28 @@ export class UploadController {
             return { error: 'No file uploaded' };
         }
 
-        // Remove accidental quotes from APP_URL if it was set like APP_URL="http://..."
-        let baseUrl = process.env.APP_URL;
-        if (baseUrl) {
-            baseUrl = baseUrl.replace(/['"]+/g, '');
+        let baseUrl = '';
+
+        // 1. Check Railway's automatic public domain first
+        if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+            baseUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+        }
+        // 2. Fallback to manually configured APP_URL but ignore localhost in prod
+        else if (process.env.APP_URL && !process.env.APP_URL.includes('localhost')) {
+            baseUrl = process.env.APP_URL.replace(/['"]+/g, '');
             if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-        } else {
+        }
+        // 3. Fallback to request host headers 
+        else {
             const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-            const host = req.get('host') || 'localhost:4000';
-            baseUrl = `${protocol}://${host}`;
+            const host = req.headers['x-forwarded-host'] || req.get('host') || 'localhost:4000';
+
+            // Hardcode fallback if somehow still localhost on prod
+            if (host.includes('localhost') && process.env.NODE_ENV === 'production') {
+                baseUrl = 'https://xmedia-production.up.railway.app';
+            } else {
+                baseUrl = `${protocol}://${host}`;
+            }
         }
 
         return {
