@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
+import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -25,6 +26,7 @@ export function CartDrawer() {
     const { items, removeItem, clearCart, getTotalPrice } = useCartStore();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     // Customer Info Form
     const [customer, setCustomer] = useState(() => {
@@ -37,7 +39,7 @@ export function CartDrawer() {
         };
     });
 
-    const handleCheckout = async () => {
+    const handleCheckout = async (paymentType: "qpay" | "invoice") => {
         if (items.length === 0) return toast.error("Сагс хоосон байна");
         if (!customer.name || !customer.phone) return toast.error("Нэр, утасны дугаараа оруулна уу!");
 
@@ -65,21 +67,24 @@ export function CartDrawer() {
             if (!res.ok) throw new Error("Алдаа гарлаа");
 
             const data = await res.json();
-            if (data.checkoutUrl) {
+            if (paymentType === "qpay" && data.checkoutUrl) {
                 clearCart();
                 toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
                 setTimeout(() => window.location.href = data.checkoutUrl, 1500);
             } else {
-                toast.error("Төлбөрийн холбоос үүсгэж чадсангүй.");
+                clearCart();
+                toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: "Нэхэмжлэлийг цахим дыгаараа авна уу.", duration: 5000 });
+                setOpen(false);
             }
-        } catch (error) {
+        } catch {
             toast.error("Захиалга үүсгэхэд алдаа гарлаа. Дахин оролдоно уу.");
         } finally {
             setLoading(false);
+            setShowPaymentModal(false);
         }
     };
 
-    return (
+    return (<>
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/10 hover:text-primary transition-colors">
@@ -180,7 +185,11 @@ export function CartDrawer() {
                         <Button
                             className="w-full bg-red-600 hover:bg-red-700 text-white py-6 text-lg font-bold"
                             disabled={items.length === 0 || loading}
-                            onClick={handleCheckout}
+                            onClick={() => {
+                                if (items.length === 0) return toast.error("Сагс хоосон байна");
+                                if (!customer.name || !customer.phone) return toast.error("Нэр, утасны дугаараа оруулна уу!");
+                                setShowPaymentModal(true);
+                            }}
                         >
                             {loading ? "Түр хүлээнэ үү..." : "Төлбөр төлөх"}
                         </Button>
@@ -188,5 +197,14 @@ export function CartDrawer() {
                 </SheetFooter>
             </SheetContent>
         </Sheet>
-    );
+
+        <PaymentMethodModal
+            open={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            onSelectQpay={() => handleCheckout("qpay")}
+            onSelectInvoice={() => handleCheckout("invoice")}
+            loading={loading}
+            amount={getTotalPrice()}
+        />
+    </>);
 }

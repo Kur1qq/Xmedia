@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
 import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
+import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -46,6 +47,7 @@ export default function VideoEditingPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, notes: "" });
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
     const { addItem } = useCartStore();
 
     useEffect(() => {
@@ -89,7 +91,7 @@ export default function VideoEditingPage() {
         close();
     };
 
-    const handleBuyNow = async () => {
+    const handleBuyNow = async (paymentType: "qpay" | "invoice") => {
         if (!validateForm()) return;
 
         setSubmitting(true);
@@ -111,7 +113,7 @@ export default function VideoEditingPage() {
             saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
 
             const data = await res.json();
-            if (data.checkoutUrl) {
+            if (paymentType === "qpay" && data.checkoutUrl) {
                 toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
                 window.location.href = data.checkoutUrl;
                 return;
@@ -120,7 +122,7 @@ export default function VideoEditingPage() {
             close();
         } catch {
             toast.error("Захиалга бүртгэхэд алдаа гарлаа.");
-        } finally { setSubmitting(false); }
+        } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
     const close = () => { setSelected(null); setIsBooking(false); setSelectedPackage(null); setForm({ name: "", phone: "", email: "", date: undefined, notes: "" }); };
@@ -289,7 +291,10 @@ export default function VideoEditingPage() {
                                                     <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
                                                         Сагсанд нэмэх
                                                     </Button>
-                                                    <Button type="button" onClick={handleBuyNow} disabled={submitting} className="flex-1 h-11 bg-primary hover:bg-red-600 font-semibold text-white">
+                                                    <Button type="button"
+                                                        onClick={() => { if (validateForm()) setShowPaymentModal(true); }}
+                                                        disabled={submitting}
+                                                        className="flex-1 h-11 bg-primary hover:bg-red-600 font-semibold text-white">
                                                         {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Уншиж байна...</> : "Шууд авах"}
                                                     </Button>
                                                 </div>
@@ -302,6 +307,15 @@ export default function VideoEditingPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <PaymentMethodModal
+                open={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                onSelectQpay={() => handleBuyNow("qpay")}
+                onSelectInvoice={() => handleBuyNow("invoice")}
+                loading={submitting}
+                amount={selectedPackage ? Number(selectedPackage.price) : undefined}
+            />
         </div>
     );
 }
