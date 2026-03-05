@@ -25,9 +25,20 @@ let AdminController = class AdminController {
         this.logService = logService;
     }
     async login(body, req) {
-        const result = await this.adminService.login(body.username, body.password);
-        await this.logService.log(result.admin.id, 'LOGIN', 'Admin', result.admin.id, undefined, req.ip);
-        return result;
+        try {
+            const result = await this.adminService.login(body.username, body.password);
+            try {
+                await this.logService.log(result.admin.id, 'LOGIN', 'Admin', result.admin.id, undefined, req.ip);
+            }
+            catch (logErr) {
+                console.error('Login log failed:', logErr);
+            }
+            return result;
+        }
+        catch (err) {
+            console.error('Login error:', err);
+            throw err;
+        }
     }
     getLogs(adminId, limit, offset) {
         return this.logService.findAll({

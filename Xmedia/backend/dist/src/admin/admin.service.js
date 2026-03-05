@@ -184,16 +184,23 @@ let AdminService = class AdminService {
         return this.prisma.adminPermissionRole.delete({ where: { id } });
     }
     async seed() {
-        const count = await this.prisma.admin.count();
-        if (count === 0) {
-            const seedPassword = process.env.ADMIN_SEED_PASSWORD;
-            if (!seedPassword)
-                throw new Error('ADMIN_SEED_PASSWORD environment variable is not set!');
-            const hash = await bcrypt.hash(seedPassword, 12);
+        const seedPassword = process.env.ADMIN_SEED_PASSWORD;
+        if (!seedPassword)
+            throw new Error('ADMIN_SEED_PASSWORD environment variable is not set!');
+        const hash = await bcrypt.hash(seedPassword, 12);
+        const existing = await this.prisma.admin.findUnique({ where: { username: 'admin' } });
+        if (!existing) {
             await this.prisma.admin.create({
                 data: { username: 'admin', password: hash, role: 'SUPER_ADMIN' },
             });
             console.log('✅ Default SUPER_ADMIN created: username=admin (password from ADMIN_SEED_PASSWORD env)');
+        }
+        else {
+            await this.prisma.admin.update({
+                where: { username: 'admin' },
+                data: { password: hash },
+            });
+            console.log('✅ Default admin password synced with ADMIN_SEED_PASSWORD env');
         }
     }
 };

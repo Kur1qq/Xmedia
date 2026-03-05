@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Calendar as CalendarIcon } from "lucide-react";
 
-const API = "http://localhost:4000/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 interface ServicePackage {
     id: number;

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-const API = "http://localhost:4000/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 const TIMES = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
 
 interface CameraTier {

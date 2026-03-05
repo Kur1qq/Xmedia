@@ -22,11 +22,11 @@ export declare class AdminService {
     findAll(): Promise<{
         id: number;
         username: string;
-        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
+        createdAt: Date;
         customRole: {
             id: number;
             name: string;
@@ -36,11 +36,11 @@ export declare class AdminService {
     findOne(id: number): Promise<{
         id: number;
         username: string;
-        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
+        createdAt: Date;
         customRole: {
             id: number;
             name: string;
@@ -56,11 +56,11 @@ export declare class AdminService {
     }): Promise<{
         id: number;
         username: string;
-        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
+        createdAt: Date;
         customRole: {
             id: number;
             name: string;
@@ -77,11 +77,11 @@ export declare class AdminService {
     }): Promise<{
         id: number;
         username: string;
-        createdAt: Date;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
+        createdAt: Date;
         customRole: {
             id: number;
             name: string;
@@ -91,13 +91,13 @@ export declare class AdminService {
     remove(id: number): Promise<{
         id: number;
         username: string;
-        createdAt: Date;
-        updatedAt: Date;
         password: string;
         image: string | null;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     findAllRoles(): Promise<({
         _count: {
