@@ -20,11 +20,29 @@ const path_1 = require("path");
 const uuid_1 = require("uuid");
 const jwt_auth_guard_1 = require("../admin/jwt-auth.guard");
 let UploadController = class UploadController {
-    uploadFile(file) {
+    uploadFile(file, req) {
         if (!file) {
             return { error: 'No file uploaded' };
         }
-        const baseUrl = process.env.APP_URL || 'http://localhost:4000';
+        let baseUrl = '';
+        if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+            baseUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+        }
+        else if (process.env.APP_URL && !process.env.APP_URL.includes('localhost')) {
+            baseUrl = process.env.APP_URL.replace(/['"]+/g, '');
+            if (baseUrl.endsWith('/'))
+                baseUrl = baseUrl.slice(0, -1);
+        }
+        else {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+            const host = req.headers['x-forwarded-host'] || req.get('host') || 'localhost:4000';
+            if (host.includes('localhost') && process.env.NODE_ENV === 'production') {
+                baseUrl = 'https://xmedia-production.up.railway.app';
+            }
+            else {
+                baseUrl = `${protocol}://${host}`;
+            }
+        }
         return {
             url: `${baseUrl}/public/uploads/${file.filename}`
         };
@@ -51,8 +69,9 @@ __decorate([
         },
     })),
     __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], UploadController.prototype, "uploadFile", null);
 exports.UploadController = UploadController = __decorate([

@@ -22,10 +22,10 @@ let BylPaymentService = BylPaymentService_1 = class BylPaymentService {
         this.bylToken = process.env.BYL_TOKEN || '';
     }
     async createCheckout(params) {
-        const clientBaseUrl = process.env.CORS_ORIGINS?.split(',')[1] || 'http://localhost:3002';
+        const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
         const body = {
-            success_url: params.successUrl || `${clientBaseUrl}/booking/success?bookingId=${params.bookingId}`,
-            cancel_url: params.cancelUrl || `${clientBaseUrl}/booking/cancel?bookingId=${params.bookingId}`,
+            success_url: params.successUrl || `${clientBaseUrl}/`,
+            cancel_url: params.cancelUrl || `${clientBaseUrl}/`,
             client_reference_id: String(params.bookingId),
             customer_email: params.customerEmail || undefined,
             items: [

@@ -121,6 +121,64 @@ export declare class BookingsController {
         createdAt: Date;
         updatedAt: Date;
     })[]>;
+    createCartBooking(dto: any): Promise<{
+        checkoutUrl: string;
+        items: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            bookingId: number;
+            itemType: import("@prisma/client").$Enums.ItemType;
+            studioId: number | null;
+            serviceId: number | null;
+            photographerServiceId: number | null;
+            editServiceId: number | null;
+            liveServiceId: number | null;
+            quantity: number;
+            unitPrice: import("@prisma/client-runtime-utils").Decimal;
+            totalPrice: import("@prisma/client-runtime-utils").Decimal;
+            bookingDate: Date;
+            startTime: Date | null;
+            endTime: Date | null;
+        }[];
+        id: number;
+        userId: number;
+        totalAmount: import("@prisma/client-runtime-utils").Decimal;
+        status: import("@prisma/client").$Enums.BookingStatus;
+        paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
+        notes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | {
+        checkoutUrl: null;
+        paymentError: any;
+        items: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            bookingId: number;
+            itemType: import("@prisma/client").$Enums.ItemType;
+            studioId: number | null;
+            serviceId: number | null;
+            photographerServiceId: number | null;
+            editServiceId: number | null;
+            liveServiceId: number | null;
+            quantity: number;
+            unitPrice: import("@prisma/client-runtime-utils").Decimal;
+            totalPrice: import("@prisma/client-runtime-utils").Decimal;
+            bookingDate: Date;
+            startTime: Date | null;
+            endTime: Date | null;
+        }[];
+        id: number;
+        userId: number;
+        totalAmount: import("@prisma/client-runtime-utils").Decimal;
+        status: import("@prisma/client").$Enums.BookingStatus;
+        paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
+        notes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
     createGuest(dto: any): Promise<{
         checkoutUrl: string;
         items: {

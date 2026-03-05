@@ -17,7 +17,7 @@ if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is not set!');
 }
 exports.JWT_SECRET = process.env.JWT_SECRET;
-exports.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+exports.JWT_EXPIRES_IN = '24h';
 let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
     constructor() {
         super({

@@ -30,6 +30,9 @@ let BookingsController = BookingsController_1 = class BookingsController {
         this.bylPayment = bylPayment;
     }
     async findAll() { return this.bookingsService.findAll(); }
+    async createCartBooking(dto) {
+        return this.bookingsService.createCartBooking(dto);
+    }
     async createGuest(dto) {
         return this.bookingsService.createGuestBooking(dto);
     }
@@ -65,6 +68,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Post)('cart'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "createCartBooking", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

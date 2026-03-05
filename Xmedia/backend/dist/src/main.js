@@ -39,6 +39,7 @@ const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
 const express = __importStar(require("express"));
 const path_1 = require("path");
+const fs = __importStar(require("fs"));
 const all_exceptions_filter_1 = require("./common/filters/all-exceptions.filter");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
@@ -49,6 +50,10 @@ async function bootstrap() {
         transform: true,
     }));
     app.useGlobalFilters(new all_exceptions_filter_1.AllExceptionsFilter());
+    const uploadDir = (0, path_1.join)(process.cwd(), 'public', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
     app.use('/public', express.static((0, path_1.join)(process.cwd(), 'public')));
     app.enableCors({
         origin: true,
