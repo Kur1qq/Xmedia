@@ -263,6 +263,7 @@ export class InvoiceService {
     // HTML invoice for email fallback
     generateInvoiceHtml(data: InvoiceData): string {
         const subTotal = data.items.reduce((s, i) => s + i.totalPrice, 0);
+        const td = 'padding:6px 10px;border:1px solid #ccc;font-size:13px';
         const rows = data.items.map((item, i) => `
             <tr style="background:${i % 2 ? '#f9f9f9' : '#fff'}">
                 <td style="${td}">${i + 1}</td>
@@ -272,7 +273,6 @@ export class InvoiceService {
                 <td style="${td};text-align:right"><b>${item.totalPrice.toLocaleString()}₮</b></td>
             </tr>`).join('');
 
-        const td = 'padding:6px 10px;border:1px solid #ccc;font-size:13px';
         return `
         <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;color:#222">
             <div style="text-align:right;font-size:11px;color:#666">
