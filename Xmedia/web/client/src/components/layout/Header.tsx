@@ -34,12 +34,29 @@ export function Header() {
             >
                 <div className="container flex h-14 items-center justify-between">
                     {/* Logo */}
-                    <Link href="/" className="font-serif font-bold text-3xl tracking-tight text-white hover:opacity-90 transition-opacity">
-                        {siteConfig.name}
-                    </Link>
+                    <div className="flex-1 flex justify-start">
+                        <Link href="/" className="font-serif font-bold text-3xl tracking-tight text-white hover:opacity-90 transition-opacity">
+                            {siteConfig.name}
+                        </Link>
+                    </div>
+
+                    {/* Desktop: Navigation links */}
+                    <div className="hidden md:flex justify-center items-center absolute left-1/2 -translate-x-1/2">
+                        <div className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-black/70 border border-white/10 backdrop-blur-md shadow-sm shadow-red-500/10">
+                            {siteConfig.nav.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className="px-5 py-1 text-sm font-medium text-white/75 rounded-full transition-all duration-200 hover:text-white hover:bg-white/10"
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
 
                     {/* Desktop: right buttons */}
-                    <div className="hidden md:flex items-center gap-3">
+                    <div className="hidden md:flex flex-1 justify-end items-center gap-3">
                         <CartDrawer />
                         <Link href="/contact">
                             <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-primary hover:bg-white/10">
@@ -54,7 +71,7 @@ export function Header() {
                     </div>
 
                     {/* Mobile hamburger */}
-                    <div className="flex items-center gap-2 md:hidden">
+                    <div className="flex items-center justify-end gap-2 md:hidden flex-1">
                         <CartDrawer />
                         <Sheet open={isOpen} onOpenChange={setIsOpen}>
                             <SheetTrigger asChild>
@@ -90,26 +107,6 @@ export function Header() {
                     </div>
                 </div>
             </motion.header>
-
-            {/* ── Floating Nav Pill (desktop only) ── */}
-            <motion.div
-                initial={{ y: -40, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 260, damping: 28, delay: 0.15 }}
-                className="fixed top-20 left-1/2 -translate-x-1/2 z-40 hidden md:flex"
-            >
-                <div className="flex items-center gap-1 px-4 py-2 rounded-full bg-black/70 border border-white/10 backdrop-blur-md shadow-lg shadow-red-500/20">
-                    {siteConfig.nav.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className="px-5 py-1.5 text-sm font-medium text-white/75 rounded-full transition-all duration-200 hover:text-white hover:bg-white/10"
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
-                </div>
-            </motion.div>
         </>
     );
 }
