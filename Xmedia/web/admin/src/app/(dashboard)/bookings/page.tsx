@@ -58,7 +58,7 @@ export default function BookingsPage() {
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<'list' | 'calendar'>('list');
     const [tab, setTab] = useState<'paid' | 'pending' | 'cancelled'>('paid');
-    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
     const [newNoteText, setNewNoteText] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
@@ -72,7 +72,7 @@ export default function BookingsPage() {
         totalAmount: 100000, status: 'CONFIRMED', paymentStatus: 'PAID', notes: ''
     });
 
-    const openBookingModal = (b: Booking, event: React.MouseEvent) => {
+    const openBookingModal = (b: any, event: React.MouseEvent) => {
         event.stopPropagation();
         setSelectedBooking(b);
         setNewNoteText("");
