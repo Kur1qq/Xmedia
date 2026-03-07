@@ -19,6 +19,7 @@ const bookings_service_1 = require("./bookings.service");
 const client_1 = require("@prisma/client");
 const admin_log_service_1 = require("../admin/admin-log.service");
 const byl_payment_service_1 = require("./byl-payment.service");
+const jwt_auth_guard_1 = require("../admin/jwt-auth.guard");
 let BookingsController = BookingsController_1 = class BookingsController {
     bookingsService;
     log;
@@ -30,6 +31,28 @@ let BookingsController = BookingsController_1 = class BookingsController {
         this.bylPayment = bylPayment;
     }
     async findAll() { return this.bookingsService.findAll(); }
+    async getPendingBookings() {
+        return this.bookingsService.findPending();
+    }
+    async getCancelledBookings() {
+        return this.bookingsService.findCancelled();
+    }
+    async findByUser(userId) {
+        return this.bookingsService.findByUserId(userId);
+    }
+    async getAvailableSlots(serviceType, serviceId, date) {
+        const bookedTimes = await this.bookingsService.getBookedSlots(serviceType, Number(serviceId), date);
+        return { bookedTimes };
+    }
+    async createManualBooking(dto, req) {
+        const result = await this.bookingsService.createManualBooking({
+            ...dto,
+            serviceId: Number(dto.serviceId),
+            totalAmount: Number(dto.totalAmount)
+        });
+        await this.log.log(req.user?.id ?? 0, 'MANUAL_BOOKING_CREATE', 'Booking', result.id, `Created manual booking by admin`, req.ip).catch(() => { });
+        return result;
+    }
     async createCartBooking(dto) {
         return this.bookingsService.createCartBooking(dto);
     }
@@ -60,6 +83,16 @@ let BookingsController = BookingsController_1 = class BookingsController {
         this.log.log(req.user?.id ?? 0, 'BOOKING_STATUS_UPDATE', 'Booking', id, `status=${status}`, req.ip).catch(() => { });
         return result;
     }
+    async updateNotes(id, notes, req) {
+        const result = await this.bookingsService.updateNotes(id, notes);
+        this.log.log(req.user?.id ?? 0, 'BOOKING_NOTES_UPDATE', 'Booking', id, `Updated notes`, req.ip).catch(() => { });
+        return result;
+    }
+    async updatePaymentStatus(id, paymentStatus, req) {
+        const result = await this.bookingsService.updatePaymentStatus(id, paymentStatus);
+        this.log.log(req.user?.id ?? 0, 'BOOKING_PAYMENT_UPDATE', 'Booking', id, `paymentStatus=${paymentStatus}`, req.ip).catch(() => { });
+        return result;
+    }
 };
 exports.BookingsController = BookingsController;
 __decorate([
@@ -68,6 +101,43 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('pending'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "getPendingBookings", null);
+__decorate([
+    (0, common_1.Get)('cancelled'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "getCancelledBookings", null);
+__decorate([
+    (0, common_1.Get)('user/:userId'),
+    __param(0, (0, common_1.Param)('userId', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "findByUser", null);
+__decorate([
+    (0, common_1.Get)('available-slots'),
+    __param(0, (0, common_1.Query)('serviceType')),
+    __param(1, (0, common_1.Query)('serviceId')),
+    __param(2, (0, common_1.Query)('date')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "getAvailableSlots", null);
+__decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN')),
+    (0, common_1.Post)('admin/manual'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "createManualBooking", null);
 __decorate([
     (0, common_1.Post)('cart'),
     __param(0, (0, common_1.Body)()),
@@ -108,6 +178,24 @@ __decorate([
     __metadata("design:paramtypes", [Number, String, Object]),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.Patch)(':id/notes'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)('notes')),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, String, Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "updateNotes", null);
+__decorate([
+    (0, common_1.Patch)(':id/payment-status'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)('paymentStatus')),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, String, Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "updatePaymentStatus", null);
 exports.BookingsController = BookingsController = BookingsController_1 = __decorate([
     (0, common_1.Controller)('bookings'),
     __metadata("design:paramtypes", [bookings_service_1.BookingsService,

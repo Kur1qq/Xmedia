@@ -16,10 +16,11 @@ export class CloudinaryService {
 
     async uploadFile(file: Express.Multer.File): Promise<UploadApiResponse> {
         return new Promise((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
+            const uploadStream = cloudinary.uploader.upload_chunked_stream(
                 {
                     folder: 'xmedia',
-                    resource_type: 'image',
+                    resource_type: 'auto',
+                    chunk_size: 6000000, // 6MB chunks to avoid Cloudinary timeouts
                 },
                 (error, result) => {
                     if (error || !result) {

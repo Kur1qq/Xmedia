@@ -19,8 +19,8 @@ export declare class LiveServiceController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                description: string | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
@@ -36,8 +36,8 @@ export declare class LiveServiceController {
             updatedAt: Date;
             liveServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
-            cameraCount: number;
             label: string | null;
+            cameraCount: number;
         }[];
     } & {
         id: number;
@@ -65,8 +65,8 @@ export declare class LiveServiceController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                description: string | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
@@ -82,8 +82,8 @@ export declare class LiveServiceController {
             updatedAt: Date;
             liveServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
-            cameraCount: number;
             label: string | null;
+            cameraCount: number;
         }[];
     } & {
         id: number;
@@ -111,8 +111,8 @@ export declare class LiveServiceController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                description: string | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
@@ -128,8 +128,8 @@ export declare class LiveServiceController {
             updatedAt: Date;
             liveServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
-            cameraCount: number;
             label: string | null;
+            cameraCount: number;
         }[];
     } & {
         id: number;
@@ -157,8 +157,8 @@ export declare class LiveServiceController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                description: string | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
@@ -174,8 +174,8 @@ export declare class LiveServiceController {
             updatedAt: Date;
             liveServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
-            cameraCount: number;
             label: string | null;
+            cameraCount: number;
         }[];
     } & {
         id: number;

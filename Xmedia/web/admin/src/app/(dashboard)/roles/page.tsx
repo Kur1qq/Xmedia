@@ -206,60 +206,68 @@ export default function RolesPage() {
 
             {/* Create/Edit Modal */}
             {isModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-xl border border-border/50 shadow-xl p-6 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-5">
-                            <h2 className="text-lg font-semibold">{editing ? "Эрх засах" : "Шинэ эрх нэмэх"}</h2>
-                            <button onClick={() => setIsModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !saving && setIsModal(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
+                            <h2 className="text-lg font-semibold tracking-tight">{editing ? "Эрх засах" : "Шинэ эрх нэмэх"}</h2>
+                            <button onClick={() => !saving && setIsModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        <form onSubmit={save} className="space-y-5">
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">Эрхийн нэр <span className="text-red-500">*</span></label>
-                                <input
-                                    required
-                                    value={form.name}
-                                    onChange={e => setForm({ ...form, name: e.target.value })}
-                                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                    placeholder="Жишээ: Студио менежер"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium">Хандах хуудсууд <span className="text-red-500">*</span></label>
-                                    <button type="button" onClick={toggleAll} className="text-xs text-primary hover:underline">
-                                        {ALL_PAGES.every(p => form.permissions.includes(p.href)) ? "Цуцлах" : "Бүгдийг сонгох"}
-                                    </button>
+                        <div className="p-4 overflow-y-auto">
+                            <form id="role-form" onSubmit={save} className="space-y-5">
+                                <div>
+                                    <label className="text-xs text-gray-500 mb-1 block">Эрхийн нэр <span className="text-red-500">*</span></label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={form.name}
+                                        onChange={e => setForm({ ...form, name: e.target.value })}
+                                        className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                        placeholder="Жишээ: Студио менежер"
+                                    />
                                 </div>
-                                <div className="rounded-lg border border-border/50 divide-y divide-border/30">
-                                    {ALL_PAGES.map(page => {
-                                        const checked = form.permissions.includes(page.href);
-                                        return (
-                                            <div
-                                                key={page.href}
-                                                onClick={() => togglePage(page.href)}
-                                                className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors"
-                                            >
-                                                <span className={`shrink-0 ${checked ? 'text-primary' : 'text-muted-foreground/50'}`}>
-                                                    {checked ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                                                </span>
-                                                <span className="text-sm">{page.label}</span>
-                                                <span className="ml-auto text-xs text-muted-foreground font-mono">{page.href}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                <p className="text-xs text-muted-foreground">{form.permissions.length} хуудас сонгогдсон</p>
-                            </div>
 
-                            <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
-                                <button type="button" onClick={() => setIsModal(false)} className="px-4 py-2 text-sm border border-border/50 rounded-md hover:bg-muted">Болих</button>
-                                <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm disabled:opacity-60">
-                                    {saving ? "Хадгалж байна..." : "Хадгалах"}
-                                </button>
-                            </div>
-                        </form>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs text-gray-500 block">Хандах хуудсууд <span className="text-red-500">*</span></label>
+                                        <button type="button" onClick={toggleAll} className="text-xs text-primary hover:underline">
+                                            {ALL_PAGES.every(p => form.permissions.includes(p.href)) ? "Цуцлах" : "Бүгдийг сонгох"}
+                                        </button>
+                                    </div>
+                                    <div className="rounded-lg border border-white/10 divide-y divide-white/5 bg-black/10">
+                                        {ALL_PAGES.map(page => {
+                                            const checked = form.permissions.includes(page.href);
+                                            return (
+                                                <div
+                                                    key={page.href}
+                                                    onClick={() => togglePage(page.href)}
+                                                    className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-white/5 transition-colors"
+                                                >
+                                                    <span className={`shrink-0 ${checked ? 'text-primary' : 'text-gray-600'}`}>
+                                                        {checked ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                                                    </span>
+                                                    <span className="text-sm text-gray-200">{page.label}</span>
+                                                    <span className="ml-auto text-[10px] text-gray-500 font-mono">{page.href}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="text-xs text-gray-500">{form.permissions.length} хуудас сонгогдсон</p>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsModal(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                                Болих
+                            </button>
+                            <button type="submit" form="role-form" disabled={saving} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">
+                                {saving ? <span className="animate-pulse">Түр хүлээнэ...</span> : "Хадгалах"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

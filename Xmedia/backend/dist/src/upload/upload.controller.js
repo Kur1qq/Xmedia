@@ -16,36 +16,19 @@ exports.UploadController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
-const path_1 = require("path");
-const uuid_1 = require("uuid");
 const jwt_auth_guard_1 = require("../admin/jwt-auth.guard");
+const cloudinary_service_1 = require("./cloudinary.service");
 let UploadController = class UploadController {
-    uploadFile(file, req) {
+    cloudinary;
+    constructor(cloudinary) {
+        this.cloudinary = cloudinary;
+    }
+    async uploadFile(file) {
         if (!file) {
             return { error: 'No file uploaded' };
         }
-        let baseUrl = '';
-        if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-            baseUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
-        }
-        else if (process.env.APP_URL && !process.env.APP_URL.includes('localhost')) {
-            baseUrl = process.env.APP_URL.replace(/['"]+/g, '');
-            if (baseUrl.endsWith('/'))
-                baseUrl = baseUrl.slice(0, -1);
-        }
-        else {
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-            const host = req.headers['x-forwarded-host'] || req.get('host') || 'localhost:4000';
-            if (host.includes('localhost') && process.env.NODE_ENV === 'production') {
-                baseUrl = 'https://xmedia-production.up.railway.app';
-            }
-            else {
-                baseUrl = `${protocol}://${host}`;
-            }
-        }
-        return {
-            url: `${baseUrl}/public/uploads/${file.filename}`
-        };
+        const result = await this.cloudinary.uploadFile(file);
+        return { url: result.secure_url };
     }
 };
 exports.UploadController = UploadController;
@@ -53,28 +36,22 @@ __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN', 'MODERATOR')),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
-        storage: (0, multer_1.diskStorage)({
-            destination: './public/uploads',
-            filename: (req, file, cb) => {
-                const uniqueName = (0, uuid_1.v4)() + (0, path_1.extname)(file.originalname);
-                cb(null, uniqueName);
-            }
-        }),
-        limits: { fileSize: 5 * 1024 * 1024 },
+        storage: (0, multer_1.memoryStorage)(),
+        limits: { fileSize: 50 * 1024 * 1024 },
         fileFilter: (req, file, cb) => {
-            if (!file.mimetype.match(/^image\//)) {
-                return cb(new common_1.BadRequestException('Зөвхөн зураг (image/*) upload хийнэ!'), false);
+            if (!file.mimetype.match(/^(image|video)\//)) {
+                return cb(new common_1.BadRequestException('Зөвхөн зураг эсвэл бичлэг (image/*, video/*) upload хийнэ!'), false);
             }
             cb(null, true);
         },
     })),
     __param(0, (0, common_1.UploadedFile)()),
-    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
 ], UploadController.prototype, "uploadFile", null);
 exports.UploadController = UploadController = __decorate([
-    (0, common_1.Controller)('upload')
+    (0, common_1.Controller)('upload'),
+    __metadata("design:paramtypes", [cloudinary_service_1.CloudinaryService])
 ], UploadController);
 //# sourceMappingURL=upload.controller.js.map

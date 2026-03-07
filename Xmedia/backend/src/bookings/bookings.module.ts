@@ -5,8 +5,10 @@ import { BylPaymentService } from './byl-payment.service';
 import { PrismaService } from '../prisma.service';
 import { MailService } from './mail.service';
 import { InvoiceService } from './invoice.service';
+import { AdminModule } from '../admin/admin.module';
 
 @Module({
+  imports: [AdminModule],
   controllers: [BookingsController],
   providers: [BookingsService, BylPaymentService, PrismaService, MailService, InvoiceService],
 })

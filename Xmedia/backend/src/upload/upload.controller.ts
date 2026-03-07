@@ -12,10 +12,10 @@ export class UploadController {
     @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN', 'MODERATOR'))
     @UseInterceptors(FileInterceptor('file', {
         storage: memoryStorage(),
-        limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+        limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limits for videos
         fileFilter: (req, file, cb) => {
-            if (!file.mimetype.match(/^image\//)) {
-                return cb(new BadRequestException('Зөвхөн зураг (image/*) upload хийнэ!'), false);
+            if (!file.mimetype.match(/^(image|video)\//)) {
+                return cb(new BadRequestException('Зөвхөн зураг эсвэл бичлэг (image/*, video/*) upload хийнэ!'), false);
             }
             cb(null, true);
         },

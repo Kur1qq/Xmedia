@@ -4,6 +4,7 @@ import { BookingStatus, ItemType, PaymentStatus } from '@prisma/client';
 import { BylPaymentService } from './byl-payment.service';
 import { MailService } from './mail.service';
 import { InvoiceService } from './invoice.service';
+import { AdminNotificationService } from '../admin/admin-notification.service';
 
 @Injectable()
 export class BookingsService {
@@ -13,6 +14,7 @@ export class BookingsService {
         private bylPayment: BylPaymentService,
         private mailService: MailService,
         private invoiceService: InvoiceService,
+        private adminNotificationService: AdminNotificationService,
     ) { }
 
     // Find all bookings (only PAID — for admin bookings section)
@@ -56,6 +58,21 @@ export class BookingsService {
         });
     }
 
+    // Find cancelled bookings (Admin tab)
+    async findCancelled() {
+        return this.prisma.booking.findMany({
+            where: {
+                status: 'CANCELLED',
+            },
+            include: {
+                user: { select: { id: true, username: true, email: true, phone: true } },
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                payments: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
     // Find bookings by user ID
     async findByUserId(userId: number) {
         return this.prisma.booking.findMany({
@@ -82,9 +99,18 @@ export class BookingsService {
         notes?: string;
         serviceName?: string;
         paymentType?: 'qpay' | 'invoice'; // new
+        userId?: number; // Use explicit user logic if logged in
     }) {
-        // Find or create a guest user by phone
-        let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        // Find by explicit userId first
+        let user: any = null;
+        if (dto.userId) {
+            user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+        }
+
+        // Fallback to guest logic
+        if (!user) {
+            user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        }
         if (!user) {
             user = await this.prisma.user.create({
                 data: {
@@ -140,6 +166,8 @@ export class BookingsService {
         // QPay path — create Byl checkout
         try {
             const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
+            //const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: total,
@@ -188,9 +216,16 @@ export class BookingsService {
             serviceName?: string;
         }>;
         paymentType?: 'qpay' | 'invoice'; // new
+        userId?: number; // Explicit explicit user logic
     }) {
-        // Find or create a user by phone
-        let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        let user: any = null;
+        if (dto.userId) {
+            user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+        }
+
+        if (!user) {
+            user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        }
         if (!user) {
             user = await this.prisma.user.create({
                 data: {
@@ -361,6 +396,75 @@ export class BookingsService {
         }
     }
 
+    // Manual booking creation (for Admin use)
+    async createManualBooking(dto: {
+        name: string;
+        phone: string;
+        email?: string;
+        date: string;     // 'YYYY-MM-DD'
+        startTime: string; // 'HH:MM'
+        endTime: string;   // 'HH:MM'
+        serviceType: 'STUDIO' | 'LIVE_SERVICE' | 'PHOTOGRAPHER_SERVICE' | 'EDIT_SERVICE';
+        serviceId: number;
+        totalAmount: number;
+        status: BookingStatus;
+        paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED';
+        notes?: string;
+    }) {
+        // Find or create user
+        let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        if (!user) {
+            user = await this.prisma.user.create({
+                data: {
+                    username: dto.name,
+                    email: dto.email || `guest_${dto.phone}@xmedia.guest`,
+                    phone: dto.phone,
+                    passwordHash: 'GUEST',
+                }
+            });
+        }
+
+        const bookingDate = new Date(dto.date);
+        const start = new Date(`1970-01-01T${dto.startTime}:00`);
+        const end = new Date(`1970-01-01T${dto.endTime}:00`);
+
+        // Calculate duration in hours
+        const durationHours = (end.getTime() - start.getTime()) / 3600000;
+        const unitPrice = dto.totalAmount / (durationHours || 1);
+
+        const itemData: any = {
+            itemType: dto.serviceType as ItemType,
+            quantity: durationHours,
+            unitPrice,
+            totalPrice: dto.totalAmount,
+            bookingDate,
+            startTime: start,
+            endTime: end,
+        };
+
+        if (dto.serviceType === 'STUDIO') itemData.studioId = dto.serviceId;
+        if (dto.serviceType === 'LIVE_SERVICE') itemData.liveServiceId = dto.serviceId;
+        if (dto.serviceType === 'PHOTOGRAPHER_SERVICE') itemData.photographerServiceId = dto.serviceId;
+        if (dto.serviceType === 'EDIT_SERVICE') itemData.serviceId = dto.serviceId;
+
+        const booking = await this.prisma.booking.create({
+            data: {
+                userId: user.id,
+                totalAmount: dto.totalAmount,
+                notes: dto.notes,
+                status: dto.status,
+                paymentStatus: dto.paymentStatus as any,
+                items: { create: [itemData] },
+            },
+            include: { items: true, user: true }
+        });
+
+        // Trigger email/invoice generation if marked PAID?
+        // Admins can trigger this themselves if needed, or we just rely on standard flows.
+
+        return booking;
+    }
+
     // Confirm payment from webhook
     async confirmPayment(bylCheckoutId: string) {
         // Find payment by Byl checkout ID (stored as invoiceId)
@@ -490,7 +594,7 @@ export class BookingsService {
             throw new NotFoundException(`Booking with ID ${id} not found`);
         }
 
-        return this.prisma.booking.update({
+        const updated = await this.prisma.booking.update({
             where: { id },
             data: { status },
             include: {
@@ -498,5 +602,58 @@ export class BookingsService {
                 items: true,
             }
         });
+
+        // Trigger an admin notification when an order is cancelled
+        if (status === 'CANCELLED') {
+            await this.adminNotificationService.createNotification(
+                'ORDER_CANCELLED',
+                `Захиалга ORD-${id.toString().padStart(4, '0')} цуцлагдлаа`,
+                id
+            );
+        }
+
+        return updated;
+    }
+
+    // Update internal notes for a booking from admin
+    async updateNotes(id: number, notes: string) {
+        const booking = await this.prisma.booking.findUnique({ where: { id } });
+
+        if (!booking) {
+            throw new NotFoundException(`Booking with ID ${id} not found`);
+        }
+
+        const updated = await this.prisma.booking.update({
+            where: { id },
+            data: { notes },
+            include: {
+                user: true,
+                items: true,
+            }
+        });
+
+        return updated;
+    }
+
+    // Update custom payment status from admin
+    async updatePaymentStatus(id: number, paymentStatus: PaymentStatus) {
+        const booking = await this.prisma.booking.findUnique({ where: { id } });
+
+        if (!booking) {
+            throw new NotFoundException(`Booking with ID ${id} not found`);
+        }
+
+        const updated = await this.prisma.booking.update({
+            where: { id },
+            data: { paymentStatus },
+            include: {
+                user: true,
+                items: true,
+            }
+        });
+
+        // Trigger log or notification if needed...
+
+        return updated;
     }
 }

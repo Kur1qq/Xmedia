@@ -6,13 +6,18 @@ import { siteConfig } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, User as UserIcon, LogOut } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuthStore } from "@/lib/store/auth";
 import { motion } from "framer-motion";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { OrderHistoryModal } from "@/components/profile/OrderHistoryModal";
 
 export function Header() {
     const [isOpen, setIsOpen] = React.useState(false);
     const [isScrolled, setIsScrolled] = React.useState(false);
+    const [isOrderHistoryOpen, setIsOrderHistoryOpen] = React.useState(false);
+    const { user, logout } = useAuthStore();
 
     React.useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -41,7 +46,7 @@ export function Header() {
                     </div>
 
                     {/* Desktop: Navigation links */}
-                    <div className="hidden md:flex justify-center items-center absolute left-1/2 -translate-x-1/2">
+                    <div className="hidden lg:flex justify-center items-center">
                         <div className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-black/70 border border-white/10 backdrop-blur-md shadow-sm shadow-red-500/10">
                             {siteConfig.nav.map((item) => (
                                 <Link
@@ -56,22 +61,42 @@ export function Header() {
                     </div>
 
                     {/* Desktop: right buttons */}
-                    <div className="hidden md:flex flex-1 justify-end items-center gap-3">
+                    <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
                         <CartDrawer />
                         <Link href="/contact">
                             <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-primary hover:bg-white/10">
                                 Холбоо барих
                             </Button>
                         </Link>
-                        <Link href="/booking">
-                            <Button className="font-semibold text-sm px-5 bg-white/5 border border-white/20 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/10 hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] hover:border-red-500/50 hover:scale-105">
-                                Захиалга өгөх
-                            </Button>
-                        </Link>
+                        {user ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button className="font-semibold text-sm px-4 bg-white/5 border border-white/20 backdrop-blur-sm text-white hover:bg-white/10 flex items-center gap-2">
+                                        <UserIcon className="w-4 h-4" />
+                                        {user.name}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56 bg-black/95 border-white/10 text-white" align="end">
+                                    <DropdownMenuItem onClick={() => setIsOrderHistoryOpen(true)} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer">
+                                        <UserIcon className="w-4 h-4 mr-2" /> Миний захиалгын түүх
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => logout()} className="text-red-500 hover:bg-red-500/10 focus:bg-red-500/10 cursor-pointer mt-1 font-medium focus:text-red-500">
+                                        <LogOut className="w-4 h-4 mr-2" />
+                                        Гарах
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <Link href="/sign-in">
+                                <Button className="font-semibold text-sm px-5 bg-white/5 border border-white/20 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/10 hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] hover:border-red-500/50 hover:scale-105">
+                                    Нэвтрэх
+                                </Button>
+                            </Link>
+                        )}
                     </div>
 
                     {/* Mobile hamburger */}
-                    <div className="flex items-center justify-end gap-2 md:hidden flex-1">
+                    <div className="flex items-center justify-end gap-2 lg:hidden flex-1">
                         <CartDrawer />
                         <Sheet open={isOpen} onOpenChange={setIsOpen}>
                             <SheetTrigger asChild>
@@ -98,15 +123,39 @@ export function Header() {
                                     <Link href="/contact" onClick={() => setIsOpen(false)}>
                                         <Button variant="outline" className="w-full">Холбоо барих</Button>
                                     </Link>
-                                    <Link href="/booking" onClick={() => setIsOpen(false)}>
-                                        <Button className="w-full">Захиалга өгөх</Button>
-                                    </Link>
+
+                                    {user ? (
+                                        <div className="pt-4 mt-2 border-t border-white/10 flex flex-col gap-3">
+                                            <div className="flex items-center gap-3 px-2 mb-2">
+                                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                                                    <UserIcon className="w-5 h-5 text-gray-300" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-white">{user.name}</p>
+                                                    <p className="text-xs text-gray-400">{user.email}</p>
+                                                </div>
+                                            </div>
+                                            <Button variant="outline" onClick={() => { setIsOpen(false); setIsOrderHistoryOpen(true); }} className="w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10">
+                                                <UserIcon className="w-4 h-4" /> Миний захиалгын түүх
+                                            </Button>
+                                            <Button variant="outline" onClick={() => { logout(); setIsOpen(false); }} className="w-full text-red-500 hover:text-red-400 border-red-500/20 hover:bg-red-500/10 justify-start gap-2">
+                                                <LogOut className="w-4 h-4" /> Гарах
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Link href="/sign-in" onClick={() => setIsOpen(false)}>
+                                            <Button className="w-full">Нэвтрэх</Button>
+                                        </Link>
+                                    )}
                                 </nav>
                             </SheetContent>
                         </Sheet>
                     </div>
                 </div>
             </motion.header>
+
+            {/* Modals outside of header boundary */}
+            <OrderHistoryModal isOpen={isOrderHistoryOpen} onClose={() => setIsOrderHistoryOpen(false)} />
         </>
     );
 }

@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Param, Patch, Body, ParseIntPipe, Req, Headers, RawBodyRequest, Logger, HttpCode, Query } from '@nestjs/common';
+import { Controller, Get, Post, Param, Patch, Body, ParseIntPipe, Req, Headers, RawBodyRequest, Logger, HttpCode, Query, UseGuards } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { BookingStatus } from '@prisma/client';
 import { AdminLogService } from '../admin/admin-log.service';
 import { BylPaymentService } from './byl-payment.service';
+import { RolesGuard } from '../admin/jwt-auth.guard';
 
 @Controller('bookings')
 export class BookingsController {
@@ -22,6 +23,11 @@ export class BookingsController {
         return this.bookingsService.findPending();
     }
 
+    @Get('cancelled')
+    async getCancelledBookings() {
+        return this.bookingsService.findCancelled();
+    }
+
     @Get('user/:userId')
     async findByUser(@Param('userId', ParseIntPipe) userId: number) {
         return this.bookingsService.findByUserId(userId);
@@ -36,6 +42,19 @@ export class BookingsController {
     ) {
         const bookedTimes = await this.bookingsService.getBookedSlots(serviceType, Number(serviceId), date);
         return { bookedTimes };
+    }
+
+    // Admin direct manual booking
+    @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN'))
+    @Post('admin/manual')
+    async createManualBooking(@Body() dto: any, @Req() req: any) {
+        const result = await this.bookingsService.createManualBooking({
+            ...dto,
+            serviceId: Number(dto.serviceId),
+            totalAmount: Number(dto.totalAmount)
+        });
+        await this.log.log(req.user?.id ?? 0, 'MANUAL_BOOKING_CREATE', 'Booking', result.id, `Created manual booking by admin`, req.ip).catch(() => { });
+        return result;
     }
 
     // Multi-item cart booking
@@ -92,6 +111,29 @@ export class BookingsController {
     ) {
         const result = await this.bookingsService.updateStatus(id, status);
         this.log.log(req.user?.id ?? 0, 'BOOKING_STATUS_UPDATE', 'Booking', id, `status=${status}`, req.ip).catch(() => { });
+        return result;
+    }
+
+    @Patch(':id/notes')
+    async updateNotes(
+        @Param('id', ParseIntPipe) id: number,
+        @Body('notes') notes: string,
+        @Req() req: any,
+    ) {
+        const result = await this.bookingsService.updateNotes(id, notes);
+        this.log.log(req.user?.id ?? 0, 'BOOKING_NOTES_UPDATE', 'Booking', id, `Updated notes`, req.ip).catch(() => { });
+        return result;
+    }
+
+    @Patch(':id/payment-status')
+    async updatePaymentStatus(
+        @Param('id', ParseIntPipe) id: number,
+        @Body('paymentStatus') paymentStatus: string,
+        @Req() req: any,
+    ) {
+        // Assume string corresponds to Prisma PaymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED'
+        const result = await this.bookingsService.updatePaymentStatus(id, paymentStatus as any);
+        this.log.log(req.user?.id ?? 0, 'BOOKING_PAYMENT_UPDATE', 'Booking', id, `paymentStatus=${paymentStatus}`, req.ip).catch(() => { });
         return result;
     }
 }

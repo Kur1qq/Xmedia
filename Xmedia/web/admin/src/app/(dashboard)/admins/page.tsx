@@ -175,71 +175,88 @@ export default function AdminsPage() {
             <input type="file" accept="image/*" className="hidden" ref={fileRef} onChange={handleImageUpload} />
 
             {isModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-semibold">{editing ? 'Админ засах' : 'Шинэ Админ нэмэх'}</h2>
-                            <button onClick={() => setIsModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !saving && setIsModal(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
+                            <h2 className="text-lg font-semibold tracking-tight">{editing ? 'Админ засах' : 'Шинэ Админ нэмэх'}</h2>
+                            <button onClick={() => !saving && setIsModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
-                        <form onSubmit={save} className="space-y-4">
-                            {/* Avatar */}
-                            <div className="flex items-center gap-4">
-                                {form.image
-                                    ? <img src={form.image} alt="" className="w-16 h-16 rounded-full object-cover border border-border/50" />
-                                    : <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center border border-border/50"><ImageIcon className="w-6 h-6 text-muted-foreground" /></div>}
-                                <button type="button" disabled={uploadingImg} onClick={() => fileRef.current?.click()} className="px-3 py-1.5 text-sm bg-background border border-border/50 rounded-md hover:bg-muted">
-                                    {uploadingImg ? "Хуулж байна..." : "Зураг хуулах"}
-                                </button>
-                            </div>
 
-                            <div className="space-y-1"><label className="text-sm font-medium">Нэвтрэх нэр <span className="text-red-500">*</span></label>
-                                <input required value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" placeholder="admin123" />
-                            </div>
-                            <div className="space-y-1"><label className="text-sm font-medium">Нууц үг {editing && <span className="text-muted-foreground text-xs">(хоосон орхивол өөрчлөгдөхгүй)</span>}</label>
-                                <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" placeholder="••••••••" />
-                            </div>
-
-                            {/* Role */}
-                            <div className="space-y-1"><label className="text-sm font-medium">Эрхийн түвшин</label>
-                                <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value, customRoleId: "" })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                                    <option value="MODERATOR">Модератор</option>
-                                    <option value="EDITOR">Эдитор</option>
-                                    <option value="ADMIN">Админ</option>
-                                    <option value="SUPER_ADMIN">Дээд Админ</option>
-                                    <option value="CUSTOM">Захиалгат эрх</option>
-                                </select>
-                            </div>
-
-                            {/* Custom role picker */}
-                            {form.role === 'CUSTOM' && (
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Захиалгат эрх сонгох <span className="text-red-500">*</span></label>
-                                    {customRoles.length === 0 ? (
-                                        <p className="text-sm text-muted-foreground p-2 rounded-md border border-dashed border-border/50">
-                                            Захиалгат эрх байхгүй. <a href="/roles" className="text-primary underline">Эрх удирдлага</a>-аас нэмнэ үү.
-                                        </p>
-                                    ) : (
-                                        <select
-                                            required
-                                            value={form.customRoleId}
-                                            onChange={e => setForm({ ...form, customRoleId: e.target.value })}
-                                            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                        >
-                                            <option value="">-- Эрх сонгоно уу --</option>
-                                            {customRoles.map(r => (
-                                                <option key={r.id} value={r.id}>{r.name}</option>
-                                            ))}
-                                        </select>
-                                    )}
+                        <div className="p-4 overflow-y-auto">
+                            <form id="admin-form" onSubmit={save} className="space-y-4">
+                                {/* Avatar */}
+                                <div className="flex items-center gap-4 mb-2">
+                                    {form.image
+                                        ? <img src={form.image} alt="" className="w-16 h-16 rounded-full object-cover border border-white/10 shadow-sm" />
+                                        : <div className="w-16 h-16 rounded-full bg-black/20 flex items-center justify-center border border-white/5"><ImageIcon className="w-6 h-6 text-gray-500" /></div>}
+                                    <button type="button" disabled={uploadingImg} onClick={() => fileRef.current?.click()} className="px-3 py-1.5 text-sm bg-black/20 border border-white/5 text-white rounded-md hover:border-white/20 transition-colors">
+                                        {uploadingImg ? "Хуулж байна..." : "Зураг хуулах"}
+                                    </button>
                                 </div>
-                            )}
 
-                            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} /> Идэвхтэй</label>
-                            <div className="flex justify-end gap-2 pt-4 border-t border-border/50">
-                                <button type="button" onClick={() => setIsModal(false)} className="px-4 py-2 text-sm border border-border/50 rounded-md hover:bg-muted">Болих</button>
-                                <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{saving ? 'Хадгалж байна...' : 'Хадгалах'}</button>
-                            </div>
-                        </form>
+                                <div>
+                                    <label className="text-xs text-gray-500 mb-1 block">Нэвтрэх нэр <span className="text-red-500">*</span></label>
+                                    <input required type="text" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} placeholder="admin123" />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-500 mb-1 block">Нууц үг {editing && <span className="text-gray-600">(хоосон орхивол өөрчлөгдөхгүй)</span>}</label>
+                                    <input type="password" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="••••••••" />
+                                </div>
+
+                                {/* Role */}
+                                <div>
+                                    <label className="text-xs text-gray-500 mb-1 block">Эрхийн түвшин</label>
+                                    <select className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={form.role} onChange={e => setForm({ ...form, role: e.target.value, customRoleId: "" })}>
+                                        <option value="MODERATOR">Модератор</option>
+                                        <option value="EDITOR">Эдитор</option>
+                                        <option value="ADMIN">Админ</option>
+                                        <option value="SUPER_ADMIN">Дээд Админ</option>
+                                        <option value="CUSTOM">Захиалгат эрх</option>
+                                    </select>
+                                </div>
+
+                                {/* Custom role picker */}
+                                {form.role === 'CUSTOM' && (
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Захиалгат эрх сонгох <span className="text-red-500">*</span></label>
+                                        {customRoles.length === 0 ? (
+                                            <p className="text-xs text-gray-500 p-2 rounded-md border border-dashed border-white/10 bg-black/10">
+                                                Захиалгат эрх байхгүй. <a href="/roles" className="text-primary hover:underline">Эрх удирдлага</a>-аас нэмнэ үү.
+                                            </p>
+                                        ) : (
+                                            <select
+                                                required
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                value={form.customRoleId}
+                                                onChange={e => setForm({ ...form, customRoleId: e.target.value })}
+                                            >
+                                                <option value="">-- Эрх сонгоно уу --</option>
+                                                {customRoles.map(r => (
+                                                    <option key={r.id} value={r.id}>{r.name}</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </div>
+                                )}
+
+                                <label className="flex items-center gap-2 text-sm text-gray-300 mt-2 select-none cursor-pointer w-fit">
+                                    <input type="checkbox" className="accent-primary w-4 h-4 cursor-pointer" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} /> Идэвхтэй
+                                </label>
+                            </form>
+                        </div>
+
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsModal(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                                Болих
+                            </button>
+                            <button type="submit" form="admin-form" disabled={saving} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">
+                                {saving ? <span className="animate-pulse">Түр хүлээнэ үү...</span> : 'Хадгалах'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

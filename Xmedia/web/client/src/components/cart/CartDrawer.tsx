@@ -12,9 +12,9 @@ import {
     SheetFooter,
 } from "@/components/ui/sheet";
 import { useCartStore } from "@/lib/store/cart";
-import { loadCustomerInfo, saveCustomerInfo } from "@/lib/customer";
+import { useAuthStore } from "@/lib/store/auth";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
@@ -23,35 +23,36 @@ import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export function CartDrawer() {
+    const { user } = useAuthStore();
+    const router = useRouter();
     const { items, removeItem, clearCart, getTotalPrice } = useCartStore();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     // Customer Info Form
-    const [customer, setCustomer] = useState(() => {
-        const saved = loadCustomerInfo();
-        return {
-            name: saved?.name || "",
-            phone: saved?.phone || "",
-            email: saved?.email || "",
-            notes: "",
-        };
-    });
+    const [customer, setCustomer] = useState({ notes: "" });
 
     const handleCheckout = async (paymentType: "qpay" | "invoice") => {
+        if (!user) {
+            toast.error("Та эхлээд нэвтэрнэ үү.");
+            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
+            return;
+        }
         if (items.length === 0) return toast.error("Сагс хоосон байна");
-        if (!customer.name || !customer.phone) return toast.error("Нэр, утасны дугаараа оруулна уу!");
 
         setLoading(true);
-        saveCustomerInfo({ name: customer.name, phone: customer.phone, email: customer.email });
 
         try {
             const res = await fetch(`${API}/bookings/cart`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    ...customer,
+                    userId: parseInt(user.id, 10),
+                    name: user.name,
+                    phone: user.phone || '00000000',
+                    email: user.email,
+                    notes: customer.notes,
                     paymentType,
                     items: items.map(i => ({
                         date: i.date,
@@ -136,35 +137,6 @@ export function CartDrawer() {
                         <div className="space-y-4 border-t border-white/10 pt-4 mt-6">
                             <h3 className="font-semibold text-sm">Хувийн мэдээлэл</h3>
                             <div className="space-y-2">
-                                <Label className="text-xs text-gray-400">Нэр *</Label>
-                                <Input
-                                    value={customer.name}
-                                    onChange={e => setCustomer({ ...customer, name: e.target.value })}
-                                    className="bg-white/5 border-white/10 text-white"
-                                    placeholder="Таны нэр"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs text-gray-400">Утас *</Label>
-                                <Input
-                                    type="tel"
-                                    value={customer.phone}
-                                    onChange={e => setCustomer({ ...customer, phone: e.target.value })}
-                                    className="bg-white/5 border-white/10 text-white"
-                                    placeholder="Утасны дугаар"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs text-gray-400">И-мэйл</Label>
-                                <Input
-                                    type="email"
-                                    value={customer.email}
-                                    onChange={e => setCustomer({ ...customer, email: e.target.value })}
-                                    className="bg-white/5 border-white/10 text-white"
-                                    placeholder="И-мэйл хаяг (Заавал биш)"
-                                />
-                            </div>
-                            <div className="space-y-2">
                                 <Label className="text-xs text-gray-400">Нэмэлт тайлбар</Label>
                                 <Textarea
                                     value={customer.notes}
@@ -187,8 +159,12 @@ export function CartDrawer() {
                             className="w-full bg-red-600 hover:bg-red-700 text-white py-6 text-lg font-bold"
                             disabled={items.length === 0 || loading}
                             onClick={() => {
+                                if (!user) {
+                                    toast.error("Та эхлээд нэвтэрнэ үү.");
+                                    router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
+                                    return;
+                                }
                                 if (items.length === 0) return toast.error("Сагс хоосон байна");
-                                if (!customer.name || !customer.phone) return toast.error("Нэр, утасны дугаараа оруулна уу!");
                                 setShowPaymentModal(true);
                             }}
                         >

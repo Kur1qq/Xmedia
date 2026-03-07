@@ -5,6 +5,7 @@ import { PrismaModule } from '../prisma.module';
 import { AdminService } from './admin.service';
 import { AdminLogService } from './admin-log.service';
 import { AdminController } from './admin.controller';
+import { AdminNotificationService } from './admin-notification.service';
 import { JwtStrategy, JWT_SECRET, JWT_EXPIRES_IN } from './jwt.strategy';
 
 @Module({
@@ -17,8 +18,8 @@ import { JwtStrategy, JWT_SECRET, JWT_EXPIRES_IN } from './jwt.strategy';
         }),
     ],
     controllers: [AdminController],
-    providers: [AdminService, AdminLogService, JwtStrategy],
-    exports: [AdminService, AdminLogService, JwtModule, JwtStrategy, PassportModule],
+    providers: [AdminService, AdminLogService, AdminNotificationService, JwtStrategy],
+    exports: [AdminService, AdminLogService, AdminNotificationService, JwtModule, JwtStrategy, PassportModule],
 })
 export class AdminModule implements OnModuleInit {
     constructor(private readonly adminService: AdminService) { }

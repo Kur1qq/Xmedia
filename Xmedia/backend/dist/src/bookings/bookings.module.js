@@ -12,13 +12,17 @@ const bookings_controller_1 = require("./bookings.controller");
 const bookings_service_1 = require("./bookings.service");
 const byl_payment_service_1 = require("./byl-payment.service");
 const prisma_service_1 = require("../prisma.service");
+const mail_service_1 = require("./mail.service");
+const invoice_service_1 = require("./invoice.service");
+const admin_module_1 = require("../admin/admin.module");
 let BookingsModule = class BookingsModule {
 };
 exports.BookingsModule = BookingsModule;
 exports.BookingsModule = BookingsModule = __decorate([
     (0, common_1.Module)({
+        imports: [admin_module_1.AdminModule],
         controllers: [bookings_controller_1.BookingsController],
-        providers: [bookings_service_1.BookingsService, byl_payment_service_1.BylPaymentService, prisma_service_1.PrismaService],
+        providers: [bookings_service_1.BookingsService, byl_payment_service_1.BylPaymentService, prisma_service_1.PrismaService, mail_service_1.MailService, invoice_service_1.InvoiceService],
     })
 ], BookingsModule);
 //# sourceMappingURL=bookings.module.js.map

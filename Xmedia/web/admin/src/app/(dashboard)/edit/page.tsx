@@ -395,207 +395,253 @@ export default function EditPage() {
 
             {/* CATEGORY MODAL */}
             {isCatModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
-                        <div className="flex justify-between items-center mb-6"><h2 className="text-lg font-semibold">{editingCat ? 'Ангилал засах' : 'Ангилал үүсгэх'}</h2><button onClick={() => setIsCatModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button></div>
-                        <form onSubmit={saveCat} className="space-y-4">
-                            <div className="space-y-1"><label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label><input required value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
-                            <div className="space-y-1"><label className="text-sm font-medium">Тайлбар</label><textarea value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" /></div>
-                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsCatModal(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={savingCat} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{savingCat ? '...' : 'Хадгалах'}</button></div>
-                        </form>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !savingCat && setIsCatModal(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingCat ? 'Ангилал засах' : 'Ангилал үүсгэх'}</h2>
+                            <button onClick={() => !savingCat && setIsCatModal(false)} className="text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="p-4 overflow-y-auto">
+                            <form id="cat-form" onSubmit={saveCat} className="space-y-4">
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Нэр <span className="text-red-500">*</span></label>
+                                    <input required value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Тайлбар</label>
+                                    <textarea value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[80px]" /></div>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsCatModal(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">Болих</button>
+                            <button type="submit" form="cat-form" disabled={savingCat} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">{savingCat ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}</button>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* MAIN TYPE MODAL */}
             {isMainModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
-                        <div className="flex justify-between items-center mb-6"><h2 className="text-lg font-semibold">{editingMain ? 'Үндсэн төрөл засах' : 'Үндсэн төрөл нэмэх'}</h2><button onClick={() => setIsMainModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button></div>
-                        <form onSubmit={saveMain} className="space-y-4">
-                            <div className="space-y-1"><label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label><input required placeholder="Фото, Видео..." value={mainForm.name} onChange={e => setMainForm({ ...mainForm, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
-                            <div className="space-y-1"><label className="text-sm font-medium">Тайлбар</label><textarea value={mainForm.description} onChange={e => setMainForm({ ...mainForm, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[60px]" /></div>
-                            <div className="space-y-1"><label className="text-sm font-medium">Дараалал</label><input type="number" value={mainForm.sortOrder} onChange={e => setMainForm({ ...mainForm, sortOrder: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
-                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsMainModal(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={savingMain} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{savingMain ? '...' : 'Хадгалах'}</button></div>
-                        </form>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !savingMain && setIsMainModal(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingMain ? 'Үндсэн төрөл засах' : 'Үндсэн төрөл нэмэх'}</h2>
+                            <button onClick={() => !savingMain && setIsMainModal(false)} className="text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="p-4 overflow-y-auto">
+                            <form id="main-form" onSubmit={saveMain} className="space-y-4">
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Нэр <span className="text-red-500">*</span></label>
+                                    <input required placeholder="Фото, Видео..." value={mainForm.name} onChange={e => setMainForm({ ...mainForm, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Тайлбар</label>
+                                    <textarea value={mainForm.description} onChange={e => setMainForm({ ...mainForm, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[60px]" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Дараалал</label>
+                                    <input type="number" value={mainForm.sortOrder} onChange={e => setMainForm({ ...mainForm, sortOrder: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsMainModal(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">Болих</button>
+                            <button type="submit" form="main-form" disabled={savingMain} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">{savingMain ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}</button>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* SUB TYPE MODAL */}
             {isSubModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
-                        <div className="flex justify-between items-center mb-6"><h2 className="text-lg font-semibold">{editingSub ? 'Дэд төрөл засах' : 'Дэд төрөл нэмэх'}</h2><button onClick={() => setIsSubModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button></div>
-                        <form onSubmit={saveSub} className="space-y-4">
-                            <div className="space-y-1"><label className="text-sm font-medium">Үндсэн төрөл <span className="text-red-500">*</span></label>
-                                <select required value={subForm.mainTypeId} onChange={e => setSubForm({ ...subForm, mainTypeId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                                    <option value="" disabled>Сонгох...</option>
-                                    {mainTypes.map(mt => <option key={mt.id} value={mt.id}>{mt.name}</option>)}
-                                </select>
-                            </div>
-                            <div className="space-y-1"><label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label><input required placeholder="Лого, Зураг янзлах, Рийл 60 сек..." value={subForm.name} onChange={e => setSubForm({ ...subForm, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
-                            <div className="space-y-1"><label className="text-sm font-medium">Тайлбар</label><textarea value={subForm.description} onChange={e => setSubForm({ ...subForm, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[60px]" /></div>
-                            <div className="space-y-1"><label className="text-sm font-medium">Дараалал</label><input type="number" value={subForm.sortOrder} onChange={e => setSubForm({ ...subForm, sortOrder: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" /></div>
-                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsSubModal(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={savingSub} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{savingSub ? '...' : 'Хадгалах'}</button></div>
-                        </form>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !savingSub && setIsSubModal(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingSub ? 'Дэд төрөл засах' : 'Дэд төрөл нэмэх'}</h2>
+                            <button onClick={() => !savingSub && setIsSubModal(false)} className="text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="p-4 overflow-y-auto">
+                            <form id="sub-form" onSubmit={saveSub} className="space-y-4">
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Үндсэн төрөл <span className="text-red-500">*</span></label>
+                                    <select required value={subForm.mainTypeId} onChange={e => setSubForm({ ...subForm, mainTypeId: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
+                                        <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
+                                        {mainTypes.map(mt => <option key={mt.id} value={mt.id} className="bg-[#1e1e1e]">{mt.name}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Нэр <span className="text-red-500">*</span></label>
+                                    <input required placeholder="Лого, Зураг янзлах, Рийл 60 сек..." value={subForm.name} onChange={e => setSubForm({ ...subForm, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Тайлбар</label>
+                                    <textarea value={subForm.description} onChange={e => setSubForm({ ...subForm, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[60px]" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Дараалал</label>
+                                    <input type="number" value={subForm.sortOrder} onChange={e => setSubForm({ ...subForm, sortOrder: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsSubModal(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">Болих</button>
+                            <button type="submit" form="sub-form" disabled={savingSub} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">{savingSub ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}</button>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* SERVICE MODAL */}
             {isSvcModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border border-border/50 shadow-lg p-6">
-                        <div className="flex justify-between items-center mb-6"><h2 className="text-lg font-semibold">{editingSvc ? 'Үйлчилгээ засах' : 'Шинэ үйлчилгээ нэмэх'}</h2><button onClick={() => setIsSvcModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button></div>
-                        <form onSubmit={saveSvc} className="space-y-4">
-                            {/* Image */}
-                            <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-lg border border-border/50">
-                                <div className="w-16 h-16 rounded overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    {svcForm.image ? <img src={svcForm.image} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
-                                </div>
-                                <button type="button" disabled={uploadingImg} onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 text-sm bg-background border border-border/50 rounded-md hover:bg-muted">{uploadingImg ? "Хуулж байна..." : "Зураг хуулах"}</button>
-                            </div>
-
-                            {/* Category & Name */}
-                            <div className="space-y-1"><label className="text-sm font-medium">Ангилал <span className="text-red-500">*</span></label>
-                                <select required value={svcForm.categoryId} onChange={e => setSvcForm({ ...svcForm, categoryId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                                    <option value="" disabled>Сонгох...</option>
-                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                </select>
-                            </div>
-                            <div className="space-y-1"><label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
-                                <input required value={svcForm.name} onChange={e => setSvcForm({ ...svcForm, name: e.target.value })} placeholder="Нэр..." className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
-                            </div>
-
-                            {/* Main + Packages */}
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Үндсэн төрөл <span className="text-red-500">*</span></label>
-                                    <select
-                                        required
-                                        value={svcForm.mainTypeId}
-                                        onChange={e => setSvcForm({ ...svcForm, mainTypeId: e.target.value, packages: [{ id: Date.now().toString(), subTypeId: "", price: "", priceLabel: "" }] })}
-                                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                                    >
-                                        <option value="" disabled>— Үндсэн төрөл сонгох —</option>
-                                        {mainTypes.map(mt => <option key={mt.id} value={mt.id}>{mt.name}</option>)}
-                                    </select>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-sm font-medium">Үнийн багцууд <span className="text-red-500">*</span></label>
-                                        <button type="button" onClick={addPackage} className="text-xs text-primary hover:underline flex items-center gap-1">
-                                            <Plus className="w-3 h-3" /> нэмэх
-                                        </button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !savingSvc && setIsSvcModal(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingSvc ? 'Үйлчилгээ засах' : 'Шинэ үйлчилгээ нэмэх'}</h2>
+                            <button onClick={() => !savingSvc && setIsSvcModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-4 overflow-y-auto">
+                            <form id="svc-form" onSubmit={saveSvc} className="space-y-4">
+                                {/* Image */}
+                                <div className="flex items-center gap-4 bg-black/20 p-4 rounded-lg border border-white/5">
+                                    <div className="w-16 h-16 rounded overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        {svcForm.image ? <img src={svcForm.image} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-gray-500" />}
                                     </div>
-
-                                    <div className="space-y-2 rounded-md border border-border/50 p-3 bg-muted/20">
-                                        {svcForm.packages.map((pkg, idx) => (
-                                            <div key={pkg.id || idx} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-center">
-                                                <div>
-                                                    <label className="text-xs text-muted-foreground mb-1 block">Контентийн төрөл</label>
-                                                    <select
-                                                        required
-                                                        value={pkg.subTypeId}
-                                                        onChange={e => updatePackage(idx, 'subTypeId', e.target.value)}
-                                                        className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                                    >
-                                                        <option value="" disabled>Сонгох...</option>
-                                                        {filteredSubTypes.map((st: any) => <option key={st.id} value={st.id}>{st.name}</option>)}
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs text-muted-foreground mb-1 block">Нэршил (Сонголттой)</label>
-                                                    <input
-                                                        type="text"
-                                                        value={pkg.priceLabel || ""}
-                                                        onChange={e => updatePackage(idx, 'priceLabel', e.target.value)}
-                                                        placeholder="Жишээ: Бичлэг + Эвлүүлэг..."
-                                                        className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs text-muted-foreground mb-1 block">Үнэ (₮)</label>
-                                                    <input
-                                                        type="number" min={0}
-                                                        value={pkg.price}
-                                                        onChange={e => updatePackage(idx, 'price', e.target.value)}
-                                                        className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                                        required
-                                                    />
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removePackage(idx)}
-                                                    disabled={svcForm.packages.length <= 1}
-                                                    className="mt-5 text-muted-foreground hover:text-red-500 disabled:opacity-30 flex justify-center"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {svcForm.mainTypeId && filteredSubTypes.length === 0 && (
-                                            <p className="text-xs text-amber-500 py-2 px-3">⚠️ Энэ үндсэн төрөлд дэд төрөл байхгүй байна. Эхлээд дэд төрөл нэмнэ үү.</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Description */}
-                            <div className="space-y-1"><label className="text-sm font-medium">Тайлбар</label>
-                                <textarea value={svcForm.description} onChange={e => setSvcForm({ ...svcForm, description: e.target.value })} placeholder="Тайлбар..." className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
-                            </div>
-
-                            {/* Amenities */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium block">Давуу талууд</label>
-                                <div className="flex gap-2 mb-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Шинэ давуу тал..."
-                                        className="flex-1 h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                        id="new-amenity-input"
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                addAmenity(e.currentTarget.value);
-                                                e.currentTarget.value = '';
-                                            }
-                                        }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const input = document.getElementById('new-amenity-input') as HTMLInputElement;
-                                            if (input) { addAmenity(input.value); input.value = ''; }
-                                        }}
-                                        className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm border-none shrink-0"
-                                    >
-                                        Нэмэх
+                                    <button type="button" disabled={uploadingImg} onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 text-sm bg-black/20 border border-white/10 hover:bg-white/5 transition-colors rounded-md text-gray-200">
+                                        {uploadingImg ? <span className="animate-pulse">Хуулж байна...</span> : "Зураг хуулах"}
                                     </button>
                                 </div>
-                                {svcForm.amenities.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {svcForm.amenities.map((amenity, idx) => (
-                                            <div key={idx} className="flex items-center gap-1.5 bg-muted/40 border border-border/50 px-2.5 py-1 rounded-md text-xs">
-                                                <span>{amenity}</span>
-                                                <button type="button" onClick={() => removeAmenity(idx)} className="text-muted-foreground hover:text-red-500 rounded-full hover:bg-white/10 p-0.5"><X className="w-3 h-3" /></button>
-                                            </div>
-                                        ))}
+
+                                {/* Category & Name */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1 col-span-2"><label className="text-xs text-gray-400">Ангилал <span className="text-red-500">*</span></label>
+                                        <select required value={svcForm.categoryId} onChange={e => setSvcForm({ ...svcForm, categoryId: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
+                                            <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
+                                            {categories.map(c => <option key={c.id} value={c.id} className="bg-[#1e1e1e]">{c.name}</option>)}
+                                        </select>
                                     </div>
-                                )}
-                            </div>
+                                    <div className="space-y-1 col-span-2"><label className="text-xs text-gray-400">Нэр <span className="text-red-500">*</span></label>
+                                        <input required value={svcForm.name} onChange={e => setSvcForm({ ...svcForm, name: e.target.value })} placeholder="Нэр..." className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                    </div>
+                                </div>
 
-                            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={svcForm.isActive} onChange={e => setSvcForm({ ...svcForm, isActive: e.target.checked })} /> Идэвхтэй</label>
+                                {/* Main + Packages */}
+                                <div className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-gray-400">Үндсэн төрөл <span className="text-red-500">*</span></label>
+                                        <select
+                                            required
+                                            value={svcForm.mainTypeId}
+                                            onChange={e => setSvcForm({ ...svcForm, mainTypeId: e.target.value, packages: [{ id: Date.now().toString(), subTypeId: "", price: "", priceLabel: "" }] })}
+                                            className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none"
+                                        >
+                                            <option value="" disabled className="bg-[#1e1e1e]">— Үндсэн төрөл сонгох —</option>
+                                            {mainTypes.map(mt => <option key={mt.id} value={mt.id} className="bg-[#1e1e1e]">{mt.name}</option>)}
+                                        </select>
+                                    </div>
 
-                            <div className="flex justify-end gap-2 pt-4 border-t border-border/50">
-                                <button type="button" onClick={() => setIsSvcModal(false)} className="px-4 py-2 text-sm border border-border/50 rounded-md hover:bg-muted">Болих</button>
-                                <button type="submit" disabled={savingSvc} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{savingSvc ? 'Хадгалж байна...' : 'Хадгалах'}</button>
-                            </div>
-                        </form>
+                                    <div className="space-y-3 bg-black/10 p-4 rounded-xl border border-white/5">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs text-gray-400">Үнийн багцууд <span className="text-red-500">*</span></label>
+                                            <button type="button" onClick={addPackage} className="text-[10px] flex items-center gap-1 bg-primary/20 text-primary px-2 py-1 rounded hover:bg-primary/30 transition-colors disabled:opacity-50">
+                                                <Plus className="w-3 h-3" /> нэмэх
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {svcForm.packages.map((pkg, idx) => (
+                                                <div key={pkg.id || idx} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block">Контентийн төрөл</label>
+                                                        <select
+                                                            required
+                                                            value={pkg.subTypeId}
+                                                            onChange={e => updatePackage(idx, 'subTypeId', e.target.value)}
+                                                            className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary appearance-none"
+                                                        >
+                                                            <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
+                                                            {filteredSubTypes.map((st: any) => <option key={st.id} value={st.id} className="bg-[#1e1e1e]">{st.name}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block">Нэршил (Сонголттой)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={pkg.priceLabel || ""}
+                                                            onChange={e => updatePackage(idx, 'priceLabel', e.target.value)}
+                                                            placeholder="Жишээ: Бичлэг + Эвлүүлэг..."
+                                                            className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block">Үнэ (₮)</label>
+                                                        <input
+                                                            type="number" min={0}
+                                                            value={pkg.price}
+                                                            onChange={e => updatePackage(idx, 'price', e.target.value)}
+                                                            className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removePackage(idx)}
+                                                        disabled={svcForm.packages.length <= 1}
+                                                        className="mt-4 text-gray-500 hover:text-red-500 disabled:opacity-30 flex justify-center"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {svcForm.mainTypeId && filteredSubTypes.length === 0 && (
+                                                <p className="text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded p-2 mt-2">⚠️ Энэ үндсэн төрөлд дэд төрөл байхгүй байна. Эхлээд дэд төрөл нэмнэ үү.</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Тайлбар</label>
+                                    <textarea value={svcForm.description} onChange={e => setSvcForm({ ...svcForm, description: e.target.value })} placeholder="Тайлбар..." className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[80px]" />
+                                </div>
+
+                                {/* Amenities */}
+                                <div className="space-y-2">
+                                    <label className="text-xs text-gray-400 block">Давуу талууд</label>
+                                    <div className="flex gap-2 mb-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Шинэ давуу тал..."
+                                            className="flex-1 bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                            id="new-amenity-input"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    addAmenity(e.currentTarget.value);
+                                                    e.currentTarget.value = '';
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const input = document.getElementById('new-amenity-input') as HTMLInputElement;
+                                                if (input) { addAmenity(input.value); input.value = ''; }
+                                            }}
+                                            className="px-3 py-2 bg-white/10 text-gray-200 rounded-md text-sm hover:bg-white/20 transition-colors border border-white/5 shrink-0"
+                                        >
+                                            Нэмэх
+                                        </button>
+                                    </div>
+                                    {svcForm.amenities.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 p-3 bg-black/10 border border-white/5 rounded-md">
+                                            {svcForm.amenities.map((amenity, idx) => (
+                                                <div key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-black/20 border border-white/10 text-gray-200 rounded-full">
+                                                    <span>{amenity}</span>
+                                                    <button type="button" onClick={() => removeAmenity(idx)} className="text-gray-500 hover:text-red-500 transition-colors p-0.5"><X className="w-3 h-3" /></button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <label className="flex items-center gap-2 text-xs text-gray-300"><input type="checkbox" checked={svcForm.isActive} onChange={e => setSvcForm({ ...svcForm, isActive: e.target.checked })} className="accent-primary" /> Идэвхтэй</label>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsSvcModal(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">Болих</button>
+                            <button type="submit" form="svc-form" disabled={savingSvc} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">{savingSvc ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}</button>
+                        </div>
                     </div>
                 </div>
             )}

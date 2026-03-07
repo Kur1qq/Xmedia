@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, LogOut, Menu, X, Camera, Tv, Film, BookOpen, Sliders, ShieldCheck, ScrollText, User, KeyRound, Image as ImageIcon } from "lucide-react";
+import { Home, Users, LogOut, Menu, X, Camera, Tv, Film, BookOpen, Sliders, ShieldCheck, ScrollText, User, KeyRound, Image as ImageIcon, PanelTop } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getAdminInfo, getAdminPermissions, logout, fetchWithAuth } from "@/lib/auth";
 
@@ -19,13 +19,14 @@ const ALL_NAV = [
     { name: "Зураглаач", href: "/photographer", icon: Camera },
     { name: "Эдит", href: "/edit", icon: Film },
     { name: "Өмнөх ажлууд", href: "/portfolio", icon: ImageIcon },
+    { name: "Нүүрний слайд", href: "/hero", icon: PanelTop },
     { name: "Админ удирдлага", href: "/admins", icon: ShieldCheck },
     { name: "Эрх удирдлага", href: "/roles", icon: KeyRound },
     { name: "Системийн лог", href: "/logs", icon: ScrollText },
     { name: "Тохиргоо", href: "/settings", icon: Sliders },
 ];
 
-const EDITOR_ALLOWED = ['/', '/edit', '/settings'];
+const EDITOR_ALLOWED = ['/', '/hero', '/edit', '/settings'];
 const SUPER_ADMIN_ONLY = ['/admins', '/roles', '/logs'];
 
 export function Sidebar() {

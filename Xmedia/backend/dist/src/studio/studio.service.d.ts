@@ -9,8 +9,8 @@ export declare class StudioService {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                description: string | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
@@ -48,8 +48,8 @@ export declare class StudioService {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                description: string | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
@@ -87,8 +87,8 @@ export declare class StudioService {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                description: string | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
@@ -126,8 +126,8 @@ export declare class StudioService {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
+                description: string | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {

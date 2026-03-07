@@ -8,5 +8,9 @@ export declare class DashboardController {
         totalRevenue: number | import("@prisma/client-runtime-utils").Decimal;
         activeStudios: number;
         activeEquipment: number;
+        revenueChart: {
+            label: string;
+            amount: number;
+        }[];
     }>;
 }

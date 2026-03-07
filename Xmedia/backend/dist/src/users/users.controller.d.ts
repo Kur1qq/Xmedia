@@ -14,6 +14,28 @@ export declare class UsersController {
         phone: string | null;
         createdAt: Date;
     }>;
+    checkEmail(body: {
+        email: string;
+    }): Promise<{
+        exists: boolean;
+    }>;
+    resetPassword(body: {
+        email: string;
+        passwordHash: string;
+    }): Promise<{
+        success: boolean;
+    }>;
+    login(body: {
+        email: string;
+        passwordHash: string;
+    }): Promise<{
+        id: number;
+        username: string;
+        email: string;
+        phone: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
     findAll(): Promise<{
         id: number;
         username: string;

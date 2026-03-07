@@ -17,6 +17,7 @@ const prisma_module_1 = require("../prisma.module");
 const admin_service_1 = require("./admin.service");
 const admin_log_service_1 = require("./admin-log.service");
 const admin_controller_1 = require("./admin.controller");
+const admin_notification_service_1 = require("./admin-notification.service");
 const jwt_strategy_1 = require("./jwt.strategy");
 let AdminModule = class AdminModule {
     adminService;
@@ -37,8 +38,8 @@ exports.AdminModule = AdminModule = __decorate([
             }),
         ],
         controllers: [admin_controller_1.AdminController],
-        providers: [admin_service_1.AdminService, admin_log_service_1.AdminLogService, jwt_strategy_1.JwtStrategy],
-        exports: [admin_service_1.AdminService, admin_log_service_1.AdminLogService, jwt_1.JwtModule, jwt_strategy_1.JwtStrategy, passport_1.PassportModule],
+        providers: [admin_service_1.AdminService, admin_log_service_1.AdminLogService, admin_notification_service_1.AdminNotificationService, jwt_strategy_1.JwtStrategy],
+        exports: [admin_service_1.AdminService, admin_log_service_1.AdminLogService, admin_notification_service_1.AdminNotificationService, jwt_1.JwtModule, jwt_strategy_1.JwtStrategy, passport_1.PassportModule],
     }),
     __metadata("design:paramtypes", [admin_service_1.AdminService])
 ], AdminModule);

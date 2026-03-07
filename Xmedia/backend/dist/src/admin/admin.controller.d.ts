@@ -1,9 +1,11 @@
 import { AdminService } from './admin.service';
 import { AdminLogService } from './admin-log.service';
+import { AdminNotificationService } from './admin-notification.service';
 export declare class AdminController {
     private readonly adminService;
-    private readonly logService;
-    constructor(adminService: AdminService, logService: AdminLogService);
+    private readonly adminLogService;
+    private readonly adminNotificationService;
+    constructor(adminService: AdminService, adminLogService: AdminLogService, adminNotificationService: AdminNotificationService);
     login(body: {
         username: string;
         password: string;
@@ -22,7 +24,7 @@ export declare class AdminController {
             } | null;
         };
     }>;
-    getLogs(adminId?: string, limit?: string, offset?: string): Promise<({
+    getLogs(page: number, limit: number, adminId?: string, action?: string, startDate?: string, endDate?: string): Promise<({
         admin: {
             id: number;
             username: string;
@@ -39,6 +41,25 @@ export declare class AdminController {
         ip: string | null;
         adminId: number | null;
     })[]>;
+    getNotifications(): Promise<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        type: string;
+        message: string;
+        isRead: boolean;
+        referenceId: number | null;
+    }[]>;
+    markAllNotificationsAsRead(): Promise<import("@prisma/client").Prisma.BatchPayload>;
+    markNotificationAsRead(id: number): Promise<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        type: string;
+        message: string;
+        isRead: boolean;
+        referenceId: number | null;
+    }>;
     getRoles(): Promise<({
         _count: {
             admins: number;

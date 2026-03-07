@@ -18,6 +18,22 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    findByEmail(email: string): Promise<{
+        id: number;
+        email: string;
+    } | null>;
+    resetPassword(email: string, passwordHash: string): Promise<{
+        id: number;
+        email: string;
+    }>;
+    login(email: string, passwordHash: string): Promise<{
+        id: number;
+        username: string;
+        email: string;
+        phone: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
     create(data: {
         username: string;
         email: string;

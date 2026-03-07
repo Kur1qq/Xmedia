@@ -387,239 +387,264 @@ export default function StudioPage() {
             {/* STUDIO MODAL */}
             {/* ===================================== */}
             {isStudioModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border border-border/50 shadow-lg p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-semibold">{editingStudio ? 'Студи засах' : 'Шинэ студи нэмэх'}</h2>
-                            <button onClick={() => setIsStudioModalOpen(false)}><X className="w-5 h-5 text-muted-foreground hover:text-foreground" /></button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !isSavingStudio && setIsStudioModalOpen(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingStudio ? 'Студи засах' : 'Шинэ студи нэмэх'}</h2>
+                            <button onClick={() => !isSavingStudio && setIsStudioModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
-                        <form onSubmit={handleSaveStudio} className="space-y-4">
-                            <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-lg border border-border/50">
-                                <div className="w-16 h-16 rounded overflow-hidden bg-muted flex items-center justify-center">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    {studioFormData.images ? <img src={studioFormData.images} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
-                                </div>
-                                <button type="button" disabled={isUploadingImage} onClick={() => { setUploadTarget('studio'); fileInputRef.current?.click(); }} className="px-3 py-1.5 text-sm bg-background border border-border/50 rounded-md hover:bg-muted">Зураг хуулах</button>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
-                                    <input required value={studioFormData.name} onChange={e => setStudioFormData({ ...studioFormData, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Хаяг байршил</label>
-                                    <input value={studioFormData.address} onChange={e => setStudioFormData({ ...studioFormData, address: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Талбайн хэмжээ (м.кв)</label>
-                                    <input type="number" value={studioFormData.sizeSqm} onChange={e => setStudioFormData({ ...studioFormData, sizeSqm: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium">Багтаамж (хүн)</label>
-                                    <input type="number" value={studioFormData.capacity} onChange={e => setStudioFormData({ ...studioFormData, capacity: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
-                                </div>
-                            </div>
-
-                            {/* Packages */}
-                            <div className="space-y-3 bg-muted/20 p-4 rounded-xl border border-border/50">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium">Үнийн багцууд</label>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setStudioFormData(prev => ({
-                                                ...prev,
-                                                packages: [...prev.packages, { hours: '', price: '' }]
-                                            }));
-                                        }}
-                                        className="text-xs flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded hover:bg-primary/90 transition-colors"
-                                    >
-                                        <Plus className="w-3 h-3" /> Багц нэмэх
+                        <div className="p-4 overflow-y-auto">
+                            <form id="studio-form" onSubmit={handleSaveStudio} className="space-y-4">
+                                <div className="flex items-center gap-4 bg-black/20 p-4 rounded-lg border border-white/5">
+                                    <div className="w-16 h-16 rounded overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        {studioFormData.images ? <img src={studioFormData.images} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-gray-500" />}
+                                    </div>
+                                    <button type="button" disabled={isUploadingImage} onClick={() => { setUploadTarget('studio'); fileInputRef.current?.click(); }} className="px-3 py-1.5 text-sm bg-black/20 border border-white/10 hover:bg-white/5 transition-colors rounded-md text-gray-200 disabled:opacity-50">
+                                        Хуулах
                                     </button>
                                 </div>
-                                <div className="space-y-3">
-                                    {studioFormData.packages.map((pkg, i) => (
-                                        <div key={i} className="flex gap-3 items-start bg-background p-3 rounded-lg border border-border/50 relative group">
-                                            <div className="flex-1 space-y-1">
-                                                <label className="text-xs text-muted-foreground uppercase font-semibold">Цаг (Hours)</label>
-                                                <input
-                                                    type="number"
-                                                    value={pkg.hours}
-                                                    onChange={e => {
-                                                        const newPkgs = [...studioFormData.packages];
-                                                        newPkgs[i].hours = e.target.value === '' ? '' : Number(e.target.value);
-                                                        setStudioFormData({ ...studioFormData, packages: newPkgs });
-                                                    }}
-                                                    placeholder="Жнь: 3"
-                                                    className="w-full h-9 px-3 rounded-md border border-input bg-background focus:ring-1 focus:ring-primary text-sm"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="flex-1 space-y-1">
-                                                <label className="text-xs text-muted-foreground uppercase font-semibold">Үнэ (Price ₮)</label>
-                                                <input
-                                                    type="number"
-                                                    value={pkg.price}
-                                                    onChange={e => {
-                                                        const newPkgs = [...studioFormData.packages];
-                                                        newPkgs[i].price = e.target.value === '' ? '' : Number(e.target.value);
-                                                        setStudioFormData({ ...studioFormData, packages: newPkgs });
-                                                    }}
-                                                    placeholder="Жнь: 440000"
-                                                    className="w-full h-9 px-3 rounded-md border border-input bg-background focus:ring-1 focus:ring-primary text-sm"
-                                                    required
-                                                />
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const newPkgs = [...studioFormData.packages];
-                                                    newPkgs.splice(i, 1);
-                                                    setStudioFormData({ ...studioFormData, packages: newPkgs });
-                                                }}
-                                                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 shadow-sm"
-                                            >
-                                                <Trash2 className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {studioFormData.packages.length === 0 && (
-                                        <p className="text-sm text-muted-foreground italic text-center py-4 bg-background/50 rounded border border-dashed border-border/50">
-                                            Үнийн багц нэмэгдээгүй байна
-                                        </p>
-                                    )}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-gray-400">Нэр <span className="text-red-500">*</span></label>
+                                        <input required value={studioFormData.name} onChange={e => setStudioFormData({ ...studioFormData, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-gray-400">Хаяг байршил</label>
+                                        <input value={studioFormData.address} onChange={e => setStudioFormData({ ...studioFormData, address: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-gray-400">Талбайн хэмжээ (м.кв)</label>
+                                        <input type="number" value={studioFormData.sizeSqm} onChange={e => setStudioFormData({ ...studioFormData, sizeSqm: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-gray-400">Багтаамж (хүн)</label>
+                                        <input type="number" value={studioFormData.capacity} onChange={e => setStudioFormData({ ...studioFormData, capacity: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">Тайлбар</label>
-                                <textarea value={studioFormData.description} onChange={e => setStudioFormData({ ...studioFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
-                            </div>
 
-                            {/* Features / Amenities */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium block">Онцлог талууд (Features)</label>
-                                <div className="flex gap-2 mb-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Шинэ онцлог..."
-                                        className="flex-1 h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                        id="new-amenity-input"
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                const val = (e.target as HTMLInputElement).value.trim();
-                                                if (val && !studioFormData.amenities.includes(val)) {
-                                                    setStudioFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
-                                                    (e.target as HTMLInputElement).value = '';
-                                                }
-                                            }
-                                        }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const input = document.getElementById('new-amenity-input') as HTMLInputElement;
-                                            const val = input.value.trim();
-                                            if (val && !studioFormData.amenities.includes(val)) {
-                                                setStudioFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
-                                                input.value = '';
-                                            }
-                                        }}
-                                        className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-md text-sm border border-border/50 hover:bg-muted"
-                                    >
-                                        Нэмэх
-                                    </button>
-                                </div>
-                                {studioFormData.amenities.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 p-3 bg-muted/30 border border-border/50 rounded-md">
-                                        {studioFormData.amenities.map(amenity => (
-                                            <span key={amenity} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-background border border-border text-foreground rounded-full">
-                                                {amenity}
+                                {/* Packages */}
+                                <div className="space-y-3 bg-black/10 p-4 rounded-xl border border-white/5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs text-gray-400">Үнийн багцууд</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setStudioFormData(prev => ({
+                                                    ...prev,
+                                                    packages: [...prev.packages, { hours: '', price: '' }]
+                                                }));
+                                            }}
+                                            className="text-[10px] flex items-center gap-1 bg-primary/20 text-primary px-2 py-1 rounded hover:bg-primary/30 transition-colors"
+                                        >
+                                            <Plus className="w-3 h-3" /> Багц нэмэх
+                                        </button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {studioFormData.packages.map((pkg, i) => (
+                                            <div key={i} className="flex gap-3 items-start bg-black/20 p-3 rounded-lg border border-white/5 relative group">
+                                                <div className="flex-1 space-y-1">
+                                                    <label className="text-[10px] text-gray-500 uppercase font-semibold">Цаг (Hours)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={pkg.hours}
+                                                        onChange={e => {
+                                                            const newPkgs = [...studioFormData.packages];
+                                                            newPkgs[i].hours = e.target.value === '' ? '' : Number(e.target.value);
+                                                            setStudioFormData({ ...studioFormData, packages: newPkgs });
+                                                        }}
+                                                        placeholder="Жнь: 3"
+                                                        className="w-full bg-white/5 border border-white/5 rounded-md px-3 py-1.5 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="flex-1 space-y-1">
+                                                    <label className="text-[10px] text-gray-500 uppercase font-semibold">Үнэ (Price ₮)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={pkg.price}
+                                                        onChange={e => {
+                                                            const newPkgs = [...studioFormData.packages];
+                                                            newPkgs[i].price = e.target.value === '' ? '' : Number(e.target.value);
+                                                            setStudioFormData({ ...studioFormData, packages: newPkgs });
+                                                        }}
+                                                        placeholder="Жнь: 440000"
+                                                        className="w-full bg-white/5 border border-white/5 rounded-md px-3 py-1.5 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                        required
+                                                    />
+                                                </div>
                                                 <button
                                                     type="button"
-                                                    className="text-muted-foreground hover:text-red-500"
-                                                    onClick={() => setStudioFormData(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity) }))}
+                                                    onClick={() => {
+                                                        const newPkgs = [...studioFormData.packages];
+                                                        newPkgs.splice(i, 1);
+                                                        setStudioFormData({ ...studioFormData, packages: newPkgs });
+                                                    }}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 shadow-sm"
                                                 >
-                                                    <X className="w-3 h-3" />
+                                                    <Trash2 className="w-3 h-3" />
                                                 </button>
-                                            </span>
+                                            </div>
+                                        ))}
+                                        {studioFormData.packages.length === 0 && (
+                                            <p className="text-xs text-gray-500 italic text-center py-4 bg-white/5 rounded border border-dashed border-white/10">
+                                                Үнийн багц нэмэгдээгүй байна
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400">Тайлбар</label>
+                                    <textarea value={studioFormData.description} onChange={e => setStudioFormData({ ...studioFormData, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[80px]" />
+                                </div>
+
+                                {/* Features / Amenities */}
+                                <div className="space-y-2">
+                                    <label className="text-xs text-gray-400 block">Онцлог талууд (Features)</label>
+                                    <div className="flex gap-2 mb-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Шинэ онцлог..."
+                                            className="flex-1 bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                            id="new-amenity-input"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const val = (e.target as HTMLInputElement).value.trim();
+                                                    if (val && !studioFormData.amenities.includes(val)) {
+                                                        setStudioFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
+                                                        (e.target as HTMLInputElement).value = '';
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const input = document.getElementById('new-amenity-input') as HTMLInputElement;
+                                                const val = input.value.trim();
+                                                if (val && !studioFormData.amenities.includes(val)) {
+                                                    setStudioFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
+                                                    input.value = '';
+                                                }
+                                            }}
+                                            className="px-3 py-2 bg-white/10 text-gray-200 rounded-md text-sm hover:bg-white/20 transition-colors border border-white/5"
+                                        >
+                                            Нэмэх
+                                        </button>
+                                    </div>
+                                    {studioFormData.amenities.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 p-3 bg-black/10 border border-white/5 rounded-md">
+                                            {studioFormData.amenities.map(amenity => (
+                                                <span key={amenity} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-black/20 border border-white/10 text-gray-200 rounded-full">
+                                                    {amenity}
+                                                    <button
+                                                        type="button"
+                                                        className="text-gray-500 hover:text-red-500 transition-colors"
+                                                        onClick={() => setStudioFormData(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity) }))}
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs text-gray-400 block">Дагалдах тоног төхөөрөмж</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-3 border border-white/5 bg-black/10 rounded-md">
+                                        {equipments.map(eq => (
+                                            <label key={eq.id} className="flex items-center gap-2 text-xs text-gray-300 p-1.5 hover:bg-white/5 rounded cursor-pointer transition-colors">
+                                                <input type="checkbox" className="accent-primary" checked={studioFormData.equipmentIds.includes(eq.id)} onChange={() => toggleEquipmentSelection(eq.id)} /> {eq.name}
+                                            </label>
                                         ))}
                                     </div>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium block">Дагалдах тоног төхөөрөмж</label>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 border border-border/50 rounded-md">
-                                    {equipments.map(eq => (
-                                        <label key={eq.id} className="flex items-center gap-2 text-sm p-1 hover:bg-muted/50 rounded cursor-pointer">
-                                            <input type="checkbox" checked={studioFormData.equipmentIds.includes(eq.id)} onChange={() => toggleEquipmentSelection(eq.id)} /> {eq.name}
-                                        </label>
-                                    ))}
                                 </div>
-                            </div>
-                            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={studioFormData.isAvailable} onChange={e => setStudioFormData({ ...studioFormData, isAvailable: e.target.checked })} /> Идэвхтэй (Захиалга авах боломжтой)</label>
-
-                            <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsStudioModalOpen(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={isSavingStudio} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{isSavingStudio ? '...' : 'Хадгалах'}</button></div>
-                        </form>
+                                <label className="flex items-center gap-2 text-xs text-gray-300">
+                                    <input type="checkbox" className="accent-primary" checked={studioFormData.isAvailable} onChange={e => setStudioFormData({ ...studioFormData, isAvailable: e.target.checked })} />
+                                    Идэвхтэй (Захиалга авах боломжтой)
+                                </label>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsStudioModalOpen(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                                Болих
+                            </button>
+                            <button type="submit" form="studio-form" disabled={isSavingStudio} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">
+                                {isSavingStudio ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}
+                            </button>
+                        </div>
                     </div>
                 </div >
-            )
-            }
+            )}
 
             {/* ===================================== */}
             {/* EQUIPMENT MODAL */}
             {/* ===================================== */}
-            {
-                isEquipmentModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                        <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-lg font-semibold">{editingEquipment ? 'Төхөөрөмж засах' : 'Төхөөрөмж үүсгэх'}</h2>
-                                <button onClick={() => setIsEquipmentModalOpen(false)}><X className="w-5 h-5 text-muted-foreground hover:text-foreground" /></button>
-                            </div>
-                            <form onSubmit={handleSaveEquipment} className="space-y-4">
+            {isEquipmentModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !isSavingEquipment && setIsEquipmentModalOpen(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingEquipment ? 'Төхөөрөмж засах' : 'Төхөөрөмж үүсгэх'}</h2>
+                            <button onClick={() => !isSavingEquipment && setIsEquipmentModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-4 overflow-y-auto">
+                            <form id="equipment-form" onSubmit={handleSaveEquipment} className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium flex items-center justify-between">
+                                    <label className="text-xs text-gray-400 flex items-center justify-between block">
                                         Төхөөрөмжийн зураг
                                         {equipmentFormData.images && (
-                                            <button type="button" onClick={() => setEquipmentFormData(prev => ({ ...prev, images: "" }))} className="text-xs text-red-500 hover:underline">Зураг устгах</button>
+                                            <button type="button" onClick={() => setEquipmentFormData(prev => ({ ...prev, images: "" }))} className="text-[10px] text-red-500 hover:underline">Зураг устгах</button>
                                         )}
                                     </label>
-                                    <div className="flex gap-4 items-start">
-                                        <div className="w-16 h-16 shrink-0 rounded-md border border-border/50 bg-muted flex items-center justify-center overflow-hidden">
+                                    <div className="flex gap-4 items-center bg-black/20 p-3 rounded-lg border border-white/5">
+                                        <div className="w-16 h-16 shrink-0 rounded-md border border-white/10 bg-white/5 flex items-center justify-center overflow-hidden">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            {equipmentFormData.images ? <img src={equipmentFormData.images} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-muted-foreground/30" />}
+                                            {equipmentFormData.images ? <img src={equipmentFormData.images} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-gray-600" />}
                                         </div>
-                                        <div className="flex-1 space-y-2">
-                                            <button type="button" onClick={() => { setUploadTarget('equipment'); fileInputRef.current?.click(); }} disabled={isUploadingImage} className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-border/50 bg-background px-4 py-2 text-sm font-medium hover:bg-muted focus-visible:outline-none">
+                                        <div className="flex-1">
+                                            <button type="button" onClick={() => { setUploadTarget('equipment'); fileInputRef.current?.click(); }} disabled={isUploadingImage} className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-white/20 bg-black/20 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 transition-colors focus-visible:outline-none">
                                                 {isUploadingImage ? <span className="animate-pulse">Хуулж байна...</span> : <><UploadCloud className="w-4 h-4" /> Зураг сонгох</>}
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
-                                    <input required value={equipmentFormData.name} onChange={e => setEquipmentFormData({ ...equipmentFormData, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
+                                    <label className="text-xs text-gray-400 block">Нэр <span className="text-red-500">*</span></label>
+                                    <input required value={equipmentFormData.name} onChange={e => setEquipmentFormData({ ...equipmentFormData, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-sm font-medium">Төрөл (Ангилал)</label>
-                                    <select value={equipmentFormData.type} onChange={(e) => setEquipmentFormData({ ...equipmentFormData, type: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+                                    <label className="text-xs text-gray-400 block">Төрөл (Ангилал)</label>
+                                    <select value={equipmentFormData.type} onChange={(e) => setEquipmentFormData({ ...equipmentFormData, type: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
                                         {equipmentTypes.map(type => (
-                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                            <option key={type.value} value={type.value} className="bg-[#1e1e1e]">{type.label}</option>
                                         ))}
                                     </select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-sm font-medium">Тайлбар</label>
-                                    <textarea value={equipmentFormData.description} onChange={e => setEquipmentFormData({ ...equipmentFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
+                                    <label className="text-xs text-gray-400 block">Тайлбар</label>
+                                    <textarea value={equipmentFormData.description} onChange={e => setEquipmentFormData({ ...equipmentFormData, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[80px]" />
                                 </div>
-                                <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={() => setIsEquipmentModalOpen(false)} className="px-4 py-2 text-sm">Болих</button><button type="submit" disabled={isSavingEquipment} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{isSavingEquipment ? '...' : 'Хадгалах'}</button></div>
                             </form>
                         </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsEquipmentModalOpen(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                                Болих
+                            </button>
+                            <button type="submit" form="equipment-form" disabled={isSavingEquipment} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">
+                                {isSavingEquipment ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}
+                            </button>
+                        </div>
                     </div>
-                )
-            }
+                </div>
+            )}
         </div >
     );
 }

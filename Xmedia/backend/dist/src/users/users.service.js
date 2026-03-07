@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
+const client_1 = require("@prisma/client");
 let UsersService = class UsersService {
     prisma;
     constructor(prisma) {
@@ -31,11 +32,45 @@ let UsersService = class UsersService {
             throw new common_1.NotFoundException('User not found');
         return user;
     }
-    async create(data) {
-        return this.prisma.user.create({
-            data,
-            select: { id: true, username: true, email: true, phone: true, createdAt: true }
+    async findByEmail(email) {
+        const user = await this.prisma.user.findUnique({
+            where: { email },
+            select: { id: true, email: true }
         });
+        return user;
+    }
+    async resetPassword(email, passwordHash) {
+        return this.prisma.user.update({
+            where: { email },
+            data: { passwordHash },
+            select: { id: true, email: true }
+        });
+    }
+    async login(email, passwordHash) {
+        const user = await this.prisma.user.findUnique({
+            where: { email }
+        });
+        if (!user || user.passwordHash !== passwordHash) {
+            throw new Error('Invalid credentials');
+        }
+        const { passwordHash: _, ...result } = user;
+        return result;
+    }
+    async create(data) {
+        try {
+            return await this.prisma.user.create({
+                data,
+                select: { id: true, username: true, email: true, phone: true, createdAt: true }
+            });
+        }
+        catch (error) {
+            if (error instanceof client_1.Prisma.PrismaClientKnownRequestError) {
+                if (error.code === 'P2002') {
+                    throw new common_1.ConflictException('Энэ и-мэйл хаяг бүртгэгдсэн байна.');
+                }
+            }
+            throw error;
+        }
     }
     async update(id, data) {
         return this.prisma.user.update({

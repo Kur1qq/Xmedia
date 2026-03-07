@@ -588,8 +588,20 @@ model AdminLog {
 
   admin Admin? @relation(fields: [adminId], references: [id], onDelete: SetNull) // FIX: SetNull
 
-  @@index([adminId]) // FIX: fast filter by admin
   @@map("admin_logs")
+}
+
+model AdminNotification {
+  id          Int      @id @default(autoincrement())
+  type        String   @db.VarChar(50)  // e.g. "ORDER_CANCELLED"
+  message     String   @db.Text
+  isRead      Boolean  @default(false) @map("is_read")
+  referenceId Int?     @map("reference_id") // ID of the booking
+  
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("admin_notifications")
 }
 
 // --------------------------------------------------------------------------
@@ -625,4 +637,24 @@ model PortfolioItem {
 
   @@index([serviceType])
   @@map("portfolio_items")
+}
+
+// --------------------------------------------------------------------------
+// ДЭЛГЭРЭНГҮЙ НҮҮР ХУУДАС (HERO SLIDES)
+// --------------------------------------------------------------------------
+
+model HeroSlide {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  highlight   String?  @db.VarChar(255)
+  subTitle    String?  @db.VarChar(255)
+  description String?  @db.Text
+  image       String   @db.Text
+  order       Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+  
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("hero_slides")
 }

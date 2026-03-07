@@ -8,19 +8,41 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var BookingsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
 const byl_payment_service_1 = require("./byl-payment.service");
-let BookingsService = class BookingsService {
+const mail_service_1 = require("./mail.service");
+const invoice_service_1 = require("./invoice.service");
+const admin_notification_service_1 = require("../admin/admin-notification.service");
+let BookingsService = BookingsService_1 = class BookingsService {
     prisma;
     bylPayment;
-    constructor(prisma, bylPayment) {
+    mailService;
+    invoiceService;
+    adminNotificationService;
+    logger = new common_1.Logger(BookingsService_1.name);
+    constructor(prisma, bylPayment, mailService, invoiceService, adminNotificationService) {
         this.prisma = prisma;
         this.bylPayment = bylPayment;
+        this.mailService = mailService;
+        this.invoiceService = invoiceService;
+        this.adminNotificationService = adminNotificationService;
     }
     async findAll() {
+        return this.prisma.booking.findMany({
+            where: { paymentStatus: 'PAID' },
+            include: {
+                user: { select: { id: true, username: true, email: true, phone: true } },
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                payments: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async findAllRaw() {
         return this.prisma.booking.findMany({
             include: {
                 user: { select: { id: true, username: true, email: true, phone: true } },
@@ -30,8 +52,51 @@ let BookingsService = class BookingsService {
             orderBy: { createdAt: 'desc' }
         });
     }
+    async findPending() {
+        return this.prisma.booking.findMany({
+            where: {
+                paymentStatus: { not: 'PAID' },
+                status: { not: 'CANCELLED' },
+            },
+            include: {
+                user: { select: { id: true, username: true, email: true, phone: true } },
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                payments: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async findCancelled() {
+        return this.prisma.booking.findMany({
+            where: {
+                status: 'CANCELLED',
+            },
+            include: {
+                user: { select: { id: true, username: true, email: true, phone: true } },
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                payments: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async findByUserId(userId) {
+        return this.prisma.booking.findMany({
+            where: { userId },
+            include: {
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                payments: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
     async createGuestBooking(dto) {
-        let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        let user = null;
+        if (dto.userId) {
+            user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+        }
+        if (!user) {
+            user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        }
         if (!user) {
             user = await this.prisma.user.create({
                 data: {
@@ -73,13 +138,20 @@ let BookingsService = class BookingsService {
             },
             include: { items: true }
         });
+        if (dto.paymentType === 'invoice') {
+            await this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }], dto.date);
+            return { ...booking, checkoutUrl: null };
+        }
         try {
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: total,
                 serviceName: dto.serviceName || dto.serviceType,
                 quantity: 1,
                 customerEmail: dto.email,
+                successUrl: `${clientBaseUrl}/booking/success?bookingId=${booking.id}`,
+                cancelUrl: `${clientBaseUrl}/booking/cancel`,
             });
             await this.prisma.payment.create({
                 data: {
@@ -92,11 +164,18 @@ let BookingsService = class BookingsService {
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
         }
         catch (error) {
-            return { ...booking, checkoutUrl: null, paymentError: error.message };
+            await this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }], dto.date);
+            return { ...booking, checkoutUrl: null };
         }
     }
     async createCartBooking(dto) {
-        let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        let user = null;
+        if (dto.userId) {
+            user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+        }
+        if (!user) {
+            user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        }
         if (!user) {
             user = await this.prisma.user.create({
                 data: {
@@ -142,13 +221,26 @@ let BookingsService = class BookingsService {
             },
             include: { items: true }
         });
+        if (dto.paymentType === 'invoice') {
+            const invoiceItems = dto.items.map(i => ({
+                description: i.serviceName || i.serviceType,
+                quantity: i.duration,
+                unitPrice: i.unitPrice,
+                totalPrice: i.unitPrice * i.duration,
+            }));
+            await this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, invoiceItems, dto.items[0]?.date || new Date().toISOString().slice(0, 10));
+            return { ...booking, checkoutUrl: null };
+        }
         try {
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: totalAmount,
                 serviceName: `Xmedia багц (${dto.items.length} үйлчилгээ)`,
                 quantity: 1,
                 customerEmail: dto.email,
+                successUrl: `${clientBaseUrl}/booking/success?bookingId=${booking.id}`,
+                cancelUrl: `${clientBaseUrl}/booking/cancel`,
             });
             await this.prisma.payment.create({
                 data: {
@@ -161,8 +253,116 @@ let BookingsService = class BookingsService {
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
         }
         catch (error) {
-            return { ...booking, checkoutUrl: null, paymentError: error.message };
+            const invoiceItems = dto.items.map(i => ({
+                description: i.serviceName || i.serviceType,
+                quantity: i.duration,
+                unitPrice: i.unitPrice,
+                totalPrice: i.unitPrice * i.duration,
+            }));
+            await this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, invoiceItems, dto.items[0]?.date || new Date().toISOString().slice(0, 10));
+            return { ...booking, checkoutUrl: null };
         }
+    }
+    async sendInvoiceForBooking(bookingId, buyerName, buyerEmail, buyerPhone, items, invoiceDate) {
+        if (!buyerEmail || !buyerEmail.includes('@')) {
+            this.logger.warn(`No valid email for booking #${bookingId} (email: ${buyerEmail}), skipping`);
+            return;
+        }
+        const invoiceData = {
+            invoiceNumber: String(bookingId).padStart(5, '0'),
+            invoiceDate,
+            payByDate: '14 хоног',
+            sellerName: process.env.COMPANY_NAME || 'Xmedia Media Production',
+            sellerAddress: process.env.COMPANY_ADDRESS || 'Улаанбаатар хот',
+            sellerPhone: process.env.COMPANY_PHONE || '99001100',
+            sellerBank: process.env.COMPANY_BANK || 'Хаан банк',
+            sellerAccount: process.env.COMPANY_ACCOUNT || '5000000000',
+            sellerReg: process.env.COMPANY_REG || '1234567',
+            buyerName,
+            buyerEmail,
+            buyerPhone,
+            items,
+        };
+        const total = items.reduce((s, i) => s + i.totalPrice, 0);
+        const subject = `Нэхэмжлэх #${invoiceData.invoiceNumber} — Xmedia`;
+        const htmlBody = `
+            <div style="font-family:Arial,sans-serif;color:#222;max-width:620px;margin:0 auto">
+                <h2 style="color:#e11d48">Xmedia — Нэхэмжлэх</h2>
+                <p>Сайн байна уу, <b>${buyerName}</b>!</p>
+                <p>Таны <b>₮${total.toLocaleString()}</b> дүнтэй нэхэмжлэхийг хавсаргав (PDF хавсарлаасаа харна уу).</p>
+                <p>Нэхэмжлэхийн дугаар: <b>#${invoiceData.invoiceNumber}</b></p>
+                <p>Банк: <b>${invoiceData.sellerBank}</b>, Данс: <b>${invoiceData.sellerAccount}</b></p>
+                <p>Холбоо барих: <b>${invoiceData.sellerPhone}</b></p>
+                <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
+                ${this.invoiceService.generateInvoiceHtml(invoiceData)}
+            </div>`;
+        let pdfBuffer = null;
+        try {
+            pdfBuffer = await this.invoiceService.generateInvoicePdf(invoiceData);
+            this.logger.log(`PDF generated for booking #${bookingId}, size=${pdfBuffer.length}`);
+        }
+        catch (pdfErr) {
+            this.logger.error(`PDF generation failed for #${bookingId}: ${pdfErr.message}`);
+        }
+        try {
+            if (pdfBuffer) {
+                await this.mailService.sendInvoiceEmail(buyerEmail, subject, htmlBody, pdfBuffer, `invoice-${bookingId}.pdf`);
+            }
+            else {
+                await this.mailService.sendInvoiceEmail(buyerEmail, subject, htmlBody, null, null);
+            }
+            this.logger.log(`Invoice email sent to ${buyerEmail} for booking #${bookingId}`);
+        }
+        catch (mailErr) {
+            this.logger.error(`SMTP failed for booking #${bookingId}: ${mailErr.message}`);
+        }
+    }
+    async createManualBooking(dto) {
+        let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        if (!user) {
+            user = await this.prisma.user.create({
+                data: {
+                    username: dto.name,
+                    email: dto.email || `guest_${dto.phone}@xmedia.guest`,
+                    phone: dto.phone,
+                    passwordHash: 'GUEST',
+                }
+            });
+        }
+        const bookingDate = new Date(dto.date);
+        const start = new Date(`1970-01-01T${dto.startTime}:00`);
+        const end = new Date(`1970-01-01T${dto.endTime}:00`);
+        const durationHours = (end.getTime() - start.getTime()) / 3600000;
+        const unitPrice = dto.totalAmount / (durationHours || 1);
+        const itemData = {
+            itemType: dto.serviceType,
+            quantity: durationHours,
+            unitPrice,
+            totalPrice: dto.totalAmount,
+            bookingDate,
+            startTime: start,
+            endTime: end,
+        };
+        if (dto.serviceType === 'STUDIO')
+            itemData.studioId = dto.serviceId;
+        if (dto.serviceType === 'LIVE_SERVICE')
+            itemData.liveServiceId = dto.serviceId;
+        if (dto.serviceType === 'PHOTOGRAPHER_SERVICE')
+            itemData.photographerServiceId = dto.serviceId;
+        if (dto.serviceType === 'EDIT_SERVICE')
+            itemData.serviceId = dto.serviceId;
+        const booking = await this.prisma.booking.create({
+            data: {
+                userId: user.id,
+                totalAmount: dto.totalAmount,
+                notes: dto.notes,
+                status: dto.status,
+                paymentStatus: dto.paymentStatus,
+                items: { create: [itemData] },
+            },
+            include: { items: true, user: true }
+        });
+        return booking;
     }
     async confirmPayment(bylCheckoutId) {
         const payment = await this.prisma.payment.findUnique({
@@ -210,12 +410,56 @@ let BookingsService = class BookingsService {
             message: `Checkout status: ${bylStatus.status}`,
         };
     }
+    async getBookedSlots(serviceType, serviceId, date) {
+        const bookingDate = new Date(date);
+        const serviceWhere = { itemType: serviceType, bookingDate };
+        if (serviceType === 'STUDIO')
+            serviceWhere.studioId = serviceId;
+        if (serviceType === 'LIVE_SERVICE')
+            serviceWhere.liveServiceId = serviceId;
+        if (serviceType === 'PHOTOGRAPHER_SERVICE')
+            serviceWhere.photographerServiceId = serviceId;
+        if (serviceType === 'EDIT_SERVICE')
+            serviceWhere.serviceId = serviceId;
+        const items = await this.prisma.bookingItem.findMany({
+            where: {
+                ...serviceWhere,
+                booking: { status: { not: 'CANCELLED' } },
+                startTime: { not: null },
+                endTime: { not: null },
+            },
+            select: { startTime: true, endTime: true },
+        });
+        const ALL_TIMES = [
+            '09:00', '10:00', '11:00', '12:00', '13:00',
+            '14:00', '15:00', '16:00', '17:00', '18:00',
+            '19:00', '20:00', '21:00',
+        ];
+        const bookedTimes = [];
+        for (const time of ALL_TIMES) {
+            const [h, m] = time.split(':').map(Number);
+            const slotStart = h * 60 + m;
+            const slotEnd = slotStart + 60;
+            const overlaps = items.some(item => {
+                if (!item.startTime || !item.endTime)
+                    return false;
+                const s = item.startTime;
+                const e = item.endTime;
+                const bookedStart = s.getHours() * 60 + s.getMinutes();
+                const bookedEnd = e.getHours() * 60 + e.getMinutes();
+                return slotStart < bookedEnd && slotEnd > bookedStart;
+            });
+            if (overlaps)
+                bookedTimes.push(time);
+        }
+        return bookedTimes;
+    }
     async updateStatus(id, status) {
         const booking = await this.prisma.booking.findUnique({ where: { id } });
         if (!booking) {
             throw new common_1.NotFoundException(`Booking with ID ${id} not found`);
         }
-        return this.prisma.booking.update({
+        const updated = await this.prisma.booking.update({
             where: { id },
             data: { status },
             include: {
@@ -223,12 +467,49 @@ let BookingsService = class BookingsService {
                 items: true,
             }
         });
+        if (status === 'CANCELLED') {
+            await this.adminNotificationService.createNotification('ORDER_CANCELLED', `Захиалга ORD-${id.toString().padStart(4, '0')} цуцлагдлаа`, id);
+        }
+        return updated;
+    }
+    async updateNotes(id, notes) {
+        const booking = await this.prisma.booking.findUnique({ where: { id } });
+        if (!booking) {
+            throw new common_1.NotFoundException(`Booking with ID ${id} not found`);
+        }
+        const updated = await this.prisma.booking.update({
+            where: { id },
+            data: { notes },
+            include: {
+                user: true,
+                items: true,
+            }
+        });
+        return updated;
+    }
+    async updatePaymentStatus(id, paymentStatus) {
+        const booking = await this.prisma.booking.findUnique({ where: { id } });
+        if (!booking) {
+            throw new common_1.NotFoundException(`Booking with ID ${id} not found`);
+        }
+        const updated = await this.prisma.booking.update({
+            where: { id },
+            data: { paymentStatus },
+            include: {
+                user: true,
+                items: true,
+            }
+        });
+        return updated;
     }
 };
 exports.BookingsService = BookingsService;
-exports.BookingsService = BookingsService = __decorate([
+exports.BookingsService = BookingsService = BookingsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        byl_payment_service_1.BylPaymentService])
+        byl_payment_service_1.BylPaymentService,
+        mail_service_1.MailService,
+        invoice_service_1.InvoiceService,
+        admin_notification_service_1.AdminNotificationService])
 ], BookingsService);
 //# sourceMappingURL=bookings.service.js.map

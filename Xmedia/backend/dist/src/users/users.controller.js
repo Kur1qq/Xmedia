@@ -23,6 +23,26 @@ let UsersController = class UsersController {
     create(body) {
         return this.usersService.create(body);
     }
+    async checkEmail(body) {
+        const user = await this.usersService.findByEmail(body.email);
+        return { exists: !!user };
+    }
+    async resetPassword(body) {
+        const user = await this.usersService.findByEmail(body.email);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        await this.usersService.resetPassword(body.email, body.passwordHash);
+        return { success: true };
+    }
+    async login(body) {
+        try {
+            return await this.usersService.login(body.email, body.passwordHash);
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException('Нэвтрэх нэр эсвэл нууц үг буруу байна');
+        }
+    }
     findAll() {
         return this.usersService.findAll();
     }
@@ -44,6 +64,27 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)('check-email'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "checkEmail", null);
+__decorate([
+    (0, common_1.Post)('reset-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "resetPassword", null);
+__decorate([
+    (0, common_1.Post)('login'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "login", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),

@@ -4,6 +4,8 @@ import { Download, Filter, Plus, History, X, CheckSquare, Square, ChevronDown } 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { fetchWithAuth } from "@/lib/auth";
+import * as XLSX from 'xlsx';
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, TextRun } from 'docx';
 
 const EMPTY_FORM = { username: "", email: "", phone: "", password: "" };
 
@@ -118,76 +120,110 @@ export default function UsersPage() {
         }
     };
 
-    const exportToPDF = async (type: 'all' | 'selected') => {
+    const exportToExcel = (type: 'all' | 'selected') => {
         setIsExportMenuOpen(false);
         const usersToExport = type === 'all'
             ? users
             : users.filter(u => selectedUserIds.includes(u.id));
 
         if (usersToExport.length === 0) {
-            alert("Татах хэрэглэгч алга байна.");
+            toast.error("Татах хэрэглэгч алга байна.");
             return;
         }
 
-        // Dynamically import html2pdf only on the client side
-        // @ts-ignore
-        const html2pdf = (await import('html2pdf.js')).default;
+        const exportData = usersToExport.map((u: any, index: number) => ({
+            '№': index + 1,
+            'Нэр': u.username || '-',
+            'Имэйл': u.email || '-',
+            'Утас': u.phone || '-',
+            'Төлөв': 'Идэвхтэй',
+            'Бүртгүүлсэн огноо': new Date(u.createdAt).toLocaleDateString('mn-MN'),
+        }));
 
-        // 1. Create a temporary HTML element to hold the table for PDF structure
-        const container = document.createElement('div');
-        container.style.padding = '20px';
-        container.style.fontFamily = 'sans-serif';
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const colWidths = [
+            { wch: 5 }, // №
+            { wch: 25 }, // Username
+            { wch: 30 }, // Email
+            { wch: 15 }, // Phone
+            { wch: 15 }, // Status
+            { wch: 20 }, // Date
+        ];
+        worksheet['!cols'] = colWidths;
 
-        // 2. Build the HTML string
-        let htmlStr = `
-            <div style="color: #000; background-color: #fff; padding: 20px;">
-                <h2 style="text-align: center; margin-bottom: 20px; color: #000;">Хэрэглэгчдийн жагсаалт</h2>
-                <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #000;">
-                    <thead>
-                        <tr style="background-color: #f3f4f6; text-align: left; color: #000;">
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; color: #000;">Нэр</th>
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; color: #000;">Имэйл</th>
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; color: #000;">Утас</th>
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; color: #000;">Бүртгүүлсэн огноо</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
 
-        usersToExport.forEach(user => {
-            const date = new Date(user.createdAt).toLocaleDateString('mn-MN');
-            htmlStr += `
-                <tr style="color: #000;">
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; color: #000;">${user.username || '-'}</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; color: #000;">${user.email || '-'}</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; color: #000;">${user.phone || '-'}</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; color: #000;">${date}</td>
-                </tr>
-            `;
+        XLSX.writeFile(workbook, `Users_Export_${new Date().toLocaleDateString('mn-MN')}.xlsx`);
+    };
+
+    const exportToWord = async (type: 'all' | 'selected') => {
+        setIsExportMenuOpen(false);
+        const usersToExport = type === 'all'
+            ? users
+            : users.filter(u => selectedUserIds.includes(u.id));
+
+        if (usersToExport.length === 0) {
+            toast.error("Татах хэрэглэгч алга байна.");
+            return;
+        }
+
+        const dateStr = new Date().toLocaleDateString('mn-MN');
+
+        const doc = new Document({
+            sections: [{
+                properties: {},
+                children: [
+                    new Paragraph({
+                        text: "Хэрэглэгчдийн жагсаалт",
+                        heading: HeadingLevel.HEADING_1,
+                        alignment: AlignmentType.CENTER,
+                    }),
+                    new Paragraph({
+                        text: `Нийт: ${usersToExport.length} хэрэглэгч | Огноо: ${dateStr}`,
+                        alignment: AlignmentType.RIGHT,
+                    }),
+                    new Paragraph({ text: "" }), // Spacing
+                    new Table({
+                        width: {
+                            size: 100,
+                            type: WidthType.PERCENTAGE,
+                        },
+                        columnWidths: [700, 2500, 3500, 1500, 1800], // Set explicit column widths in twips
+                        rows: [
+                            // Header Row
+                            new TableRow({
+                                children: [
+                                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "№", bold: true })] })] }),
+                                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Нэр", bold: true })] })] }),
+                                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Имэйл", bold: true })] })] }),
+                                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Утас", bold: true })] })] }),
+                                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Бүртгүүлсэн огноо", bold: true })] })] }),
+                                ]
+                            }),
+                            // Data Rows
+                            ...usersToExport.map((u: any, i: number) => new TableRow({
+                                children: [
+                                    new TableCell({ children: [new Paragraph(String(i + 1))] }),
+                                    new TableCell({ children: [new Paragraph(u.username || '-')] }),
+                                    new TableCell({ children: [new Paragraph(u.email || '-')] }),
+                                    new TableCell({ children: [new Paragraph(u.phone || '-')] }),
+                                    new TableCell({ children: [new Paragraph(new Date(u.createdAt).toLocaleDateString('mn-MN'))] }),
+                                ]
+                            }))
+                        ]
+                    })
+                ]
+            }]
         });
 
-        htmlStr += `
-                </tbody>
-            </table>
-            <p style="text-align: right; font-size: 10px; color: #6b7280; margin-top: 20px;">
-                Нийт татсан: ${usersToExport.length} хэрэглэгч | Огноо: ${new Date().toLocaleDateString('mn-MN')}
-            </p>
-            </div>
-        `;
-
-        container.innerHTML = htmlStr;
-
-        // 3. Configure html2pdf options
-        const opt = {
-            margin: 10,
-            filename: `users-export-${new Date().getTime()}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
-        };
-
-        // 4. Generate & Download
-        html2pdf().set(opt).from(container).save();
+        const blob = await Packer.toBlob(doc);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Users_Export_${dateStr}.docx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
     };
 
     return (
@@ -207,21 +243,37 @@ export default function UsersPage() {
                             className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors"
                         >
                             <Download size={16} />
-                            <span className="hidden sm:inline">Экспорт (PDF)</span>
+                            <span className="hidden sm:inline">Экспорт (Татах)</span>
                             <ChevronDown size={14} className={`transition - transform ${isExportMenuOpen ? "rotate-180" : ""} `} />
                         </button>
 
                         {/* Dropdown Menu */}
                         {isExportMenuOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-lg shadow-lg overflow-hidden z-10 animate-in fade-in slide-in-from-top-2 duration-150">
+                            <div className="absolute right-0 mt-2 w-56 bg-background border border-border rounded-lg shadow-lg overflow-hidden z-20 animate-in fade-in slide-in-from-top-2 duration-150">
+                                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground bg-muted/50 border-b border-border">Excel (.xlsx) татах</div>
                                 <button
-                                    onClick={() => exportToPDF('all')}
+                                    onClick={() => exportToExcel('all')}
                                     className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
                                 >
                                     Бүх хэрэглэгчийг татах
                                 </button>
                                 <button
-                                    onClick={() => exportToPDF('selected')}
+                                    onClick={() => exportToExcel('selected')}
+                                    disabled={selectedUserIds.length === 0}
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border-b border-border"
+                                >
+                                    Сонгосноо татах ({selectedUserIds.length})
+                                </button>
+
+                                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground bg-muted/50 border-b border-border">Word (.docx) татах</div>
+                                <button
+                                    onClick={() => exportToWord('all')}
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                                >
+                                    Бүх хэрэглэгчийг татах
+                                </button>
+                                <button
+                                    onClick={() => exportToWord('selected')}
                                     disabled={selectedUserIds.length === 0}
                                     className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border-t border-border"
                                 >
@@ -365,118 +417,124 @@ export default function UsersPage() {
 
             {/* --- ШИНЭ ХЭРЭГЛЭГЧ НЭМЭХ MODAL --- */}
             {isAddUserModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-background border border-border rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-                            <h3 className="text-lg font-semibold">Шинэ хэрэглэгч</h3>
-                            <button onClick={() => setIsAddUserModalOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">
-                                <X size={20} />
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !saving && setIsAddUserModalOpen(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
+                            <h2 className="text-lg font-semibold tracking-tight">Шинэ хэрэглэгч</h2>
+                            <button onClick={() => !saving && setIsAddUserModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <form onSubmit={handleAddUser}>
-                            <div className="p-6 space-y-4">
+
+                        <div className="p-4 overflow-y-auto">
+                            <form id="add-user-form" onSubmit={handleAddUser} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1.5">Нэр <span className="text-red-500">*</span></label>
+                                    <label className="text-xs text-gray-500 mb-1 block">Нэр <span className="text-red-500">*</span></label>
                                     <input
                                         required
                                         type="text"
                                         value={addForm.username}
                                         onChange={e => setAddForm({ ...addForm, username: e.target.value })}
-                                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
                                         placeholder="Ганбат Дорж"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1.5">Имэйл <span className="text-red-500">*</span></label>
+                                    <label className="text-xs text-gray-500 mb-1 block">Имэйл <span className="text-red-500">*</span></label>
                                     <input
                                         required
                                         type="email"
                                         value={addForm.email}
                                         onChange={e => setAddForm({ ...addForm, email: e.target.value })}
-                                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
                                         placeholder="ganbat@email.com"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1.5">Утас</label>
+                                    <label className="text-xs text-gray-500 mb-1 block">Утас</label>
                                     <input
                                         type="text"
                                         value={addForm.phone}
                                         onChange={e => setAddForm({ ...addForm, phone: e.target.value })}
-                                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
                                         placeholder="99001122"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1.5">Нууц үг <span className="text-red-500">*</span></label>
+                                    <label className="text-xs text-gray-500 mb-1 block">Нууц үг <span className="text-red-500">*</span></label>
                                     <input
                                         required
                                         type="password"
                                         value={addForm.password}
                                         onChange={e => setAddForm({ ...addForm, password: e.target.value })}
-                                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
                                         placeholder="••••••••"
                                     />
                                 </div>
-                            </div>
-                            <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3 bg-muted/20">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAddUserModalOpen(false)}
-                                    className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
-                                >
-                                    Цуцлах
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
-                                >
-                                    {saving ? 'Хадгалж байна...' : 'Хадгалах'}
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
+
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button
+                                type="button"
+                                onClick={() => setIsAddUserModalOpen(false)}
+                                className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors"
+                            >
+                                Цуцлах
+                            </button>
+                            <button
+                                type="submit"
+                                form="add-user-form"
+                                disabled={saving}
+                                className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {saving ? <span className="animate-pulse">Түр хүлээнэ үү...</span> : 'Хадгалах'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* --- ТҮҮХ ХАРАХ MODAL --- */}
             {historyModalUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-background border border-border rounded-xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => { setHistoryModalUser(null); setUserBookings([]); }}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
                             <div>
-                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2">
                                     <History size={18} className="text-primary" />
                                     Захиалгын түүх
-                                </h3>
-                                <p className="text-sm text-muted-foreground mt-0.5">
-                                    Хэрэглэгч: <span className="text-foreground font-medium">{historyModalUser.username}</span>
+                                </h2>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    Хэрэглэгч: <span className="text-white font-medium">{historyModalUser.username}</span>
                                 </p>
                             </div>
                             <button
                                 onClick={() => { setHistoryModalUser(null); setUserBookings([]); }}
-                                className="text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-gray-400 hover:text-white transition-colors"
                             >
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="p-0 overflow-x-auto max-h-[60vh] overflow-y-auto">
+
+                        <div className="p-0 overflow-x-auto max-h-[60vh] overflow-y-auto w-full">
                             <table className="w-full text-sm text-left whitespace-nowrap">
-                                <thead className="text-xs text-muted-foreground uppercase bg-muted/30 border-b border-border sticky top-0">
+                                <thead className="text-[10px] text-gray-500 uppercase bg-black/20 border-b border-white/5 sticky top-0">
                                     <tr>
-                                        <th className="px-6 py-3 font-medium">Огноо</th>
-                                        <th className="px-6 py-3 font-medium">Үйлчилгээ</th>
-                                        <th className="px-6 py-3 font-medium">Төлбөр</th>
-                                        <th className="px-6 py-3 font-medium">Төлөв</th>
-                                        <th className="px-6 py-3 font-medium text-right">Үнэ</th>
+                                        <th className="px-4 py-2 font-medium">Огноо</th>
+                                        <th className="px-4 py-2 font-medium">Үйлчилгээ</th>
+                                        <th className="px-4 py-2 font-medium">Төлбөр</th>
+                                        <th className="px-4 py-2 font-medium">Төлөв</th>
+                                        <th className="px-4 py-2 font-medium text-right">Үнэ</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-white/5">
                                     {loadingHistory ? (
-                                        <tr><td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">Уншиж байна...</td></tr>
+                                        <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-500">Уншиж байна...</td></tr>
                                     ) : userBookings.length === 0 ? (
-                                        <tr><td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">Захиалга олдсонгүй.</td></tr>
+                                        <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-500">Захиалга олдсонгүй.</td></tr>
                                     ) : userBookings.map((b: any) => {
                                         const itemNames = (b.items || []).map((item: any) => {
                                             if (item.studio) return `Студи: ${item.studio.name}`;
@@ -489,12 +547,12 @@ export default function UsersPage() {
 
                                         const statusMap: Record<string, { label: string; cls: string }> = {
                                             CONFIRMED: { label: 'Баталгаажсан', cls: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
-                                            COMPLETED: { label: 'Дууссан', cls: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
-                                            CANCELLED: { label: 'Цуцлагдсан', cls: 'bg-rose-500/10 text-rose-500 border-rose-500/20' },
+                                            COMPLETED: { label: 'Дууссан', cls: 'bg-green-500/10 text-green-500 border-green-500/20' },
+                                            CANCELLED: { label: 'Цуцлагдсан', cls: 'bg-red-500/10 text-red-500 border-red-500/20' },
                                             PENDING: { label: 'Хүлээгдэж буй', cls: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
                                         };
                                         const paymentMap: Record<string, { label: string; cls: string }> = {
-                                            PAID: { label: 'Төлөгдсөн', cls: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
+                                            PAID: { label: 'Төлөгдсөн', cls: 'bg-green-500/10 text-green-500 border-green-500/20' },
                                             UNPAID: { label: 'Төлөгдөөгүй', cls: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
                                             REFUNDED: { label: 'Буцаагдсан', cls: 'bg-gray-500/10 text-gray-400 border-gray-500/20' },
                                         };
@@ -502,16 +560,16 @@ export default function UsersPage() {
                                         const pt = paymentMap[b.paymentStatus] || paymentMap.UNPAID;
 
                                         return (
-                                            <tr key={b.id} className="hover:bg-muted/20 transition-colors">
-                                                <td className="px-6 py-4 text-muted-foreground">{new Date(b.createdAt).toLocaleDateString('mn-MN')}</td>
-                                                <td className="px-6 py-4 font-medium max-w-[200px] truncate">{itemNames || '—'}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border uppercase tracking-wider ${pt.cls}`}>{pt.label}</span>
+                                            <tr key={b.id} className="hover:bg-white/5 transition-colors text-xs text-gray-300">
+                                                <td className="px-4 py-3">{new Date(b.createdAt).toLocaleDateString('mn-MN')}</td>
+                                                <td className="px-4 py-3 font-medium max-w-[200px] truncate">{itemNames || '—'}</td>
+                                                <td className="px-4 py-3">
+                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border uppercase tracking-wider ${pt.cls}`}>{pt.label}</span>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border uppercase tracking-wider ${st.cls}`}>{st.label}</span>
+                                                <td className="px-4 py-3">
+                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border uppercase tracking-wider ${st.cls}`}>{st.label}</span>
                                                 </td>
-                                                <td className={`px-6 py-4 text-right font-medium ${b.status === 'CANCELLED' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                                <td className={`px-4 py-3 text-right font-medium ${b.status === 'CANCELLED' ? 'text-gray-500 line-through' : 'text-gray-100'}`}>
                                                     {Number(b.totalAmount).toLocaleString()}₮
                                                 </td>
                                             </tr>
@@ -520,10 +578,10 @@ export default function UsersPage() {
                                 </tbody>
                             </table>
                         </div>
-                        <div className="px-6 py-4 border-t border-border bg-muted/20 flex justify-end">
+                        <div className="p-4 border-t border-white/5 flex justify-end mt-auto bg-black/20">
                             <button
                                 onClick={() => { setHistoryModalUser(null); setUserBookings([]); }}
-                                className="px-4 py-2 text-sm font-medium bg-background border border-border hover:bg-muted rounded-lg transition-colors"
+                                className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors"
                             >
                                 Хаах
                             </button>

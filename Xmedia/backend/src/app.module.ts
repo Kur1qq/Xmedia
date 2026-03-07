@@ -19,6 +19,7 @@ import { EditServiceModule } from './edit-service/edit-service.module';
 import { AdminModule } from './admin/admin.module';
 import { LogModule } from './log/log.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
+import { HeroModule } from './hero/hero.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { PortfolioModule } from './portfolio/portfolio.module';
     EditServiceModule,
     AdminModule,
     PortfolioModule,
+    HeroModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

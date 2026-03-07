@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { X, CheckCircle, Clock, XCircle, ChevronDown, Package, CalendarDays, List, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { X, CheckCircle, Clock, XCircle, ChevronDown, Package, CalendarDays, List, ChevronLeft, ChevronRight, ArrowLeft, User, CreditCard, Activity, Calendar, Edit2, Trash2, Mail, MoreVertical } from "lucide-react";
+import { toast } from "sonner";
+import { getAdminInfo } from "@/lib/auth";
 
 // ---- Booking service type detection ----
 function detectBookingType(booking: any): string {
@@ -52,11 +54,29 @@ function shortDate(d: Date) {
 export default function BookingsPage() {
     const [bookings, setBookings] = useState<any[]>([]);
     const [pendingBookings, setPendingBookings] = useState<any[]>([]);
+    const [cancelledBookings, setCancelledBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<'list' | 'calendar'>('list');
-    const [tab, setTab] = useState<'paid' | 'pending'>('paid');
-    const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+    const [tab, setTab] = useState<'paid' | 'pending' | 'cancelled'>('paid');
+    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [newNoteText, setNewNoteText] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+
+    // Add Manual Booking state
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [addForm, setAddForm] = useState({
+        name: '', phone: '', email: '',
+        date: shortDate(new Date()) ? new Date().toISOString().split('T')[0] : '',
+        startTime: '10:00', endTime: '12:00',
+        serviceType: 'STUDIO', serviceId: '1',
+        totalAmount: 100000, status: 'CONFIRMED', paymentStatus: 'PAID', notes: ''
+    });
+
+    const openBookingModal = (b: Booking, event: React.MouseEvent) => {
+        event.stopPropagation();
+        setSelectedBooking(b);
+        setNewNoteText("");
+    };
 
     // Calendar state
     const today = new Date();
@@ -81,12 +101,14 @@ export default function BookingsPage() {
 
     const fetchBookings = async () => {
         try {
-            const [paidRes, pendingRes] = await Promise.all([
+            const [paidRes, pendingRes, cancelledRes] = await Promise.all([
                 fetch(`${API}/bookings`),
                 fetch(`${API}/bookings/pending`),
+                fetch(`${API}/bookings/cancelled`),
             ]);
             if (paidRes.ok) setBookings(await paidRes.json());
             if (pendingRes.ok) setPendingBookings(await pendingRes.json());
+            if (cancelledRes.ok) setCancelledBookings(await cancelledRes.json());
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     };
@@ -94,7 +116,7 @@ export default function BookingsPage() {
     useEffect(() => { fetchBookings(); }, []);
 
     // Current tab's bookings
-    const activeBookings = tab === 'paid' ? bookings : pendingBookings;
+    const activeBookings = tab === 'paid' ? bookings : tab === 'pending' ? pendingBookings : cancelledBookings;
 
     const updateBookingStatus = async (status: string) => {
         if (!selectedBooking) return;
@@ -107,6 +129,72 @@ export default function BookingsPage() {
             else alert("Алдаа гарлаа.");
         } catch (e) { console.error(e); }
         finally { setIsSaving(false); }
+    };
+
+    const updatePaymentStatus = async (paymentStatus: string) => {
+        if (!selectedBooking) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/bookings/${selectedBooking.id}/payment-status`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentStatus }),
+            });
+            if (res.ok) { await fetchBookings(); setSelectedBooking({ ...selectedBooking, paymentStatus }); }
+            else alert("Алдаа гарлаа.");
+        } catch (e) { console.error(e); }
+        finally { setIsSaving(false); }
+    };
+
+    const updateBookingNotes = async () => {
+        if (!selectedBooking || !newNoteText.trim()) return;
+        setIsSaving(true);
+        try {
+            const admin = getAdminInfo();
+            const adminName = admin?.username || "Админ";
+            const dateStr = new Date().toLocaleString('mn-MN');
+
+            const appendedNote = `\n\n--- ${dateStr} [${adminName}] ---\n${newNoteText.trim()}`;
+            const updatedNotes = (selectedBooking.notes || "") + appendedNote;
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/bookings/${selectedBooking.id}/notes`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: updatedNotes }),
+            });
+            if (res.ok) {
+                await fetchBookings();
+                setSelectedBooking({ ...selectedBooking, notes: updatedNotes });
+                setNewNoteText("");
+                toast.success("Тэмдэглэл нэмэгдлээ");
+            }
+            else toast.error("Алдаа гарлаа.");
+        } catch (e) { console.error(e); }
+        finally { setIsSaving(false); }
+    };
+
+    const submitManualBooking = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        try {
+            const token = localStorage.getItem('admin_token');
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/bookings/admin/manual`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify(addForm),
+            });
+            if (res.ok) {
+                await fetchBookings();
+                setIsAddModalOpen(false);
+            } else {
+                const err = await res.json();
+                alert(`Алдаа гарлаа: ${err.message || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Холболтын алдаа гарлаа.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     // Build calendar grid (month view)
@@ -292,14 +380,22 @@ export default function BookingsPage() {
                     <p className="text-muted-foreground mt-1">Зөвхөн төлбөр төлсөн захиалгууд харагдана.</p>
                 </div>
 
-                {/* View toggle */}
-                <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-muted/30 p-1 self-start sm:self-auto">
-                    <button onClick={() => setView('list')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${view === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                        <List className="w-4 h-4" /> Жагсаалт
+                {/* Actions & View toggle */}
+                <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
+                    >
+                        + Захиалга нэмэх
                     </button>
-                    <button onClick={() => { setView('calendar'); setCalendarMode('month'); setSelectedWeekStart(null); setSelectedDay(null); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${view === 'calendar' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                        <CalendarDays className="w-4 h-4" /> Календарь
-                    </button>
+                    <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-muted/30 p-1">
+                        <button onClick={() => setView('list')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${view === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                            <List className="w-4 h-4" /> Жагсаалт
+                        </button>
+                        <button onClick={() => { setView('calendar'); setCalendarMode('month'); setSelectedWeekStart(null); setSelectedDay(null); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${view === 'calendar' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                            <CalendarDays className="w-4 h-4" /> Календарь
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -333,6 +429,15 @@ export default function BookingsPage() {
                     Нэхэмжлэл хүлээж буй
                     {pendingBookings.length > 0 && <span className="ml-1 bg-yellow-500/20 text-yellow-600 text-xs font-bold px-1.5 py-0.5 rounded-full">{pendingBookings.length}</span>}
                 </button>
+                <button
+                    onClick={() => setTab('cancelled')}
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === 'cancelled' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                >
+                    <X className="w-4 h-4 text-red-500" />
+                    Цуцлагдсан
+                    {cancelledBookings.length > 0 && <span className="ml-1 bg-red-500/20 text-red-600 text-xs font-bold px-1.5 py-0.5 rounded-full">{cancelledBookings.length}</span>}
+                </button>
             </div>
 
             {/* ================= LIST VIEW ================= */}
@@ -354,7 +459,7 @@ export default function BookingsPage() {
                             </thead>
                             <tbody className="divide-y divide-border/50">
                                 {loading ? (<tr><td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">Уншиж байна...</td></tr>)
-                                    : activeBookings.length === 0 ? (<tr><td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">{tab === 'paid' ? 'Төлөгдсөн захиалга алга.' : 'Нэхэмжлэл хүлээж буй захиалга алга.'}</td></tr>)
+                                    : activeBookings.length === 0 ? (<tr><td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">{tab === 'paid' ? 'Төлөгдсөн захиалга алга.' : tab === 'pending' ? 'Нэхэмжлэл хүлээж буй захиалга алга.' : 'Цуцлагдсан захиалга алга.'}</td></tr>)
                                         : activeBookings.map((booking) => {
                                             const btype = detectBookingType(booking);
                                             const col = TYPE_COLORS[btype];
@@ -383,7 +488,7 @@ export default function BookingsPage() {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <button onClick={() => setSelectedBooking(booking)} className="text-sm text-primary hover:underline">Дэлгэрэнгүй</button>
+                                                        <button onClick={(e) => openBookingModal(booking, e)} className="text-sm text-primary hover:underline">Дэлгэрэнгүй</button>
                                                     </td>
                                                 </tr>
                                             );
@@ -437,7 +542,7 @@ export default function BookingsPage() {
                                                         {uniqueBookings.slice(0, 3).map((b, idx) => {
                                                             const col = TYPE_COLORS[b._type] || TYPE_COLORS.photographer;
                                                             return (
-                                                                <button key={idx} onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }} className={`w-full text-left rounded px-1.5 py-0.5 text-xs truncate ${col.bg} ${col.text} hover:opacity-80 transition-opacity`}>
+                                                                <button key={idx} onClick={(e) => openBookingModal(b, e)} className={`w-full text-left rounded px-1.5 py-0.5 text-xs truncate ${col.bg} ${col.text} hover:opacity-80 transition-opacity`}>
                                                                     <span className={`inline-block w-1.5 h-1.5 rounded-full ${col.dot} mr-1 align-middle`} />
                                                                     {b.user?.username || `#${b.id}`}
                                                                 </button>
@@ -511,7 +616,7 @@ export default function BookingsPage() {
                                                     return (
                                                         <button
                                                             key={idx}
-                                                            onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }}
+                                                            onClick={(e) => openBookingModal(b, e)}
                                                             className={`w-full text-left rounded-md px-2 py-1.5 text-xs ${col.bg} ${col.text} hover:opacity-80 transition-opacity`}
                                                         >
                                                             <div className="flex items-center gap-1">
@@ -556,7 +661,7 @@ export default function BookingsPage() {
                             <div className="divide-y divide-border/30">
                                 {DAY_HOURS.map(hour => {
                                     const hourBookings = dayBookingsByHour[hour] || [];
-                                    const isNow = today.getDate() === selectedDay.getDate() && today.getMonth() === selectedDay.getMonth() && today.getFullYear() === selectedDay.getFullYear() && today.getHours() === hour;
+                                    const isNow = today.getDate() === selectedDay.getDate() && today.getMonth() === selectedDay.getMonth() && today.getFullYear() === today.getFullYear() && today.getHours() === hour;
                                     return (
                                         <div key={hour} className={`cal-hour-row flex min-h-[60px] ${isNow ? 'bg-primary/5' : 'hover:bg-muted/10'}`}>
                                             {/* Time label */}
@@ -579,7 +684,7 @@ export default function BookingsPage() {
                                                         return (
                                                             <button
                                                                 key={idx}
-                                                                onClick={() => setSelectedBooking(b)}
+                                                                onClick={(e) => openBookingModal(b, e)}
                                                                 className={`w-full text-left rounded-md px-3 py-2 text-sm ${col.bg} ${col.text} hover:opacity-80 transition-opacity flex items-center justify-between`}
                                                             >
                                                                 <div className="flex items-center gap-2 min-w-0">
@@ -606,85 +711,266 @@ export default function BookingsPage() {
 
             {/* ================= DETAIL MODAL ================= */}
             {selectedBooking && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-2xl rounded-lg border border-border/50 shadow-lg flex flex-col max-h-[90vh]">
-                        <div className="flex items-center justify-between border-b border-border/50 p-6">
-                            <div className="flex items-center gap-3">
-                                <div>
-                                    <h2 className="text-xl font-semibold">Захиалгын дэлгэрэнгүй (#{selectedBooking.id})</h2>
-                                    <p className="text-sm text-muted-foreground mt-1">Огноо: {new Date(selectedBooking.createdAt).toLocaleString('mn-MN')}</p>
-                                </div>
-                                {(() => { const col = TYPE_COLORS[detectBookingType(selectedBooking)]; return (<span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${col.bg} ${col.text}`}><span className={`w-1.5 h-1.5 rounded-full ${col.dot}`} />{col.label}</span>); })()}
-                            </div>
-                            <button onClick={() => setSelectedBooking(null)} className="rounded-full p-2 hover:bg-muted/50 transition-colors"><X className="h-5 w-5 text-muted-foreground" /></button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    {/* Shadow backdrop to close on click outside */}
+                    <div className="absolute inset-0 pointer-events-auto bg-black/60" onClick={() => setSelectedBooking(null)}></div>
+
+                    <div
+                        className="relative bg-[#1e1e1e] w-full max-w-[420px] rounded-[16px] shadow-2xl flex flex-col z-10 pt-1 pb-4 border border-white/5 pointer-events-auto overflow-hidden"
+                        style={{
+                            maxHeight: 'calc(100vh - 32px)'
+                        }}
+                    >
+                        {/* Top Actions */}
+                        <div className="flex justify-end items-center gap-1.5 px-3 py-2 text-gray-400">
+                            <button className="p-2 rounded-full hover:bg-white/10 hover:text-white transition-colors">
+                                <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button className="p-2 rounded-full hover:bg-white/10 hover:text-white transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                            <button className="p-2 rounded-full hover:bg-white/10 hover:text-white transition-colors">
+                                <Mail className="w-4 h-4" />
+                            </button>
+                            <button className="p-2 rounded-full hover:bg-white/10 hover:text-white transition-colors">
+                                <MoreVertical className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setSelectedBooking(null)} className="p-2 rounded-full hover:bg-white/10 hover:text-white transition-colors ml-1">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            {/* User Info */}
-                            <div>
-                                <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">Захиалагчийн мэдээлэл</h3>
-                                <div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-md border border-border/50">
-                                    <div><p className="text-xs text-muted-foreground mb-1">Нэр</p><p className="font-medium">{selectedBooking.user?.username || 'Тодорхойгүй'}</p></div>
-                                    <div><p className="text-xs text-muted-foreground mb-1">Утас</p><p className="font-medium">{selectedBooking.user?.phone || 'Байхгүй'}</p></div>
-                                    <div className="col-span-2"><p className="text-xs text-muted-foreground mb-1">Имэйл</p><p className="font-medium">{selectedBooking.user?.email || 'Байхгүй'}</p></div>
+                        <div className="flex-1 overflow-y-auto px-6 space-y-5 custom-scrollbar pb-2">
+                            {/* Header row: Dot + Title */}
+                            <div className="flex gap-4">
+                                <div className="pt-1.5 flex-shrink-0">
+                                    <div className={`w-3.5 h-3.5 rounded-[3px] ${TYPE_COLORS[detectBookingType(selectedBooking)]?.dot || 'bg-gray-500'}`} />
+                                </div>
+                                <div className="flex-1">
+                                    <h2 className="text-[22px] font-normal text-white leading-tight mb-1 cursor-text select-text">
+                                        {selectedBooking.items?.[0]?.itemType === 'STUDIO' ? `Студи: ${selectedBooking.items?.[0]?.studio?.name || '(Нэргүй)'}` : `Үйлчилгээ: ${selectedBooking.items?.[0]?.service?.name || '(Нэргүй)'}`}
+                                    </h2>
+                                    <div className="text-[13px] text-gray-300 tracking-wide mt-1.5">
+                                        {new Date(selectedBooking.items?.[0]?.bookingDate).toLocaleDateString('mn-MN', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                        {selectedBooking.items?.[0]?.startTime && (
+                                            <span>
+                                                {' '}•{' '}
+                                                {new Date(selectedBooking.items?.[0]?.startTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })} – {new Date(selectedBooking.items?.[0]?.endTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Items */}
-                            <div>
-                                <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">Захиалсан зүйлс ({selectedBooking.items?.length || 0})</h3>
-                                <div className="border border-border/50 rounded-md overflow-hidden bg-muted/10 divide-y divide-border/50">
-                                    {selectedBooking.items?.map((item: any, idx: number) => (
-                                        <div key={idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                            <div className="flex items-start gap-3">
-                                                <div className="bg-primary/10 p-2 rounded-md h-fit"><Package className="w-4 h-4 text-primary" /></div>
-                                                <div>
-                                                    <p className="font-medium text-sm">{item.itemType === 'STUDIO' ? `Студи: ${item.studio?.name || 'Устгагдсан'}` : `Үйлчилгээ: ${item.service?.name || 'Устгагдсан'}`}</p>
-                                                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                                                        <Clock className="w-3 h-3" />
-                                                        <span>{new Date(item.bookingDate).toLocaleDateString('mn-MN')}</span>
-                                                        {item.startTime && item.endTime && (<span>| {new Date(item.startTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })} - {new Date(item.endTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })}</span>)}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-bold">{Number(item.totalPrice).toLocaleString()} ₮</p>
-                                                <p className="text-xs text-muted-foreground">{item.quantity} x {Number(item.unitPrice).toLocaleString()} ₮</p>
-                                            </div>
+                            {/* Details (aligned left with the title text, so we use pl-[30px] or just flex gap-4) */}
+                            <div className="space-y-4">
+
+                                {/* User Info */}
+                                <div className="flex items-start gap-4">
+                                    <User className="w-5 h-5 text-gray-400 mt-0.5" />
+                                    <div className="text-sm text-gray-300">
+                                        <div className="text-white mb-0.5">{selectedBooking.user?.username || 'Тодорхойгүй'}</div>
+                                        <div className="text-gray-400">
+                                            {selectedBooking.user?.phone ? `${selectedBooking.user.phone} • ` : ''}{selectedBooking.user?.email || 'Имэйлгүй'}
                                         </div>
-                                    ))}
-                                    {(!selectedBooking.items || selectedBooking.items.length === 0) && (<div className="p-4 text-center text-sm text-muted-foreground">Хоосон байна</div>)}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Payment */}
-                            <div className="flex items-center justify-between bg-muted/30 p-4 rounded-md border border-border/50">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Төлбөрийн төлөв</p>
-                                    <p className="font-semibold mt-1">{selectedBooking.paymentStatus === 'PAID' ? 'Төлөгдсөн' : selectedBooking.paymentStatus === 'REFUNDED' ? 'Буцаагдсан' : 'Төлөгдөөгүй'}</p>
+                                {/* Price / Payment */}
+                                <div className="flex items-start gap-4">
+                                    <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
+                                    <div className="text-sm flex flex-col gap-0.5">
+                                        <span className="text-white font-medium">{Number(selectedBooking.totalAmount).toLocaleString()} ₮</span>
+                                        <div className="flex items-center">
+                                            <select
+                                                className="appearance-none bg-transparent hover:bg-white/5 border border-transparent hover:border-white/10 rounded px-1 -ml-1 py-0.5 text-xs font-semibold focus:outline-none cursor-pointer transition-colors"
+                                                style={{ color: selectedBooking.paymentStatus === 'PAID' ? '#4ade80' : selectedBooking.paymentStatus === 'UNPAID' ? '#f87171' : '#facc15' }}
+                                                value={selectedBooking.paymentStatus}
+                                                disabled={isSaving}
+                                                onChange={(e) => updatePaymentStatus(e.target.value)}
+                                            >
+                                                <option className="bg-[#1e1e1e] text-red-500" value="UNPAID">Төлөгдөөгүй</option>
+                                                <option className="bg-[#1e1e1e] text-green-500" value="PAID">Төлөгдсөн</option>
+                                                <option className="bg-[#1e1e1e] text-yellow-500" value="REFUNDED">Буцаагдсан</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-medium text-muted-foreground">Нийт төлбөр</p>
-                                    <p className="text-xl font-bold text-primary">{Number(selectedBooking.totalAmount).toLocaleString()} ₮</p>
+
+                                {/* Booking Status */}
+                                <div className="flex items-start gap-4 w-full">
+                                    <Activity className="w-5 h-5 text-gray-400 mt-0.5" />
+                                    <div className="flex-1 min-w-0 pr-4">
+                                        <div className="flex items-center w-full">
+                                            <select
+                                                className="bg-transparent hover:bg-white/5 text-gray-300 rounded px-1 -ml-1 py-0.5 text-sm focus:outline-none cursor-pointer transition-colors w-[fit-content]"
+                                                value={selectedBooking.status}
+                                                disabled={isSaving}
+                                                onChange={(e) => updateBookingStatus(e.target.value)}
+                                            >
+                                                <option className="bg-[#1e1e1e]" value="PENDING">Шалгагдаж буй</option>
+                                                <option className="bg-[#1e1e1e]" value="CONFIRMED">Баталгаажсан</option>
+                                                <option className="bg-[#1e1e1e]" value="COMPLETED">Дууссан</option>
+                                                <option className="bg-[#1e1e1e]" value="CANCELLED">Цуцлагдсан</option>
+                                            </select>
+                                            {isSaving && <span className="text-[10px] text-primary animate-pulse ml-2 uppercase font-bold">Түр хүлээнэ үү</span>}
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {/* Dates Meta */}
+                                <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                                    <Calendar className="w-5 h-5 text-gray-400 shrink-0" />
+                                    <div className="text-sm text-gray-400">
+                                        Захиалга #{selectedBooking.id} • {new Date(selectedBooking.createdAt).toLocaleDateString('mn-MN')}
+                                    </div>
+                                </div>
+
+                                {/* Internal Notes */}
+                                <div className="flex flex-col gap-2 pt-2">
+                                    <div className="text-sm font-medium text-gray-400 flex items-center justify-between">
+                                        <span>Дотоод тэмдэглэл (Админ)</span>
+                                        <button
+                                            onClick={updateBookingNotes}
+                                            disabled={isSaving || !newNoteText.trim()}
+                                            className="text-xs bg-primary/20 text-primary hover:bg-primary/30 px-2 py-1 rounded transition-colors disabled:opacity-50"
+                                        >
+                                            {isSaving ? 'Хадгалж байна' : 'Нэмэх'}
+                                        </button>
+                                    </div>
+
+                                    {/* Existing Notes Display */}
+                                    {selectedBooking.notes && (
+                                        <div className="w-full bg-black/40 border border-white/5 rounded-md px-3 py-2 text-xs text-gray-300 whitespace-pre-wrap max-h-32 overflow-y-auto custom-scrollbar">
+                                            {selectedBooking.notes.trim()}
+                                        </div>
+                                    )}
+
+                                    {/* New Note Input */}
+                                    <textarea
+                                        rows={2}
+                                        className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors resize-none placeholder:text-gray-600 mt-1"
+                                        placeholder="Шинэ тэмдэглэлээ энд үлдээнэ үү..."
+                                        value={newNoteText}
+                                        onChange={(e) => setNewNoteText(e.target.value)}
+                                    />
+                                </div>
+
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
 
-                        <div className="border-t border-border/50 p-6 bg-muted/10 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-b-lg">
-                            <div className="flex items-center gap-3 w-full sm:w-auto">
-                                <span className="text-sm font-medium whitespace-nowrap">Төлөв өөрчлөх:</span>
-                                <div className="relative w-full sm:w-[180px]">
-                                    <select className="w-full appearance-none bg-background border border-border/50 text-sm rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-primary" value={selectedBooking.status} disabled={isSaving} onChange={(e) => updateBookingStatus(e.target.value)}>
-                                        <option value="PENDING">Шалгагдаж буй</option>
-                                        <option value="CONFIRMED">Баталгаажсан</option>
-                                        <option value="COMPLETED">Дууссан</option>
-                                        <option value="CANCELLED">Цуцлагдсан</option>
-                                    </select>
-                                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            {/* ================= ADD MANUAL BOOKING MODAL ================= */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !isSaving && setIsAddModalOpen(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
+                            <h2 className="text-lg font-semibold tracking-tight">Захиалга нэмэх</h2>
+                            <button onClick={() => !isSaving && setIsAddModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-4 overflow-y-auto">
+                            <form id="add-booking-form" onSubmit={submitManualBooking} className="space-y-4">
+                                {/* User Info */}
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Хэрэглэгч</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Нэр</label>
+                                            <input required type="text" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Утас</label>
+                                            <input required type="tel" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.phone} onChange={e => setAddForm({ ...addForm, phone: e.target.value })} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Цахим шуудан (сонголт)</label>
+                                        <input type="email" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} />
+                                    </div>
                                 </div>
-                                {isSaving && <span className="text-xs text-muted-foreground animate-pulse">Уншиж байна...</span>}
-                            </div>
-                            <button onClick={() => setSelectedBooking(null)} className="w-full sm:w-auto px-4 py-2 border border-border/50 hover:bg-muted/50 rounded-md text-sm font-medium transition-colors">Хаах</button>
+
+                                {/* Service Info */}
+                                <div className="space-y-3 pt-2">
+                                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Үйлчилгээ</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Төрөл</label>
+                                            <select className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.serviceType} onChange={e => setAddForm({ ...addForm, serviceType: e.target.value })}>
+                                                <option value="STUDIO">Студи</option>
+                                                <option value="PHOTOGRAPHER_SERVICE">Зурагчин</option>
+                                                <option value="EDIT_SERVICE">Эвлүүлэг</option>
+                                                <option value="LIVE_SERVICE">Шууд дамжуулалт</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">ID дугаар</label>
+                                            <input required type="number" min="1" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.serviceId} onChange={e => setAddForm({ ...addForm, serviceId: e.target.value })} />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Огноо</label>
+                                            <input required type="date" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors [color-scheme:dark]" value={addForm.date} onChange={e => setAddForm({ ...addForm, date: e.target.value })} />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Эхлэх</label>
+                                            <input required type="time" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors [color-scheme:dark]" value={addForm.startTime} onChange={e => setAddForm({ ...addForm, startTime: e.target.value })} />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Дуусах</label>
+                                            <input required type="time" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors [color-scheme:dark]" value={addForm.endTime} onChange={e => setAddForm({ ...addForm, endTime: e.target.value })} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Status & Price */}
+                                <div className="space-y-3 pt-2">
+                                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Төлбөр & Төлөв</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Нийт дүн (₮)</label>
+                                            <input required type="number" min="0" step="1000" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.totalAmount} onChange={e => setAddForm({ ...addForm, totalAmount: Number(e.target.value) })} />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Төлбөрийн төлөв</label>
+                                            <select className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.paymentStatus} onChange={e => setAddForm({ ...addForm, paymentStatus: e.target.value })}>
+                                                <option className="text-green-500" value="PAID">Төлөгдсөн</option>
+                                                <option className="text-red-500" value="UNPAID">Төлөгдөөгүй</option>
+                                                <option className="text-yellow-500" value="REFUNDED">Буцаагдсан</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Захиалгын төлөв</label>
+                                        <select className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.status} onChange={e => setAddForm({ ...addForm, status: e.target.value })}>
+                                            <option value="CONFIRMED">Баталгаажсан</option>
+                                            <option value="PENDING">Шалгагдаж буй</option>
+                                            <option value="COMPLETED">Дууссан</option>
+                                            <option value="CANCELLED">Цуцлагдсан</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Тэмдэглэл</label>
+                                        <textarea rows={2} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors resize-none" value={addForm.notes} onChange={e => setAddForm({ ...addForm, notes: e.target.value })} placeholder="Нэмэлт тайлбар..." />
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                                Болих
+                            </button>
+                            <button type="submit" form="add-booking-form" disabled={isSaving} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">
+                                {isSaving && <span className="animate-pulse">Түр хүлээнэ үү...</span>}
+                                {!isSaving && "Хадгалах"}
+                            </button>
                         </div>
                     </div>
                 </div>

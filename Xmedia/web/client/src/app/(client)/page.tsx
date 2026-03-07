@@ -15,7 +15,7 @@ interface Slide {
   image: string;
 }
 
-const slides: Slide[] = [
+const DEFAULT_SLIDES: Slide[] = [
   {
     id: 1,
     title: "Мэргэжлийн студио",
@@ -44,6 +44,24 @@ const slides: Slide[] = [
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
+
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/hero/active`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setSlides(data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch slides", error);
+      }
+    };
+    fetchSlides();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -51,13 +69,13 @@ export default function Home() {
     }, 10000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   return (
     <>
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
       <div className="hidden sm:block overflow-hidden">
-        <section className="relative min-h-[55vh] sm:min-h-[60vh] flex items-center justify-center pt-24 pb-10 overflow-hidden">
+        <section className="relative min-h-[55vh] sm:min-h-[71vh] flex items-center justify-center pt-24 pb-10 overflow-hidden">
           {/* Background Slider */}
           <AnimatePresence mode="popLayout">
             <motion.div
@@ -68,11 +86,26 @@ export default function Home() {
               transition={{ duration: 1.5, ease: "easeInOut" }}
               className="absolute inset-0 -z-10"
             >
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-105"
-                style={{ backgroundImage: `url('${slides[currentSlide].image}')`, transform: "scale(1.05)" }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
+              {slides[currentSlide].image.match(/\.(mp4|webm|ogg|mov)$/i) ? (
+                <video
+                  src={slides[currentSlide].image}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear scale-105"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  style={{ transform: "scale(1.05)" }}
+                />
+              ) : (
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-105"
+                  style={{ backgroundImage: `url('${slides[currentSlide].image}')`, transform: "scale(1.05)" }}
+                />
+              )}
+              {/* Added a smoother gradient fade into the background color at the bottom */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-background" />
+              {/* Extra bottom gradient for absolute seamless transition */}
+              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
             </motion.div>
           </AnimatePresence>
 
@@ -124,8 +157,8 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Services Section - Full height & centered on mobile, normal on desktop */}
-      <section className="py-4 sm:py-8 bg-background relative z-10 min-h-[100dvh] sm:min-h-0 flex sm:block items-center">
+      {/* Services Section - Smoothly overlaps with the hero section */}
+      <section className="py-4 sm:py-8 relative z-10 min-h-[100dvh] sm:min-h-0 flex sm:block items-center -mt-10 sm:-mt-16">
         <div className="container mx-auto px-4 w-full">
           <motion.div
             initial={{ opacity: 0, y: 24 }}

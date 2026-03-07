@@ -332,26 +332,29 @@ export default function LivePage() {
             {/* CATEGORY MODAL */}
             {/* ===================================== */}
             {isCategoryModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-lg border border-border/50 shadow-lg p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-semibold">{editingCategory ? 'Ангилал засах' : 'Ангилал үүсгэх'}</h2>
-                            <button onClick={() => setIsCategoryModalOpen(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !isSavingCategory && setIsCategoryModalOpen(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingCategory ? 'Ангилал засах' : 'Ангилал үүсгэх'}</h2>
+                            <button onClick={() => !isSavingCategory && setIsCategoryModalOpen(false)} className="text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
                         </div>
-                        <form onSubmit={handleSaveCategory} className="space-y-4">
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
-                                <input required value={categoryFormData.name} onChange={e => setCategoryFormData({ ...categoryFormData, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">Тайлбар</label>
-                                <textarea value={categoryFormData.description} onChange={e => setCategoryFormData({ ...categoryFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" />
-                            </div>
-                            <div className="flex justify-end gap-2 pt-4">
-                                <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="px-4 py-2 text-sm">Болих</button>
-                                <button type="submit" disabled={isSavingCategory} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{isSavingCategory ? '...' : 'Хадгалах'}</button>
-                            </div>
-                        </form>
+                        <div className="p-4 overflow-y-auto">
+                            <form id="category-form" onSubmit={handleSaveCategory} className="space-y-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400">Нэр <span className="text-red-500">*</span></label>
+                                    <input required value={categoryFormData.name} onChange={e => setCategoryFormData({ ...categoryFormData, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400">Тайлбар</label>
+                                    <textarea value={categoryFormData.description} onChange={e => setCategoryFormData({ ...categoryFormData, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[80px]" />
+                                </div>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">Болих</button>
+                            <button type="submit" form="category-form" disabled={isSavingCategory} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">{isSavingCategory ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}</button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -360,168 +363,169 @@ export default function LivePage() {
             {/* LIVE SERVICE MODAL */}
             {/* ===================================== */}
             {isServiceModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border border-border/50 shadow-lg p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-semibold">{editingService ? 'Үйлчилгээ засах' : 'Шинэ үйлчилгээ нэмэх'}</h2>
-                            <button onClick={() => setIsServiceModalOpen(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !isSavingService && setIsServiceModalOpen(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingService ? 'Үйлчилгээ засах' : 'Шинэ үйлчилгээ нэмэх'}</h2>
+                            <button onClick={() => !isSavingService && setIsServiceModalOpen(false)} className="text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
                         </div>
-                        <form onSubmit={handleSaveService} className="space-y-5">
-
-                            {/* Image */}
-                            <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-lg border border-border/50">
-                                <div className="w-16 h-16 rounded overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    {serviceFormData.image ? <img src={serviceFormData.image} alt="" className="w-full h-full object-cover" /> : <Camera className="w-6 h-6 text-muted-foreground" />}
+                        <div className="p-4 overflow-y-auto">
+                            <form id="service-form" onSubmit={handleSaveService} className="space-y-5">
+                                {/* Image */}
+                                <div className="flex items-center gap-4 bg-black/20 p-4 rounded-lg border border-white/5">
+                                    <div className="w-16 h-16 rounded overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        {serviceFormData.image ? <img src={serviceFormData.image} alt="" className="w-full h-full object-cover" /> : <Camera className="w-6 h-6 text-gray-500" />}
+                                    </div>
+                                    <button type="button" disabled={isUploadingImage} onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 text-sm bg-black/20 border border-white/10 hover:bg-white/5 transition-colors rounded-md text-gray-200">
+                                        {isUploadingImage ? <span className="animate-pulse">Хуулж байна...</span> : "Зураг хуулах"}
+                                    </button>
                                 </div>
-                                <button type="button" disabled={isUploadingImage} onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 text-sm bg-background border border-border/50 rounded-md hover:bg-muted">
-                                    {isUploadingImage ? "Хуулж байна..." : "Зураг хуулах"}
-                                </button>
-                            </div>
 
-                            {/* Basic fields */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1 col-span-2">
-                                    <label className="text-sm font-medium">Ангилал <span className="text-red-500">*</span></label>
-                                    <select required value={serviceFormData.categoryId} onChange={e => setServiceFormData({ ...serviceFormData, categoryId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                                        <option value="" disabled>Сонгох...</option>
-                                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                    </select>
+                                {/* Basic fields */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1 col-span-2">
+                                        <label className="text-xs text-gray-400">Ангилал <span className="text-red-500">*</span></label>
+                                        <select required value={serviceFormData.categoryId} onChange={e => setServiceFormData({ ...serviceFormData, categoryId: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
+                                            <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
+                                            {categories.map(c => <option key={c.id} value={c.id} className="bg-[#1e1e1e]">{c.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1 col-span-2">
+                                        <label className="text-xs text-gray-400">Үйлчилгээний нэр <span className="text-red-500">*</span></label>
+                                        <input required value={serviceFormData.name} onChange={e => setServiceFormData({ ...serviceFormData, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" placeholder="Шууд дамжуулалтын үйлчилгээ..." />
+                                    </div>
                                 </div>
-                                <div className="space-y-1 col-span-2">
-                                    <label className="text-sm font-medium">Үйлчилгээний нэр <span className="text-red-500">*</span></label>
-                                    <input required value={serviceFormData.name} onChange={e => setServiceFormData({ ...serviceFormData, name: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" placeholder="Шууд дамжуулалтын үйлчилгээ..." />
+
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400">Тайлбар</label>
+                                    <textarea value={serviceFormData.description} onChange={e => setServiceFormData({ ...serviceFormData, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[80px]" placeholder="Үйлчилгээний тайлбар..." />
                                 </div>
-                            </div>
 
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">Тайлбар</label>
-                                <textarea value={serviceFormData.description} onChange={e => setServiceFormData({ ...serviceFormData, description: e.target.value })} className="w-full p-3 rounded-md border border-input bg-background text-sm min-h-[80px]" placeholder="Үйлчилгээний тайлбар..." />
-                            </div>
-
-                            {/* Features / Amenities */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium block">Онцлог талууд (Features)</label>
-                                <div className="flex gap-2 mb-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Шинэ онцлог..."
-                                        className="flex-1 h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                        id="new-amenity-input"
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                const val = (e.target as HTMLInputElement).value.trim();
+                                {/* Features / Amenities */}
+                                <div className="space-y-2">
+                                    <label className="text-xs text-gray-400 block">Онцлог талууд (Features)</label>
+                                    <div className="flex gap-2 mb-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Шинэ онцлог..."
+                                            className="flex-1 bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                            id="new-amenity-input"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const val = (e.target as HTMLInputElement).value.trim();
+                                                    if (val && !serviceFormData.amenities.includes(val)) {
+                                                        setServiceFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
+                                                        (e.target as HTMLInputElement).value = '';
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const input = document.getElementById('new-amenity-input') as HTMLInputElement;
+                                                const val = input.value.trim();
                                                 if (val && !serviceFormData.amenities.includes(val)) {
                                                     setServiceFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
-                                                    (e.target as HTMLInputElement).value = '';
+                                                    input.value = '';
                                                 }
-                                            }
-                                        }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const input = document.getElementById('new-amenity-input') as HTMLInputElement;
-                                            const val = input.value.trim();
-                                            if (val && !serviceFormData.amenities.includes(val)) {
-                                                setServiceFormData(prev => ({ ...prev, amenities: [...prev.amenities, val] }));
-                                                input.value = '';
-                                            }
-                                        }}
-                                        className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-md text-sm border border-border/50 hover:bg-muted"
-                                    >
-                                        Нэмэх
-                                    </button>
+                                            }}
+                                            className="px-3 py-2 bg-white/10 text-gray-200 rounded-md text-sm hover:bg-white/20 transition-colors border border-white/5 shrink-0"
+                                        >
+                                            Нэмэх
+                                        </button>
+                                    </div>
+                                    {serviceFormData.amenities.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 p-3 bg-black/10 border border-white/5 rounded-md">
+                                            {serviceFormData.amenities.map(amenity => (
+                                                <span key={amenity} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-black/20 border border-white/10 text-gray-200 rounded-full">
+                                                    {amenity}
+                                                    <button
+                                                        type="button"
+                                                        className="text-gray-500 hover:text-red-500 transition-colors p-0.5"
+                                                        onClick={() => setServiceFormData(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity) }))}
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                                {serviceFormData.amenities.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 p-3 bg-muted/30 border border-border/50 rounded-md">
-                                        {serviceFormData.amenities.map(amenity => (
-                                            <span key={amenity} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-background border border-border text-foreground rounded-full">
-                                                {amenity}
-                                                <button
-                                                    type="button"
-                                                    className="text-muted-foreground hover:text-red-500"
-                                                    onClick={() => setServiceFormData(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity) }))}
-                                                >
-                                                    <X className="w-3 h-3" />
+
+                                {/* Camera Price Tiers */}
+                                <div className="space-y-3 bg-black/10 p-4 rounded-xl border border-white/5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs text-gray-400">Камерийн тоогоор үнэ <span className="text-red-500">*</span></label>
+                                        <button type="button" onClick={addTier} className="text-[10px] flex items-center gap-1 bg-primary/20 text-primary px-2 py-1 rounded hover:bg-primary/30 transition-colors">
+                                            <Plus className="w-3 h-3" /> нэмэх
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {serviceFormData.priceTiers.map((tier, idx) => (
+                                            <div key={idx} className="grid grid-cols-[80px_1fr_1fr_32px] gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
+                                                <div>
+                                                    <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block">Камер</label>
+                                                    <input
+                                                        type="number" min={1} value={tier.cameraCount}
+                                                        onChange={e => updateTier(idx, 'cameraCount', parseInt(e.target.value))}
+                                                        className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary text-center"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block">Нэршил</label>
+                                                    <input
+                                                        type="text" value={tier.label}
+                                                        onChange={e => updateTier(idx, 'label', e.target.value)}
+                                                        placeholder={`${tier.cameraCount} камер`}
+                                                        className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block">Үнэ (₮)</label>
+                                                    <input
+                                                        type="number" min={0} value={tier.price}
+                                                        onChange={e => updateTier(idx, 'price', e.target.value)}
+                                                        className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                                                        required
+                                                    />
+                                                </div>
+                                                <button type="button" onClick={() => removeTier(idx)} disabled={serviceFormData.priceTiers.length <= 1} className="mt-4 text-gray-500 hover:text-red-500 disabled:opacity-30 flex justify-center">
+                                                    <X className="w-4 h-4" />
                                                 </button>
-                                            </span>
+                                            </div>
                                         ))}
+                                    </div>
+                                </div>
+
+                                {/* Equipment selection */}
+                                {equipments.length > 0 && (
+                                    <div className="space-y-2">
+                                        <label className="text-xs text-gray-400 block">Дагалдах тоног төхөөрөмж</label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 border border-white/5 rounded-md bg-black/10">
+                                            {equipments.map(eq => (
+                                                <label key={eq.id} className="flex items-center gap-2 text-sm p-1.5 hover:bg-white/5 rounded cursor-pointer transition-colors text-gray-300">
+                                                    <input type="checkbox" checked={serviceFormData.equipmentIds.includes(eq.id)} onChange={() => toggleEquipment(eq.id)} className="accent-primary" />
+                                                    <span className="truncate">{eq.name}</span>
+                                                </label>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
-                            </div>
 
-                            {/* Camera Price Tiers */}
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium">Камерийн тоогоор үнэ <span className="text-red-500">*</span></label>
-                                    <button type="button" onClick={addTier} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                                        <Plus className="w-3 h-3" /> Нэмэх
-                                    </button>
-                                </div>
-                                <div className="space-y-2 rounded-md border border-border/50 p-3 bg-muted/20">
-                                    {serviceFormData.priceTiers.map((tier, idx) => (
-                                        <div key={idx} className="grid grid-cols-[80px_1fr_1fr_32px] gap-2 items-center">
-                                            <div>
-                                                <label className="text-xs text-muted-foreground mb-1 block">Камер</label>
-                                                <input
-                                                    type="number" min={1} value={tier.cameraCount}
-                                                    onChange={e => updateTier(idx, 'cameraCount', parseInt(e.target.value))}
-                                                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm text-center"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs text-muted-foreground mb-1 block">Нэршил</label>
-                                                <input
-                                                    type="text" value={tier.label}
-                                                    onChange={e => updateTier(idx, 'label', e.target.value)}
-                                                    placeholder={`${tier.cameraCount} камер`}
-                                                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs text-muted-foreground mb-1 block">Үнэ (₮)</label>
-                                                <input
-                                                    type="number" min={0} value={tier.price}
-                                                    onChange={e => updateTier(idx, 'price', e.target.value)}
-                                                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-                                                    required
-                                                />
-                                            </div>
-                                            <button type="button" onClick={() => removeTier(idx)} disabled={serviceFormData.priceTiers.length <= 1} className="mt-5 text-muted-foreground hover:text-red-500 disabled:opacity-30">
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Equipment selection */}
-                            {equipments.length > 0 && (
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium block">Дагалдах тоног төхөөрөмж</label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 border border-border/50 rounded-md bg-muted/20">
-                                        {equipments.map(eq => (
-                                            <label key={eq.id} className="flex items-center gap-2 text-sm p-1 hover:bg-muted/50 rounded cursor-pointer">
-                                                <input type="checkbox" checked={serviceFormData.equipmentIds.includes(eq.id)} onChange={() => toggleEquipment(eq.id)} />
-                                                <span className="truncate">{eq.name}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <label className="flex items-center gap-2 text-sm">
-                                <input type="checkbox" checked={serviceFormData.isActive} onChange={e => setServiceFormData({ ...serviceFormData, isActive: e.target.checked })} />
-                                Идэвхтэй
-                            </label>
-
-                            <div className="flex justify-end gap-2 pt-4 border-t border-border/50">
-                                <button type="button" onClick={() => setIsServiceModalOpen(false)} className="px-4 py-2 text-sm border border-border/50 rounded-md hover:bg-muted">Болих</button>
-                                <button type="submit" disabled={isSavingService} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">{isSavingService ? 'Хадгалж байна...' : 'Хадгалах'}</button>
-                            </div>
-                        </form>
+                                <label className="flex items-center gap-2 text-xs text-gray-300">
+                                    <input type="checkbox" checked={serviceFormData.isActive} onChange={e => setServiceFormData({ ...serviceFormData, isActive: e.target.checked })} className="accent-primary" />
+                                    Идэвхтэй
+                                </label>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsServiceModalOpen(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">Болих</button>
+                            <button type="submit" form="service-form" disabled={isSavingService} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">{isSavingService ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}</button>
+                        </div>
                     </div>
                 </div>
             )}

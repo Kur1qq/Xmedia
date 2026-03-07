@@ -383,181 +383,188 @@ export default function PortfolioPage() {
 
             {/* Modal */}
             {isModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className="bg-background w-full max-w-xl rounded-xl border border-border shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-background z-10">
-                            <h2 className="text-lg font-semibold">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !saving && setIsModal(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">
                                 {editing ? "Засах" : "Шинэ ажил"} — {TABS.find(t => t.key === activeTab)?.label}
                             </h2>
-                            <button onClick={() => setIsModal(false)} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
+                            <button onClick={() => !saving && setIsModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        <form onSubmit={save} className="p-6 space-y-4">
-                            {activeTab === "LIVE" ? (
-                                // --- LIVE FORM ---
-                                <>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium">Нэр <span className="text-red-500">*</span></label>
-                                        <input required value={liveForm.title} onChange={e => setLiveForm({ ...liveForm, title: e.target.value })}
-                                            className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                            placeholder="Шууд дамжуулалтын нэр" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium">Огноо</label>
-                                        <input type="date" value={liveForm.liveDate} onChange={e => setLiveForm({ ...liveForm, liveDate: e.target.value })}
-                                            className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium">Тайлбар</label>
-                                        <textarea value={liveForm.description} onChange={e => setLiveForm({ ...liveForm, description: e.target.value })}
-                                            rows={3} className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                                            placeholder="Дамжуулалтын тухай товч тайлбар..." />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium">Үзсэн үзэлт</label>
-                                        <input type="number" min={0} value={liveForm.viewCount} onChange={e => setLiveForm({ ...liveForm, viewCount: +e.target.value })}
-                                            className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                            placeholder="0" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Зураг</label>
-                                        {liveForm.image && (
-                                            <div className="relative inline-block">
-                                                <img src={liveForm.image} alt="" className="h-24 rounded-lg object-cover border border-border" />
-                                                <button type="button" onClick={() => setLiveForm({ ...liveForm, image: "" })}
-                                                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center">
-                                                    <X className="h-3 w-3" />
+                        <div className="p-4 overflow-y-auto">
+                            <form id="portfolio-form" onSubmit={save} className="space-y-5">
+                                {activeTab === "LIVE" ? (
+                                    // --- LIVE FORM ---
+                                    <>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Нэр <span className="text-red-500">*</span></label>
+                                            <input required value={liveForm.title} onChange={e => setLiveForm({ ...liveForm, title: e.target.value })}
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                placeholder="Шууд дамжуулалтын нэр" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Огноо</label>
+                                            <input type="date" value={liveForm.liveDate} onChange={e => setLiveForm({ ...liveForm, liveDate: e.target.value })}
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Тайлбар</label>
+                                            <textarea value={liveForm.description} onChange={e => setLiveForm({ ...liveForm, description: e.target.value })}
+                                                rows={3} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors resize-none"
+                                                placeholder="Дамжуулалтын тухай товч тайлбар..." />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Үзсэн үзэлт</label>
+                                            <input type="number" min={0} value={liveForm.viewCount} onChange={e => setLiveForm({ ...liveForm, viewCount: +e.target.value })}
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                placeholder="0" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-gray-500 block">Зураг</label>
+                                            {liveForm.image && (
+                                                <div className="relative inline-block">
+                                                    <img src={liveForm.image} alt="" className="h-24 rounded-lg object-cover border border-white/10" />
+                                                    <button type="button" onClick={() => setLiveForm({ ...liveForm, image: "" })}
+                                                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 hover:bg-red-600 transition-colors text-white flex items-center justify-center">
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                            <div className="flex gap-2">
+                                                <input ref={liveFileRef} type="file" accept="image/*" onChange={e => handleFileUpload(e, true)} className="hidden" />
+                                                <button type="button" onClick={() => liveFileRef.current?.click()} disabled={uploading}
+                                                    className="px-3 py-2 text-xs rounded-md border border-dashed border-white/20 bg-black/20 hover:bg-white/5 text-gray-300 transition-colors disabled:opacity-50">
+                                                    {uploading ? "Хуулж байна..." : "Файл оруулах"}
                                                 </button>
                                             </div>
-                                        )}
-                                        <div className="flex gap-2">
-                                            <input ref={liveFileRef} type="file" accept="image/*" onChange={e => handleFileUpload(e, true)} className="hidden" />
-                                            <button type="button" onClick={() => liveFileRef.current?.click()} disabled={uploading}
-                                                className="px-3 py-2 text-xs rounded-lg border border-dashed border-border bg-muted/30 hover:bg-muted/60 text-muted-foreground disabled:opacity-50">
-                                                {uploading ? "Хуулж байна..." : "Файл оруулах"}
-                                            </button>
+                                            <input type="url" value={liveForm.image} onChange={e => setLiveForm({ ...liveForm, image: e.target.value })}
+                                                placeholder="Эсвэл зургийн URL..."
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-xs text-white focus:outline-none focus:border-primary transition-colors" />
                                         </div>
-                                        <input type="url" value={liveForm.image} onChange={e => setLiveForm({ ...liveForm, image: e.target.value })}
-                                            placeholder="Эсвэл зургийн URL..."
-                                            className="w-full h-8 rounded-lg border border-border bg-muted/40 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium flex items-center gap-1.5"><Youtube className="h-4 w-4 text-red-500" /> YouTube Link</label>
-                                        <input type="url" value={liveForm.youtubeUrl} onChange={e => setLiveForm({ ...liveForm, youtubeUrl: e.target.value })}
-                                            className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                            placeholder="https://youtube.com/watch?v=..." />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium flex items-center gap-1.5"><Facebook className="h-4 w-4 text-blue-500" /> Facebook Link</label>
-                                        <input type="url" value={liveForm.facebookUrl} onChange={e => setLiveForm({ ...liveForm, facebookUrl: e.target.value })}
-                                            className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                            placeholder="https://facebook.com/video/..." />
-                                    </div>
-                                </>
-                            ) : (
-                                // --- GENERIC FORM (Studio, Photographer, Edit) ---
-                                <>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium">Гарчиг <span className="text-red-500">*</span></label>
-                                        <input required value={genericForm.title} onChange={e => setGenericForm({ ...genericForm, title: e.target.value })}
-                                            className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                            placeholder="Ажлын гарчиг..." />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium">Тайлбар</label>
-                                        <textarea value={genericForm.description} onChange={e => setGenericForm({ ...genericForm, description: e.target.value })}
-                                            rows={3} className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                                            placeholder="Ажлын тайлбар..." />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Зурагнууд <span className="text-red-500">*</span></label>
-                                        {genericForm.images.length > 0 && (
-                                            <div className="flex flex-wrap gap-2">
-                                                {genericForm.images.map((url, i) => (
-                                                    <div key={i} className="relative group">
-                                                        <img src={url} alt="" className="h-20 w-20 rounded-lg object-cover border border-border" />
-                                                        <button type="button" onClick={() => removeImage(i)}
-                                                            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <X className="h-3 w-3" />
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Youtube className="h-4 w-4 text-red-500" /> YouTube Link</label>
+                                            <input type="url" value={liveForm.youtubeUrl} onChange={e => setLiveForm({ ...liveForm, youtubeUrl: e.target.value })}
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                placeholder="https://youtube.com/watch?v=..." />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Facebook className="h-4 w-4 text-blue-500" /> Facebook Link</label>
+                                            <input type="url" value={liveForm.facebookUrl} onChange={e => setLiveForm({ ...liveForm, facebookUrl: e.target.value })}
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                placeholder="https://facebook.com/video/..." />
+                                        </div>
+                                    </>
+                                ) : (
+                                    // --- GENERIC FORM (Studio, Photographer, Edit) ---
+                                    <>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Гарчиг <span className="text-red-500">*</span></label>
+                                            <input required value={genericForm.title} onChange={e => setGenericForm({ ...genericForm, title: e.target.value })}
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                placeholder="Ажлын гарчиг..." />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Тайлбар</label>
+                                            <textarea value={genericForm.description} onChange={e => setGenericForm({ ...genericForm, description: e.target.value })}
+                                                rows={3} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors resize-none"
+                                                placeholder="Ажлын тайлбар..." />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-gray-500 block">Зурагнууд <span className="text-red-500">*</span></label>
+                                            {genericForm.images.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {genericForm.images.map((url, i) => (
+                                                        <div key={i} className="relative group">
+                                                            <img src={url} alt="" className="h-20 w-20 rounded-lg object-cover border border-white/10" />
+                                                            <button type="button" onClick={() => removeImage(i)}
+                                                                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 hover:bg-red-600 transition-colors text-white flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                                                <X className="h-3 w-3" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <div className="flex gap-2">
+                                                <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={e => handleFileUpload(e)} className="hidden" />
+                                                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                                                    className="px-3 py-2 text-xs rounded-md border border-dashed border-white/20 bg-black/20 hover:bg-white/5 text-gray-300 transition-colors disabled:opacity-50">
+                                                    {uploading ? "Хуулж байна..." : "Файл оруулах"}
+                                                </button>
                                             </div>
-                                        )}
-                                        <div className="flex gap-2">
-                                            <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={e => handleFileUpload(e)} className="hidden" />
-                                            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                                                className="px-3 py-2 text-xs rounded-lg border border-dashed border-border bg-muted/30 hover:bg-muted/60 text-muted-foreground disabled:opacity-50">
-                                                {uploading ? "Хуулж байна..." : "Файл оруулах"}
-                                            </button>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <input type="url" value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)}
-                                                onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addImageUrl())}
-                                                placeholder="Эсвэл URL оруулах..."
-                                                className="flex-1 h-8 rounded-lg border border-border bg-muted/40 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary" />
-                                            <button type="button" onClick={addImageUrl} className="px-3 h-8 text-xs rounded-lg border border-border hover:bg-muted">Нэмэх</button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Шошго</label>
-                                        {genericForm.tags.length > 0 && (
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {genericForm.tags.map((t, i) => (
-                                                    <span key={i} className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs">
-                                                        {t} <button type="button" onClick={() => removeTag(i)} className="hover:text-red-500"><X className="h-3 w-3" /></button>
-                                                    </span>
-                                                ))}
+                                            <div className="flex gap-2">
+                                                <input type="url" value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)}
+                                                    onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addImageUrl())}
+                                                    placeholder="Эсвэл URL оруулах..."
+                                                    className="flex-1 bg-black/20 border border-white/5 rounded-md px-3 py-2 text-xs text-white focus:outline-none focus:border-primary transition-colors" />
+                                                <button type="button" onClick={addImageUrl} className="px-3 py-2 text-xs rounded-md border border-white/10 hover:bg-white/5 text-gray-300 transition-colors">Нэмэх</button>
                                             </div>
-                                        )}
-                                        <div className="flex gap-2">
-                                            <input type="text" value={newTag} onChange={e => setNewTag(e.target.value)}
-                                                onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTag())}
-                                                placeholder="Шошго нэмэх..."
-                                                className="flex-1 h-8 rounded-lg border border-border bg-muted/40 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary" />
-                                            <button type="button" onClick={addTag} className="px-3 h-8 text-xs rounded-lg border border-border hover:bg-muted">Нэмэх</button>
                                         </div>
-                                    </div>
-                                    {activeTab === "VIDEO_EDIT" && (
-                                        <>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-gray-500 block">Шошго</label>
+                                            {genericForm.tags.length > 0 && (
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {genericForm.tags.map((t, i) => (
+                                                        <span key={i} className="inline-flex items-center gap-1 rounded-full bg-primary/20 text-primary px-2.5 py-1 text-xs font-medium">
+                                                            {t} <button type="button" onClick={() => removeTag(i)} className="hover:text-red-400 ml-1 transition-colors"><X className="h-3 w-3" /></button>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <div className="flex gap-2">
+                                                <input type="text" value={newTag} onChange={e => setNewTag(e.target.value)}
+                                                    onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTag())}
+                                                    placeholder="Шошго нэмэх..."
+                                                    className="flex-1 bg-black/20 border border-white/5 rounded-md px-3 py-2 text-xs text-white focus:outline-none focus:border-primary transition-colors" />
+                                                <button type="button" onClick={addTag} className="px-3 py-2 text-xs rounded-md border border-white/10 hover:bg-white/5 text-gray-300 transition-colors">Нэмэх</button>
+                                            </div>
+                                        </div>
+                                        {activeTab === "VIDEO_EDIT" && (
+                                            <>
+                                                <div>
+                                                    <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Youtube className="h-4 w-4 text-red-500" /> YouTube Link</label>
+                                                    <input type="url" value={genericForm.youtubeUrl} onChange={e => setGenericForm({ ...genericForm, youtubeUrl: e.target.value })}
+                                                        className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                        placeholder="https://youtube.com/watch?v=..." />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Facebook className="h-4 w-4 text-blue-500" /> Facebook Link</label>
+                                                    <input type="url" value={genericForm.facebookUrl} onChange={e => setGenericForm({ ...genericForm, facebookUrl: e.target.value })}
+                                                        className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                        placeholder="https://facebook.com/video/..." />
+                                                </div>
+                                            </>
+                                        )}
+                                        <div className="flex items-center gap-5 pt-2">
+                                            <div className="flex-1">
+                                                <label className="text-xs text-gray-500 mb-1 block">Эрэмбэ</label>
+                                                <input type="number" value={genericForm.sortOrder} onChange={e => setGenericForm({ ...genericForm, sortOrder: +e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                            </div>
                                             <div className="space-y-1">
-                                                <label className="text-sm font-medium flex items-center gap-1.5"><Youtube className="h-4 w-4 text-red-500" /> YouTube Link</label>
-                                                <input type="url" value={genericForm.youtubeUrl} onChange={e => setGenericForm({ ...genericForm, youtubeUrl: e.target.value })}
-                                                    className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    placeholder="https://youtube.com/watch?v=..." />
+                                                <label className="text-xs text-gray-500 block">Нийтлэх</label>
+                                                <button type="button" onClick={() => setGenericForm(p => ({ ...p, isPublished: !p.isPublished }))}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${genericForm.isPublished ? "bg-primary" : "bg-white/10"}`}>
+                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${genericForm.isPublished ? "translate-x-6" : "translate-x-1"}`} />
+                                                </button>
                                             </div>
-                                            <div className="space-y-1">
-                                                <label className="text-sm font-medium flex items-center gap-1.5"><Facebook className="h-4 w-4 text-blue-500" /> Facebook Link</label>
-                                                <input type="url" value={genericForm.facebookUrl} onChange={e => setGenericForm({ ...genericForm, facebookUrl: e.target.value })}
-                                                    className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    placeholder="https://facebook.com/video/..." />
-                                            </div>
-                                        </>
-                                    )}
-                                    <div className="flex items-center gap-4">
-                                        <div className="space-y-1 flex-1">
-                                            <label className="text-sm font-medium">Эрэмбэ</label>
-                                            <input type="number" value={genericForm.sortOrder} onChange={e => setGenericForm({ ...genericForm, sortOrder: +e.target.value })}
-                                                className="w-full h-9 rounded-lg border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-sm font-medium block">Нийтлэх</label>
-                                            <button type="button" onClick={() => setGenericForm(p => ({ ...p, isPublished: !p.isPublished }))}
-                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${genericForm.isPublished ? "bg-primary" : "bg-muted"}`}>
-                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${genericForm.isPublished ? "translate-x-6" : "translate-x-1"}`} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
+                                    </>
+                                )}
+                            </form>
+                        </div>
 
-                            <div className="flex justify-end gap-2 pt-2 border-t border-border">
-                                <button type="button" onClick={() => setIsModal(false)} className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted">Болих</button>
-                                <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-60">
-                                    {saving ? "Хадгалж байна..." : "Хадгалах"}
-                                </button>
-                            </div>
-                        </form>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsModal(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                                Болих
+                            </button>
+                            <button type="submit" form="portfolio-form" disabled={saving} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">
+                                {saving ? <span className="animate-pulse">Түр хүлээнэ...</span> : "Хадгалах"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -27,6 +27,7 @@ const edit_service_module_1 = require("./edit-service/edit-service.module");
 const admin_module_1 = require("./admin/admin.module");
 const log_module_1 = require("./log/log.module");
 const portfolio_module_1 = require("./portfolio/portfolio.module");
+const hero_module_1 = require("./hero/hero.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -49,6 +50,7 @@ exports.AppModule = AppModule = __decorate([
             edit_service_module_1.EditServiceModule,
             admin_module_1.AdminModule,
             portfolio_module_1.PortfolioModule,
+            hero_module_1.HeroModule,
         ],
         controllers: [app_controller_1.AppController, health_controller_1.HealthController],
         providers: [app_service_1.AppService],

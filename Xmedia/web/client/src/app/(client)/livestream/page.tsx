@@ -15,6 +15,8 @@ import { useCartStore } from "@/lib/store/cart";
 import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
 import { fetchBookedSlots, isTimeDisabled, ALL_TIMES } from "@/lib/booking-slots";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
+import { useAuthStore } from "@/lib/store/auth";
+import { useRouter } from "next/navigation";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -40,90 +42,103 @@ interface LiveService {
 }
 
 export default function LivestreamPage() {
+    const { user } = useAuthStore();
+    const router = useRouter();
     const [services, setServices] = useState<LiveService[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selected, setSelected] = useState<LiveService | null>(null);
+    const [activeServiceId, setActiveServiceId] = useState<number | null>(null);
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ name: "", phone: "", email: "", date: undefined as Date | undefined, time: "", duration: "1", tierId: "" });
+    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", duration: "1", tierId: "" });
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const { addItem } = useCartStore();
 
     useEffect(() => {
-        const savedInfo = loadCustomerInfo();
-        if (savedInfo) {
-            setForm(prev => ({ ...prev, name: savedInfo.name, phone: savedInfo.phone, email: savedInfo.email }));
-        }
         fetch(`${API}/live-services`)
             .then(r => r.json())
-            .then(data => setServices(Array.isArray(data) ? data : data.data ?? data.items ?? []))
+            .then(data => {
+                const fetchedServices = Array.isArray(data) ? data : data.data ?? data.items ?? [];
+                setServices(fetchedServices);
+                if (fetchedServices.length > 0) {
+                    setActiveServiceId(fetchedServices[0].id);
+                }
+            })
             .catch(() => toast.error("Мэдээлэл татахад алдаа гарлаа."))
             .finally(() => setLoading(false));
     }, []);
 
+    const activeService = services.find(s => s.id === activeServiceId);
+
     // Fetch booked slots when date or selected service changes
     useEffect(() => {
-        if (!form.date || !selected) { setBookedTimes([]); return; }
+        if (!form.date || !isBooking || !activeService) { setBookedTimes([]); return; }
         setLoadingSlots(true);
         setForm(prev => ({ ...prev, time: "" }));
-        fetchBookedSlots("LIVE_SERVICE", selected.id, format(form.date, "yyyy-MM-dd"))
+        fetchBookedSlots("LIVE_SERVICE", activeService.id, format(form.date, "yyyy-MM-dd"))
             .then(setBookedTimes)
             .finally(() => setLoadingSlots(false));
-    }, [form.date, selected?.id]);
+    }, [form.date, isBooking, activeService?.id]);
 
     const validateForm = () => {
-        if (!form.name || !form.phone || !form.email) { toast.error("Хэрэглэгчийн мэдээллээ бүрэн оруулна уу."); return false; }
-        if (selected?.priceTiers && selected.priceTiers.length > 0 && !form.tierId) { toast.error("Камерийн тоог сонгоно уу."); return false; }
+        if (activeService?.priceTiers && activeService.priceTiers.length > 0 && !form.tierId) { toast.error("Камерийн тоог сонгоно уу."); return false; }
         if (!form.time) { toast.error("Цагаа сонгоно уу."); return false; }
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return false; }
         return true;
     }
 
     const handleAddToCart = () => {
-        if (!validateForm()) return;
+        if (!user) {
+            toast.error("Та эхлээд нэвтэрнэ үү.");
+            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
+            return;
+        }
+        if (!validateForm() || !activeService) return;
 
-        const unitPrice = selected!.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0;
+        const unitPrice = activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0;
 
         addItem({
             serviceType: "LIVE_SERVICE",
-            serviceId: selected!.id,
-            serviceName: selected!.name,
+            serviceId: activeService.id,
+            serviceName: activeService.name,
             date: format(form.date!, "yyyy-MM-dd"),
             time: form.time,
             duration: parseInt(form.duration),
             unitPrice: Number(unitPrice),
         });
 
-        saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
         toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү.", duration: 4000 });
-        close();
+        closeBooking();
     };
 
     const handleBuyNow = async (paymentType: "qpay" | "invoice") => {
-        if (!validateForm()) return;
+        if (!user) {
+            toast.error("Та эхлээд нэвтэрнэ үү.");
+            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
+            return;
+        }
+        if (!validateForm() || !activeService) return;
 
         setSubmitting(true);
         try {
-            const unitPrice = selected!.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0;
+            const unitPrice = activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0;
 
             const res = await fetch(`${API}/bookings`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    name: form.name, phone: form.phone, email: form.email,
+                    userId: parseInt(user.id, 10),
+                    name: user.name, phone: user.phone || '00000000', email: user.email,
                     date: format(form.date!, "yyyy-MM-dd"), time: form.time,
                     duration: parseInt(form.duration),
-                    serviceType: "LIVE_SERVICE", serviceId: selected!.id,
+                    serviceType: "LIVE_SERVICE", serviceId: activeService.id,
                     unitPrice: Number(unitPrice),
-                    serviceName: selected!.name,
+                    serviceName: activeService.name,
                     paymentType,
                 }),
             });
             if (!res.ok) throw new Error();
-
-            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
 
             const data = await res.json();
             setShowPaymentModal(false);
@@ -136,13 +151,19 @@ export default function LivestreamPage() {
                 ? "Нэхэмжлэхийг таны имэйл рүү явууллаа. Хэрэв имэйл оруулаагүй бол бидэнтэй холбогдоно уу."
                 : "Удахгүй холбогдох болно.";
             toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: desc, duration: 6000 });
-            close();
+            closeBooking();
         } catch {
             toast.error("Захиалга бүртгэхэд алдаа гарлаа.");
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const close = () => { setSelected(null); setIsBooking(false); setForm({ name: "", phone: "", email: "", date: undefined, time: "", duration: "1", tierId: "" }); };
+    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "" })); };
+
+    const handleTabChange = (id: number) => {
+        setActiveServiceId(id);
+        setIsBooking(false);
+        setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "" }));
+    }
 
     const getStartingPrice = (svc: LiveService) => {
         if (!svc.priceTiers || svc.priceTiers.length === 0) return 0;
@@ -150,218 +171,201 @@ export default function LivestreamPage() {
     };
 
     return (
-        <div className="pt-40 md:pt-48 pb-24 min-h-screen bg-black text-white">
-            <div className="container mx-auto px-4 lg:px-8">
-                <div className="mb-18 flex items-start justify-between gap-4 flex-wrap">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold mb-4">Шууд <span className="text-red-600">Дамжуулалт</span></h1>
-                        <p className="text-gray-400 text-lg">Мэргэжлийн тоног төхөөрөмжтэй онлайн шууд дамжуулалтын үйлчилгээ.</p>
-                    </div>
-                    <Link href="/portfolio/live">
-                        <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white gap-2">
-                            <GalleryVerticalEnd className="w-4 h-4 text-red-500" />
-                            Өмнөх ажлууд харах
-                        </Button>
-                    </Link>
-                </div>
+        <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-primary/20 hover:bg-primary/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
+            <div className="pt-28 md:pt-36 pb-24 relative z-10">
+                <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
 
-                {loading ? (
-                    <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-                ) : services.length === 0 ? (
-                    <p className="text-gray-500 text-center py-24">Одоогоор үйлчилгээ нэмэгдээгүй байна.</p>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {services.map((svc, i) => (
-                            <motion.div key={svc.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 * i }}
-                                className="group bg-[#1a1a1a] rounded-2xl overflow-hidden border border-white/5 hover:border-primary/40 transition-all duration-300 cursor-pointer"
-                                onClick={() => setSelected(svc)}>
-                                <div className="relative h-52 overflow-hidden">
-                                    {svc.image
-                                        ? <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url('${svc.image}')` }} />
-                                        : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><Radio className="w-12 h-12 text-zinc-600" /></div>
+                    {loading ? (
+                        <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+                    ) : services.length === 0 ? (
+                        <p className="text-gray-500 text-center py-24">Одоогоор үйлчилгээ нэмэгдээгүй байна.</p>
+                    ) : activeService && (
+                        <div className="space-y-12">
+                            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+                                className="w-full flex flex-col lg:flex-row gap-8 lg:gap-16">
+
+                                <div className={`relative h-[300px] lg:h-[600px] lg:w-1/2 flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
+                                    {activeService.image
+                                        ? <motion.div key={activeService.image} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-cover bg-center transition-all duration-500" style={{ backgroundImage: `url('${activeService.image}')` }} />
+                                        : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><Radio className="w-16 h-16 text-zinc-600" /></div>
                                     }
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-transparent" />
                                 </div>
-                                <div className="p-6 pt-3">
-                                    <h3 className="text-xl font-bold mb-2">{svc.name}</h3>
-                                    <p className="text-gray-400 text-sm mb-5 line-clamp-2">{svc.description}</p>
-                                    <div className="flex items-center justify-between border-t border-white/10 pt-4 mt-auto">
-                                        <div className="flex flex-col">
-                                            <span className="text-gray-500 text-[10px] uppercase tracking-wider">Эхлэх үнэ</span>
-                                            <span className="text-white font-bold text-lg">{getStartingPrice(svc).toLocaleString()}₮</span>
-                                        </div>
-                                        <Button size="sm" className="bg-[#1a1a1a] border border-white/10 text-white hover:bg-white/10 font-semibold transition-all">Дэлгэрэнгүй</Button>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                )}
-            </div>
 
-            <AnimatePresence>
-                {selected && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={close}>
-                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-                            onClick={e => e.stopPropagation()}
-                            className="bg-[#111] w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-[24px] border border-white/10 shadow-2xl flex flex-col md:flex-row relative">
-                            <button onClick={close} className="absolute top-4 right-4 z-50 p-2.5 bg-black/50 backdrop-blur-md border border-white/10 hover:bg-white/20 rounded-full text-white transition-colors"><X className="w-4 h-4" /></button>
+                                <div className="flex-1 flex flex-col justify-center">
+                                    <AnimatePresence mode="wait">
+                                        {!isBooking ? (
+                                            <motion.div key={`detail-${activeService.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4">
 
-                            <div className={`relative h-64 md:h-auto md:w-1/2 flex-shrink-0 ${isBooking ? 'hidden md:block' : ''}`}>
-                                {selected.image
-                                    ? <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${selected.image}')` }} />
-                                    : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><Radio className="w-16 h-16 text-zinc-600" /></div>
-                                }
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#111]" />
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto">
-                                <AnimatePresence mode="wait">
-                                    {!isBooking ? (
-                                        <motion.div key="detail" initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="p-5 md:p-8 flex flex-col h-full">
-                                            <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
-                                                <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-red-500/10 text-red-500 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
-                                                    Live Stream
-                                                </div>
-                                            </div>
-
-                                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{selected.name}</h2>
-                                            <p className="text-gray-400 mb-5 leading-relaxed text-xs md:text-sm">{selected.description}</p>
-
-                                            {(selected.amenities && selected.amenities.length > 0) && (
-                                                <div className="mb-5 w-full">
-                                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                        <Info className="w-3.5 h-3.5 text-red-500" />Онцлог талууд
-                                                    </h4>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                        {selected.amenities.map((amenity, i) => (
-                                                            <div key={i} className="flex items-center gap-2.5 text-xs text-gray-200 bg-[#141414] px-3 py-2 rounded-lg border border-white/5 truncate">
-                                                                <Check className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                                                                <span className="truncate">{amenity}</span>
-                                                            </div>
+                                                {services.length > 1 && (
+                                                    <div className="flex flex-wrap gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-[16px]">
+                                                        {services.map(svc => (
+                                                            <button
+                                                                key={svc.id}
+                                                                onClick={() => handleTabChange(svc.id)}
+                                                                className={`flex-1 py-2.5 px-4 rounded-[12px] text-sm font-semibold transition-all ${activeServiceId === svc.id ? 'bg-[#1a1a1a] text-white shadow-md border border-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                                            >
+                                                                {svc.name}
+                                                            </button>
                                                         ))}
                                                     </div>
-                                                </div>
-                                            )}
+                                                )}
 
-                                            {selected.equipments && selected.equipments.length > 0 && (
-                                                <div className="mb-5 w-full">
-                                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                        <Info className="w-3.5 h-3.5 text-red-500" />Тоног төхөөрөмж
-                                                    </h4>
-                                                    <div className="bg-[#141414] p-4 rounded-lg border border-white/5">
-                                                        <ul className="space-y-2">
-                                                            {selected.equipments.map((eq, i) => (
-                                                                <li key={i} className="flex items-start gap-2.5 text-xs text-gray-300">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-[5px]" />
-                                                                    <span className="flex-1 leading-snug">{eq.equipment?.name}</span>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
+                                                <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
+                                                    <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-red-500/10 text-red-500 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
+                                                        Live Stream
                                                     </div>
-                                                </div>
-                                            )}
-
-                                            <div className="mt-auto pt-5 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                                                <div className="flex flex-col">
-                                                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Эхлэх үнэ</p>
-                                                    <p className="text-xl md:text-2xl font-bold text-white">{getStartingPrice(selected).toLocaleString()}₮</p>
-                                                </div>
-                                                <Button onClick={() => setIsBooking(true)} className="w-full md:w-auto px-6 h-12 bg-[#1a1a1a] border border-white/10 text-white hover:bg-white/10 text-sm font-semibold rounded-lg transition-all">Захиалга өгөх</Button>
-                                            </div>
-                                        </motion.div>
-                                    ) : (
-                                        <motion.div key="booking" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} className="p-6 md:p-8">
-                                            <div className="flex items-center gap-3 mb-5">
-                                                <Button variant="ghost" size="icon" onClick={() => setIsBooking(false)} className="text-gray-400 hover:text-white hover:bg-white/10"><ArrowLeft className="w-5 h-5" /></Button>
-                                                <h2 className="text-xl font-bold">Захиалга — <span className="text-primary">{selected.name}</span></h2>
-                                            </div>
-                                            <div className="space-y-4">
-                                                <div className="relative"><User className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required placeholder="Таны нэр" className="pl-10 bg-[#1a1a1a] border-white/10 text-white" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-                                                <div className="relative"><Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required type="tel" placeholder="Утасны дугаар" className="pl-10 bg-[#1a1a1a] border-white/10 text-white" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-                                                <div className="relative"><Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" /><Input required type="email" placeholder="И-мэйл хаяг" className="pl-10 bg-[#1a1a1a] border-white/10 text-white" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
-                                                            <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" />
-                                                            <span>{form.date ? format(form.date, "yyyy-MM-dd") : "Огноо сонгох"}</span>
+                                                    <Link href="/portfolio/live">
+                                                        <Button variant="outline" className="text-primary hover:text-white hover:bg-primary/20 border-primary/50 bg-primary/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_rgba(255,0,0,0.5)] transition-all duration-300">
+                                                            <GalleryVerticalEnd className="w-3.5 h-3.5 text-red-500" />
+                                                            Өмнөх ажлууд харах
                                                         </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0 bg-[#111] border-white/10 z-[200]" align="start">
-                                                        <Calendar mode="single" selected={form.date} onSelect={d => setForm({ ...form, date: d })} className="bg-[#111] text-white" />
-                                                    </PopoverContent>
-                                                </Popover>
-                                                {selected.priceTiers && selected.priceTiers.length > 0 && (
-                                                    <div>
-                                                        <p className="text-sm text-gray-400 mb-2">Камерийн тоо</p>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            {selected.priceTiers.map(t => (
-                                                                <button key={t.id} type="button" onClick={() => setForm({ ...form, tierId: t.id.toString() })}
-                                                                    className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-red-500/10 border-red-500 text-red-500" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
-                                                                    <div className="font-semibold">{t.label || `${t.cameraCount} камер`}</div>
-                                                                    <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
-                                                                </button>
+                                                    </Link>
+                                                </div>
+
+                                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{activeService.name}</h2>
+                                                <p className="text-gray-400 mb-6 leading-relaxed text-sm md:text-base">{activeService.description}</p>
+
+                                                {(activeService.amenities && activeService.amenities.length > 0) && (
+                                                    <div className="mb-6 w-full">
+                                                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                            <Info className="w-4 h-4 text-red-500" />Онцлог талууд
+                                                        </h4>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                            {activeService.amenities.map((amenity, i) => (
+                                                                <div key={i} className="flex items-center gap-2.5 text-xs text-gray-200 bg-[#141414] px-3 py-2 rounded-lg border border-white/5 truncate">
+                                                                    <Check className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                                                                    <span className="truncate">{amenity}</span>
+                                                                </div>
                                                             ))}
                                                         </div>
                                                     </div>
                                                 )}
-                                                <div>
-                                                    <p className="text-sm text-gray-400 mb-2">
-                                                        Эхлэх цаг
-                                                        {loadingSlots && <span className="ml-2 text-xs text-gray-500">Шалгаж байна...</span>}
-                                                    </p>
-                                                    <div className="grid grid-cols-4 gap-2">
-                                                        {ALL_TIMES.map(t => {
-                                                            const disabled = isTimeDisabled(t, bookedTimes, parseInt(form.duration || "1"));
-                                                            return (
-                                                                <button key={t} type="button"
-                                                                    disabled={disabled}
-                                                                    onClick={() => !disabled && setForm({ ...form, time: t })}
-                                                                    title={disabled ? "Захиалагдсан" : undefined}
-                                                                    className={`py-2 text-xs rounded-lg border transition-all ${disabled
-                                                                        ? "bg-white/5 border-white/5 text-gray-600 cursor-not-allowed opacity-40 line-through"
-                                                                        : form.time === t
-                                                                            ? "bg-red-500/10 border-red-500 text-red-500"
-                                                                            : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-                                                                        }`}>{t}</button>
-                                                            );
-                                                        })}
+
+                                                {activeService.equipments && activeService.equipments.length > 0 && (
+                                                    <div className="mb-6 w-full">
+                                                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                            <Info className="w-4 h-4 text-red-500" />Тоног төхөөрөмж
+                                                        </h4>
+                                                        <div className="bg-[#141414] p-4 rounded-lg border border-white/5">
+                                                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                {activeService.equipments.map((eq, i) => (
+                                                                    <li key={i} className="flex items-start gap-2.5 text-xs text-gray-300">
+                                                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-[5px]" />
+                                                                        <span className="flex-1 leading-snug">{eq.equipment?.name}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
+                                                    <div className="flex flex-col items-start md:items-center">
+                                                        <p className="text-gray-500 text-[10px] uppercase tracking-wider">Эхлэх үнэ</p>
+                                                        <p className="text-xl md:text-2xl font-bold text-white">{getStartingPrice(activeService).toLocaleString()}₮</p>
+                                                    </div>
+                                                    <Button onClick={() => {
+                                                        if (!user) {
+                                                            toast.error("Та захиалга өгөхийн тулд эхлээд нэвтэрнэ үү.");
+                                                            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
+                                                            return;
+                                                        }
+                                                        setIsBooking(true);
+                                                    }} className="w-full md:w-auto px-8 h-12 bg-primary hover:bg-red-600 font-semibold rounded-lg transition-all text-white">Захиалга өгөх</Button>
+                                                </div>
+                                            </motion.div>
+                                        ) : (
+                                            <motion.div key={`booking-${activeService.id}`} initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} className="h-full flex flex-col py-4">
+                                                <div className="flex items-center justify-between mb-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <Button variant="ghost" size="icon" onClick={() => setIsBooking(false)} className="text-gray-400 hover:text-white hover:bg-white/10 shrink-0"><ArrowLeft className="w-5 h-5" /></Button>
+                                                        <h2 className="text-xl font-bold line-clamp-1">Захиалга — <span className="text-primary">{activeService.name}</span></h2>
                                                     </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm text-gray-400 mb-2">Хугацаа (цаг)</p>
-                                                    <Input required type="number" min="1" max="24" className="bg-[#1a1a1a] border-white/10 text-white" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} />
+                                                <div className="space-y-4 flex-1">
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
+                                                                <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" />
+                                                                <span>{form.date ? format(form.date, "yyyy-MM-dd") : "Огноо сонгох"}</span>
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0 bg-[#111] border-white/10 z-[200]" align="start">
+                                                            <Calendar mode="single" selected={form.date} onSelect={d => setForm({ ...form, date: d })} className="bg-[#111] text-white" />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                    {activeService.priceTiers && activeService.priceTiers.length > 0 && (
+                                                        <div>
+                                                            <p className="text-sm text-gray-400 mb-2">Камерийн тоо</p>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                {activeService.priceTiers.map(t => (
+                                                                    <button key={t.id} type="button" onClick={() => setForm({ ...form, tierId: t.id.toString() })}
+                                                                        className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-red-500/10 border-red-500 text-red-500" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
+                                                                        <div className="font-semibold">{t.label || `${t.cameraCount} камер`}</div>
+                                                                        <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="text-sm text-gray-400 mb-2">
+                                                            Эхлэх цаг
+                                                            {loadingSlots && <span className="ml-2 text-xs text-gray-500">Шалгаж байна...</span>}
+                                                        </p>
+                                                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                                                            {ALL_TIMES.map(t => {
+                                                                const disabled = isTimeDisabled(t, bookedTimes, parseInt(form.duration || "1"));
+                                                                return (
+                                                                    <button key={t} type="button"
+                                                                        disabled={disabled}
+                                                                        onClick={() => !disabled && setForm({ ...form, time: t })}
+                                                                        title={disabled ? "Захиалагдсан" : undefined}
+                                                                        className={`py-2 text-xs rounded-lg border transition-all ${disabled
+                                                                            ? "bg-white/5 border-white/5 text-gray-600 cursor-not-allowed opacity-40 line-through"
+                                                                            : form.time === t
+                                                                                ? "bg-red-500/10 border-red-500 text-red-500"
+                                                                                : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                                                                            }`}>{t}</button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm text-gray-400 mb-2">Хугацаа (цаг)</p>
+                                                        <Input required type="number" min="1" max="24" className="bg-[#1a1a1a] border-white/10 text-white" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} />
+                                                    </div>
+                                                    <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
+                                                        <span className="text-gray-400 text-sm">Нийт үнэ:</span>
+                                                        <span className="text-xl font-bold text-white">
+                                                            {form.tierId
+                                                                ? ((activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price as number ?? 0) * parseInt(form.duration || "0")).toLocaleString() + "₮"
+                                                                : "Сонгох"
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                                                        <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
+                                                            Сагсанд нэмэх
+                                                        </Button>
+                                                        <Button type="button"
+                                                            onClick={() => { if (validateForm()) setShowPaymentModal(true); }}
+                                                            disabled={submitting}
+                                                            className="flex-1 h-11 bg-primary hover:bg-red-600 font-semibold text-white">
+                                                            {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Уншиж байна...</> : "Шууд авах"}
+                                                        </Button>
+                                                    </div>
                                                 </div>
-                                                <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-                                                    <span className="text-gray-400 text-sm">Нийт үнэ:</span>
-                                                    <span className="text-xl font-bold text-white">
-                                                        {form.tierId
-                                                            ? ((selected.priceTiers?.find(t => t.id.toString() === form.tierId)?.price as number ?? 0) * parseInt(form.duration || "0")).toLocaleString() + "₮"
-                                                            : "Цаг/камер сонгох"
-                                                        }
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                                                    <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
-                                                        Сагсанд нэмэх
-                                                    </Button>
-                                                    <Button type="button"
-                                                        onClick={() => { if (validateForm()) setShowPaymentModal(true); }}
-                                                        disabled={submitting}
-                                                        className="flex-1 h-11 bg-primary hover:bg-red-600 font-semibold text-white">
-                                                        {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Уншиж байна...</> : "Шууд авах"}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             <PaymentMethodModal
                 open={showPaymentModal}
