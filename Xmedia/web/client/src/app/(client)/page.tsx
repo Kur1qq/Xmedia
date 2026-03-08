@@ -63,6 +63,32 @@ export default function Home() {
     fetchSlides();
   }, []);
 
+  // Use a separate side-effect to inject a preload link for the first background media
+  useEffect(() => {
+    if (slides.length > 0) {
+      const firstSlideImage = slides[0].image;
+      const isVideo = firstSlideImage.match(/\.(mp4|webm|ogg|mov)$/i);
+
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.href = firstSlideImage;
+      link.as = isVideo ? 'video' : 'image';
+
+      // If image, can add fetchPriority
+      if (!isVideo) {
+        // @ts-ignore - fetchpriority is a valid web attribute, distinct from TypeScript types momentarily
+        link.fetchPriority = "high";
+      }
+
+      document.head.appendChild(link);
+
+      return () => {
+        // Optional Cleanup (usually preload links stay)
+        document.head.removeChild(link);
+      }
+    }
+  }, [slides]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
