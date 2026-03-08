@@ -72,11 +72,11 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <>
+    <div className="flex-1 flex flex-col pb-8">
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
-      <div className="hidden sm:block overflow-hidden">
-        <section className="relative min-h-[55vh] sm:min-h-[71vh] flex items-center justify-center pt-24 pb-10 overflow-hidden">
-          {/* Background Slider */}
+      <div className="hidden sm:flex flex-col flex-1 overflow-hidden relative">
+        {/* Background Slider - Moved up to take full flex-1 container space */}
+        <div className="absolute inset-0 z-0">
           <AnimatePresence mode="popLayout">
             <motion.div
               key={slides[currentSlide].id}
@@ -84,7 +84,7 @@ export default function Home() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.5, ease: "easeInOut" }}
-              className="absolute inset-0 -z-10"
+              className="absolute inset-0"
             >
               {slides[currentSlide].image.match(/\.(mp4|webm|ogg|mov)$/i) ? (
                 <video
@@ -103,11 +103,14 @@ export default function Home() {
                 />
               )}
               {/* Added a smoother gradient fade into the background color at the bottom */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-background" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-background/80" />
               {/* Extra bottom gradient for absolute seamless transition */}
-              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
             </motion.div>
           </AnimatePresence>
+        </div>
+
+        <section className="relative flex-1 flex flex-col items-center justify-center pt-10 pb-2 overflow-hidden z-10 w-full">
 
           <div className="container relative z-10 flex flex-col items-center text-center px-4">
             <AnimatePresence mode="wait">
@@ -158,7 +161,7 @@ export default function Home() {
       </div>
 
       {/* Services Section - Smoothly overlaps with the hero section */}
-      <section className="py-4 sm:py-8 relative z-10 min-h-[100dvh] sm:min-h-0 flex sm:block items-center -mt-10 sm:-mt-16">
+      <section className="mt-auto py-4 sm:py-8 relative z-20 min-h-[100dvh] sm:min-h-0 flex sm:block items-center">
         <div className="container mx-auto px-4 w-full">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -189,6 +192,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
