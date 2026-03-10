@@ -7,13 +7,14 @@ export class MailService {
     private transporter: nodemailer.Transporter;
 
     constructor() {
+        const port = Number(process.env.EMAIL_PORT) || 587;
         this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: Number(process.env.EMAIL_PORT) || 587,
-            secure: false,
+            host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
+            port: port,
+            secure: port === 465, // 465 requires secure: true
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASSWORD,
+                user: process.env.EMAIL_USER || 'a44d14001@smtp-brevo.com',
+                pass: process.env.EMAIL_PASSWORD || '7OqPhkYCU0wIFB31',
             },
         });
     }
