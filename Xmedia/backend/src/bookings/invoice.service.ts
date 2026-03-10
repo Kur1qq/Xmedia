@@ -22,6 +22,8 @@ export interface InvoiceData {
     sellerPhone: string;
     sellerBank: string;
     sellerAccount: string;
+    sellerBank2?: string;
+    sellerAccount2?: string;
     sellerReg: string;
     buyerName: string;
     buyerEmail?: string;
@@ -152,7 +154,7 @@ export class InvoiceService {
                 .text('Төлөгч', col2, y);
             y += 25;
 
-            fieldWithLine('Байгууллагын нэр', 'Отек менежмент ххк', col1, y, colW, 95);
+            fieldWithLine('Байгууллагын нэр', data.sellerName, col1, y, colW, 95);
             fieldWithLine('Байгууллагын нэр', data.buyerName, col2, y, colW, 95);
             y += 20;
 
@@ -167,16 +169,18 @@ export class InvoiceService {
             fieldWithLine('Утас', data.sellerPhone, col1, y, colW, 30);
             y += 25;
 
-            fieldWithLine('Регистр', '#6959709', col1, y, colW, 45);
+            fieldWithLine(data.sellerReg.length > 0 ? 'Регистр' : 'РД', data.sellerReg || '', col1, y, colW, 45);
             fieldWithLine('Нэхэмжилсэн огноо:', data.invoiceDate, col2, y, colW, 110);
             y += 25;
 
-            fieldWithLine('Голомт банк', 'MN-61001500 – 2025138994', col1, y, colW, 65);
+            fieldWithLine(data.sellerBank || 'Банк', data.sellerAccount || '', col1, y, colW, 65);
             fieldWithLine('Төлбөр хийх хугацаа:', data.payByDate || '5 хоног', col2, y, colW, 115);
             y += 25;
 
-            fieldWithLine('Мбанк', 'MN-85003900 - 8000666677 (Г. Сайнбуян)', col1, y, colW, 40);
-            y += 35;
+            if (data.sellerBank2 || data.sellerAccount2) {
+                fieldWithLine(data.sellerBank2 || 'Банк 2', data.sellerAccount2 || '', col1, y, colW, 40);
+                y += 35;
+            }
 
             // ── Table ──
             const cols = [
@@ -318,23 +322,22 @@ export class InvoiceService {
                     <tr>
                         <td style="width:50%;vertical-align:top;color:#4b5563;font-size:14px;line-height:1.6;">
                             <div style="margin-bottom:8px;">Нэхэмжлэгч байгууллага:</div>
-                            <div style="color:#111;font-weight:500;">Отек менежмент ххк</div>
-                            <div>Регистрийн дугаар: #6959709</div>
+                            <div style="color:#111;font-weight:500;">${data.sellerName || 'Отек менежмент ХХК'}</div>
+                            <div>Регистрийн дугаар: #${data.sellerReg || '6959709'}</div>
                             
                             <div style="margin-top:20px;">
                                 <div style="margin-bottom:4px;">
                                     ${golomtBase64 ? `<img src="${golomtBase64}" style="width:20px;height:20px;border-radius:4px;vertical-align:middle;object-fit:contain;background:#fff;display:inline-block;" alt="Golomt"/>` : `<div style="width:20px;height:20px;background:#005BBB;border-radius:4px;display:inline-block;vertical-align:middle;"></div>`}
-                                    <span style="font-weight:500;color:#005BBB;vertical-align:middle;margin-left:6px;">Голомт банк</span>
+                                    <span style="font-weight:500;color:#005BBB;vertical-align:middle;margin-left:6px;">${data.sellerBank || 'Голомт банк'}</span>
                                 </div>
-                                <div>Отек менежмент ххк</div>
-                                <div style="margin-bottom:16px;">MN-61001500 – 2025138994</div>
+                                <div style="margin-bottom:16px;">${data.sellerAccount || ''}</div>
 
+                                ${data.sellerBank2 ? `
                                 <div style="margin-bottom:4px;">
                                     ${mbankBase64 ? `<img src="${mbankBase64}" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;object-fit:contain;background:#fff;display:inline-block;" alt="Mbank"/>` : `<div style="width:20px;height:20px;background:#10b981;border-radius:50%;display:inline-block;vertical-align:middle;"></div>`}
-                                    <span style="font-weight:500;color:#10b981;vertical-align:middle;margin-left:6px;">Мбанк</span>
+                                    <span style="font-weight:500;color:#10b981;vertical-align:middle;margin-left:6px;">${data.sellerBank2}</span>
                                 </div>
-                                <div>Г. Сайнбуян</div>
-                                <div>MN-85003900 - 8000666677</div>
+                                <div>${data.sellerAccount2 || ''}</div>` : ''}
                             </div>
                         </td>
                         

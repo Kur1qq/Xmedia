@@ -105,32 +105,32 @@ export function Header() {
                                     <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                                     <SheetDescription className="sr-only">Access site navigation links</SheetDescription>
                                 </SheetHeader>
-                                <nav className="flex flex-col gap-6 text-lg font-medium text-right mt-12 pr-4">
+                                <nav className="flex flex-col gap-6 text-lg font-medium text-center mt-12 pr-4 pl-4">
                                     {siteConfig.nav.map((item) => (
-                                        <Link key={item.href} href={item.href} className="hover:text-foreground" onClick={() => setIsOpen(false)}>
+                                        <Link key={item.href} href={item.href} className="hover:text-foreground text-center" onClick={() => setIsOpen(false)}>
                                             {item.label}
                                         </Link>
                                     ))}
                                     <hr className="my-2 border-white/10" />
-                                    <Link href="/contact" onClick={() => setIsOpen(false)}>
-                                        <Button variant="outline" className="w-full">Холбоо барих</Button>
+                                    <Link href="/contact" onClick={() => setIsOpen(false)} className="flex justify-center">
+                                        <Button variant="outline" className="w-auto px-8">Холбоо барих</Button>
                                     </Link>
 
                                     {user && (
                                         <div className="pt-4 mt-2 border-t border-white/10 flex flex-col gap-3">
-                                            <div className="flex items-center gap-3 px-2 mb-2">
-                                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
-                                                    <Image src="/xtudio_logo_favico.ico" alt="user" width={28} height={28} className="object-contain" />
+                                            <div className="flex flex-col items-center justify-center gap-2 px-2 mb-2">
+                                                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
+                                                    <Image src="/xtudio_logo_favico.ico" alt="user" width={32} height={32} className="object-contain" />
                                                 </div>
-                                                <div>
+                                                <div className="text-center">
                                                     <p className="font-medium text-white">{user.name}</p>
                                                     <p className="text-xs text-gray-400">{user.email}</p>
                                                 </div>
                                             </div>
-                                            <Button variant="outline" onClick={() => { setIsOpen(false); setIsOrderHistoryOpen(true); }} className="w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10">
+                                            <Button variant="outline" onClick={() => { setIsOpen(false); setIsOrderHistoryOpen(true); }} className="w-full justify-center gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10">
                                                 <UserIcon className="w-4 h-4" /> Миний захиалгын түүх
                                             </Button>
-                                            <Button variant="outline" onClick={() => { logout(); setIsOpen(false); }} className="w-full text-rose-600 hover:text-rose-600 border-rose-600/20 hover:bg-rose-600/10 justify-start gap-2">
+                                            <Button variant="outline" onClick={() => { logout(); setIsOpen(false); }} className="w-full text-rose-600 hover:text-rose-600 border-rose-600/20 hover:bg-rose-600/10 justify-center gap-2">
                                                 <LogOut className="w-4 h-4" /> Гарах
                                             </Button>
                                         </div>

@@ -202,12 +202,12 @@ export function CartDrawer() {
                             className="w-full bg-rose-600 hover:bg-rose-600 text-white py-6 text-lg font-bold"
                             disabled={items.length === 0 || loading}
                             onClick={() => {
-                                if (!user) {
-                                    toast.error("Та эхлээд нэвтэрнэ үү.");
-                                    router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
-                                    return;
-                                }
                                 if (items.length === 0) return toast.error("Сагс хоосон байна");
+                                if (!user) {
+                                    if (!customer.name || !customer.phone || !customer.email) {
+                                        return toast.error("Та холбоо барих мэдээллээ бүрэн оруулна уу.");
+                                    }
+                                }
                                 setShowPaymentModal(true);
                             }}
                         >

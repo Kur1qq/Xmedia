@@ -13,6 +13,8 @@ export interface InvoiceData {
     sellerPhone: string;
     sellerBank: string;
     sellerAccount: string;
+    sellerBank2?: string;
+    sellerAccount2?: string;
     sellerReg: string;
     buyerName: string;
     buyerEmail?: string;
