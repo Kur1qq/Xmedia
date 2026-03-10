@@ -82,14 +82,14 @@ export class InvoiceService {
         }
 
         // 2. Try cached /tmp font
-        const tmpFont = path.join(os.tmpdir(), 'xmedia-noto-sans.ttf');
+        const tmpFont = path.join(os.tmpdir(), 'xmedia-noto-v2.ttf');
         if (fs.existsSync(tmpFont)) { this.fontPath = tmpFont; return; }
 
         // 3. Download from JSDelivr CDN
         try {
             const url = 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.0.28/files/noto-sans-cyrillic-400-normal.woff2';
-            // woff2 won't work, use ttf instead from google fonts mirror
-            const ttfUrl = 'https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf';
+            // use ttf instead from google fonts mirror (use raw.githubusercontent.com to avoid 302 redirects)
+            const ttfUrl = 'https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf';
             this.logger.log('Downloading Noto Sans font...');
             await this.downloadFile(ttfUrl, tmpFont);
             if (fs.existsSync(tmpFont)) {
