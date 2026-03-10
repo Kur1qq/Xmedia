@@ -42,7 +42,7 @@ export function Header() {
                     {/* Logo */}
                     <div className="flex-1 flex justify-start">
                         <Link href="/" className="hover:opacity-90 transition-opacity">
-                            <Image src="/x logo.png" alt={siteConfig.name} width={180} height={80} className="object-contain w-auto h-auto" priority />
+                            <Image src="/x logo.png" alt={siteConfig.name} width={140} height={50} className="object-contain w-auto h-auto" priority />
                         </Link>
                     </div>
 

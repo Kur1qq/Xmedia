@@ -50,6 +50,7 @@ export default function LivestreamPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", duration: "1", tierId: "", name: "", phone: "", email: "" });
+    const [tierRange, setTierRange] = useState<"1-4" | "4-8">("1-4");
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -302,15 +303,33 @@ export default function LivestreamPage() {
                                                     </Popover>
                                                     {activeService.priceTiers && activeService.priceTiers.length > 0 && (
                                                         <div>
-                                                            <p className="text-sm text-gray-400 mb-2">Камерийн тоо</p>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                {activeService.priceTiers.map(t => (
-                                                                    <button key={t.id} type="button" onClick={() => setForm({ ...form, tierId: t.id.toString() })}
-                                                                        className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
-                                                                        <div className="font-semibold">{t.label || `${t.cameraCount} камер`}</div>
-                                                                        <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
+                                                            <p className="text-sm text-gray-400 mb-2">Шууд дамжуулалтын цаг сонгох</p>
+                                                            {/* Range filter buttons */}
+                                                            <div className="flex gap-2 mb-3">
+                                                                {(["1-4", "4-8"] as const).map(range => (
+                                                                    <button
+                                                                        key={range}
+                                                                        type="button"
+                                                                        onClick={() => { setTierRange(range); setForm(f => ({ ...f, tierId: "" })); }}
+                                                                        className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${tierRange === range
+                                                                                ? "bg-rose-600/10 border-rose-600 text-rose-600"
+                                                                                : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                                                                            }`}
+                                                                    >
+                                                                        {range} цаг
                                                                     </button>
                                                                 ))}
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                {activeService.priceTiers
+                                                                    .filter(t => (t.label || "").includes(tierRange))
+                                                                    .map(t => (
+                                                                        <button key={t.id} type="button" onClick={() => setForm({ ...form, tierId: t.id.toString() })}
+                                                                            className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
+                                                                            <div className="font-semibold">{t.label || `${t.cameraCount} камер`}</div>
+                                                                            <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
+                                                                        </button>
+                                                                    ))}
                                                             </div>
                                                         </div>
                                                     )}
