@@ -98,7 +98,7 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="flex-1 flex flex-col pb-8">
+    <div className="flex-1 flex flex-col pt-28 sm:pt-0 pb-8">
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
       <div className="hidden sm:flex flex-col flex-1 overflow-hidden relative">
         {/* Background Slider - Moved up to take full flex-1 container space */}
