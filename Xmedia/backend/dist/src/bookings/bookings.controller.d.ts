@@ -17,10 +17,10 @@ export declare class BookingsController {
         };
         items: ({
             service: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 categoryId: number;
                 subCategoryId: number | null;
@@ -31,10 +31,10 @@ export declare class BookingsController {
                 portfolioImages: string | null;
             } | null;
             studio: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 description: string | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
@@ -44,10 +44,10 @@ export declare class BookingsController {
                 isAvailable: boolean;
             } | null;
             photographerService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -58,10 +58,10 @@ export declare class BookingsController {
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -71,10 +71,10 @@ export declare class BookingsController {
                 subTypeId: number | null;
             } | null;
             liveService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -132,10 +132,10 @@ export declare class BookingsController {
         };
         items: ({
             service: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 categoryId: number;
                 subCategoryId: number | null;
@@ -146,10 +146,10 @@ export declare class BookingsController {
                 portfolioImages: string | null;
             } | null;
             studio: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 description: string | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
@@ -159,10 +159,10 @@ export declare class BookingsController {
                 isAvailable: boolean;
             } | null;
             photographerService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -173,10 +173,10 @@ export declare class BookingsController {
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -186,10 +186,10 @@ export declare class BookingsController {
                 subTypeId: number | null;
             } | null;
             liveService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -247,10 +247,10 @@ export declare class BookingsController {
         };
         items: ({
             service: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 categoryId: number;
                 subCategoryId: number | null;
@@ -261,10 +261,10 @@ export declare class BookingsController {
                 portfolioImages: string | null;
             } | null;
             studio: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 description: string | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
@@ -274,10 +274,10 @@ export declare class BookingsController {
                 isAvailable: boolean;
             } | null;
             photographerService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -288,10 +288,10 @@ export declare class BookingsController {
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -301,10 +301,10 @@ export declare class BookingsController {
                 subTypeId: number | null;
             } | null;
             liveService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -356,10 +356,10 @@ export declare class BookingsController {
     findByUser(userId: number): Promise<({
         items: ({
             service: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 categoryId: number;
                 subCategoryId: number | null;
@@ -370,10 +370,10 @@ export declare class BookingsController {
                 portfolioImages: string | null;
             } | null;
             studio: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 description: string | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
@@ -383,10 +383,10 @@ export declare class BookingsController {
                 isAvailable: boolean;
             } | null;
             photographerService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -397,10 +397,10 @@ export declare class BookingsController {
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -410,10 +410,10 @@ export declare class BookingsController {
                 subTypeId: number | null;
             } | null;
             liveService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 categoryId: number;
@@ -421,10 +421,10 @@ export declare class BookingsController {
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
             } | null;
             bundleService: {
-                name: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 image: string | null;
                 isActive: boolean;
                 description: string | null;

@@ -1,69 +1,79 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import * as https from 'https';
 
 @Injectable()
 export class MailService {
     private readonly logger = new Logger(MailService.name);
-    private transporter: nodemailer.Transporter;
 
-    constructor() {
-        const port = Number(process.env.EMAIL_PORT) || 587;
-        this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
-            port: port,
-            secure: port === 465, // 465 requires secure: true
-            auth: {
-                user: process.env.EMAIL_USER || 'a44d14001@smtp-brevo.com',
-                pass: process.env.EMAIL_PASSWORD || '7OqPhkYCU0wIFB31',
-            },
+    private async sendViaBrevoApi(to: string, subject: string, htmlContent: string, attachments: any[] = []) {
+        return new Promise((resolve, reject) => {
+            const data = JSON.stringify({
+                sender: {
+                    name: process.env.COMPANY_NAME || "Xmedia",
+                    email: process.env.EMAIL_FROM || 'gnbkk13@gmail.com'
+                },
+                to: [{ email: to }],
+                subject: subject,
+                htmlContent: htmlContent,
+                attachment: attachments.length > 0 ? attachments : undefined
+            });
+
+            const apiKey = process.env.BREVO_API_KEY || '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';
+
+            const options = {
+                hostname: 'api.brevo.com',
+                port: 443,
+                path: '/v3/smtp/email',
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': apiKey,
+                    'content-type': 'application/json',
+                    'content-length': Buffer.byteLength(data)
+                }
+            };
+
+            const req = https.request(options, (res) => {
+                let responseBody = '';
+                res.on('data', (d) => responseBody += d);
+                res.on('end', () => {
+                    if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                        try {
+                            resolve(JSON.parse(responseBody));
+                        } catch (e) {
+                            resolve(responseBody);
+                        }
+                    } else {
+                        reject(new Error(`Brevo API Error ${res.statusCode}: ${responseBody}`));
+                    }
+                });
+            });
+
+            req.on('error', (error) => reject(error));
+            req.write(data);
+            req.end();
         });
     }
 
     async sendInvoiceEmail(to: string, subject: string, html: string, pdfBuffer: Buffer | null, filename: string | null) {
         try {
-            const attachments: any[] = pdfBuffer && filename ? [{
-                filename,
-                content: pdfBuffer,
-                contentType: 'application/pdf',
-            }] : [];
+            const attachments: any[] = [];
 
-            const fs = require('fs');
-            const path = require('path');
+            if (pdfBuffer && filename) {
+                attachments.push({
+                    name: filename,
+                    content: pdfBuffer.toString('base64')
+                });
+            }
 
-            const dirsToCheck = [
-                path.join(process.cwd(), 'public'),
-                path.join(__dirname, '..', '..', 'public')
-            ];
-
-            const getFilePath = (filename) => {
-                for (const d of dirsToCheck) {
-                    const p = path.join(d, filename);
-                    if (fs.existsSync(p)) return p;
-                }
-                return null;
-            };
-
-            const golomtPath = getFilePath('golomt.jpeg');
-            const mbankPath = getFilePath('mbank.png');
-            const xtudioPath = getFilePath('xtudio.png');
-
-            if (golomtPath) attachments.push({ filename: 'golomt.jpeg', path: golomtPath, cid: 'golomtLogo' });
-            if (mbankPath) attachments.push({ filename: 'mbank.png', path: mbankPath, cid: 'mbankLogo' });
-            if (xtudioPath) attachments.push({ filename: 'xtudio.png', path: xtudioPath, cid: 'xtudioLogo' });
-
-            await this.transporter.sendMail({
-                from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-                to,
-                subject,
-                html,
-                attachments,
-            });
+            await this.sendViaBrevoApi(to, subject, html, attachments);
             this.logger.log(`Invoice email sent to ${to}`);
         } catch (error) {
             this.logger.error(`Failed to send invoice email to ${to}`, error);
             throw error;
         }
     }
+
     async sendOrderConfirmationEmail(to: string, bookingId: number, buyerName: string, totalAmount: number, itemsCount: number) {
         try {
             const subject = `Захиалга баталгаажлаа #${String(bookingId).padStart(5, '0')} — Xmedia`;
@@ -85,16 +95,10 @@ export class MailService {
                 <p style="font-size:12px;color:#888;text-align:center;">Баярлалаа, <br>Xtudio</p>
             </div>`;
 
-            await this.transporter.sendMail({
-                from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-                to,
-                subject,
-                html,
-            });
+            await this.sendViaBrevoApi(to, subject, html);
             this.logger.log(`Order confirmation email sent to ${to} for booking #${bookingId}`);
         } catch (error) {
             this.logger.error(`Failed to send order confirmation email to ${to} for booking #${bookingId}`, error);
-            // Non-blocking error, so we don't throw
         }
     }
 }
