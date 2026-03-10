@@ -98,7 +98,7 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="flex-1 flex flex-col pt-28 sm:pt-0 pb-8">
+    <div className="flex-1 flex flex-col pt-36 sm:pt-0 pb-8">
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
       <div className="hidden sm:flex flex-col flex-1 overflow-hidden relative">
         {/* Background Slider - Moved up to take full flex-1 container space */}
@@ -194,7 +194,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="w-full max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-3 mt-0 sm:gap-4"
+            className="w-full max-w-5xl mx-auto flex flex-wrap justify-center gap-3 mt-0 sm:gap-4"
           >
             {[
               { icon: Camera, label: "Студио", desc: "Мэргэжлийн зураг авалт", href: "/studios" },
@@ -206,13 +206,13 @@ export default function Home() {
               <Link
                 key={label}
                 href={href}
-                className="group flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-xl bg-muted/30 border border-border hover:bg-muted/50 hover:border-rose-600/40 transition-all duration-300 transform translate-y-4"
+                className="w-[calc(50%-0.375rem)] md:w-auto md:flex-1 min-h-[110px] group flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-4 sm:p-4 rounded-2xl bg-muted/30 border border-border hover:bg-muted/50 hover:border-rose-600/40 transition-all duration-300 transform translate-y-4"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-rose-600/10 group-hover:bg-rose-600/20 transition-colors duration-300 mb-0.5">
-                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600" />
+                <div className="w-10 h-10 flex items-center justify-center rounded-full bg-rose-600/10 group-hover:bg-rose-600/20 transition-colors duration-300 mb-0.5">
+                  <Icon className="w-5 h-5 text-rose-600" />
                 </div>
-                <p className="text-foreground text-xs sm:text-sm font-semibold text-center">{label}</p>
-                <p className="text-muted-foreground text-[10px] sm:text-xs text-center leading-snug">{desc}</p>
+                <p className="text-foreground text-sm font-semibold text-center">{label}</p>
+                <p className="text-muted-foreground text-xs text-center leading-snug">{desc}</p>
               </Link>
             ))}
           </motion.div>
