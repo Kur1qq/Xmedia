@@ -128,6 +128,9 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (dto.userId) {
             user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
         }
+        if (!user && dto.email) {
+            user = await this.prisma.user.findFirst({ where: { email: dto.email } });
+        }
         if (!user) {
             user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
         }
@@ -180,7 +183,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { ...booking, checkoutUrl: null };
         }
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3002';
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: total,
@@ -209,6 +212,9 @@ let BookingsService = BookingsService_1 = class BookingsService {
         let user = null;
         if (dto.userId) {
             user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+        }
+        if (!user && dto.email) {
+            user = await this.prisma.user.findFirst({ where: { email: dto.email } });
         }
         if (!user) {
             user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
@@ -281,7 +287,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { ...booking, checkoutUrl: null };
         }
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3002';
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: totalAmount,
@@ -461,7 +467,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { success: true, bookingId, alreadyPaid: true };
         }
         const bylStatus = await this.bylPayment.getCheckoutStatus(payment.invoiceId);
-        if (bylStatus.status === 'complete') {
+        const statusStr = bylStatus?.status?.toLowerCase();
+        if (statusStr === 'complete' || statusStr === 'paid' || statusStr === 'success') {
             return this.confirmPayment(payment.invoiceId);
         }
         return {

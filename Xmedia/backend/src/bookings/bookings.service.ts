@@ -162,6 +162,9 @@ export class BookingsService {
         }
 
         // Fallback to guest logic
+        if (!user && dto.email) {
+            user = await this.prisma.user.findFirst({ where: { email: dto.email } });
+        }
         if (!user) {
             user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
         }
@@ -223,8 +226,7 @@ export class BookingsService {
 
         // QPay path — create Byl checkout
         try {
-            //const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
-            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3002';
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
 
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
@@ -282,6 +284,9 @@ export class BookingsService {
             user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
         }
 
+        if (!user && dto.email) {
+            user = await this.prisma.user.findFirst({ where: { email: dto.email } });
+        }
         if (!user) {
             user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
         }
@@ -365,7 +370,7 @@ export class BookingsService {
 
         // QPay path — create Byl checkout
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3002';
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: totalAmount,
@@ -624,8 +629,9 @@ export class BookingsService {
 
         // Check status from Byl.mn API
         const bylStatus = await this.bylPayment.getCheckoutStatus(payment.invoiceId);
+        const statusStr = bylStatus?.status?.toLowerCase();
 
-        if (bylStatus.status === 'complete') {
+        if (statusStr === 'complete' || statusStr === 'paid' || statusStr === 'success') {
             // Confirm the payment (will also send email)
             return this.confirmPayment(payment.invoiceId);
         }

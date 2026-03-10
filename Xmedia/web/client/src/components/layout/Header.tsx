@@ -105,16 +105,13 @@ export function Header() {
                                     <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                                     <SheetDescription className="sr-only">Access site navigation links</SheetDescription>
                                 </SheetHeader>
-                                <nav className="grid gap-6 text-lg font-medium">
-                                    <Link href="#" className="flex items-center gap-2">
-                                        <Image src="/x logo.png" alt={siteConfig.name} width={135} height={60} className="object-contain w-auto h-auto" />
-                                    </Link>
+                                <nav className="flex flex-col gap-6 text-lg font-medium text-right mt-12 pr-4">
                                     {siteConfig.nav.map((item) => (
                                         <Link key={item.href} href={item.href} className="hover:text-foreground" onClick={() => setIsOpen(false)}>
                                             {item.label}
                                         </Link>
                                     ))}
-                                    <hr className="my-4" />
+                                    <hr className="my-2 border-white/10" />
                                     <Link href="/contact" onClick={() => setIsOpen(false)}>
                                         <Button variant="outline" className="w-full">Холбоо барих</Button>
                                     </Link>

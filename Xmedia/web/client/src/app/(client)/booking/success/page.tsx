@@ -42,25 +42,31 @@ function SuccessContent() {
                         <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center">
                             <Loader2 className="w-10 h-10 text-yellow-500 animate-spin" />
                         </div>
-                    ) : (
+                    ) : verified ? (
                         <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center">
                             <CheckCircle2 className="w-10 h-10 text-green-500" />
+                        </div>
+                    ) : (
+                        <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center">
+                            <Loader2 className="w-10 h-10 text-yellow-500" />
                         </div>
                     )}
                 </div>
                 <h1 className="text-2xl font-bold text-white">
-                    {verifying ? "Төлбөр шалгаж байна..." : "Захиалга амжилттай!"}
+                    {verifying ? "Төлбөр шалгаж байна..." : verified ? "Захиалга амжилттай!" : "Нэхэмжлэл хүлээгдэж байна..."}
                 </h1>
-                <p className="text-gray-400">
+                <p className="text-gray-400 mt-2">
                     {verifying
                         ? "Түр хүлээнэ үү, төлбөрийн мэдээллийг баталгаажуулж байна."
-                        : "Таны төлбөр амжилттай төлөгдлөө. Бид тантай удахгүй холбогдох болно."}
+                        : verified
+                            ? "Таны төлбөр амжилттай төлөгдлөө. Бид тантай удахгүй холбогдох болно."
+                            : "Таны захиалга бүртгэгдсэн боловч төлбөр хараахан баталгаажаагүй байна. Төлбөр хийгдсэний дараа автоматаар баталгаажих болно."}
                 </p>
                 {bookingId && (
-                    <p className="text-sm text-gray-500">Захиалгын дугаар: #{bookingId}</p>
+                    <p className="text-sm text-gray-500 mt-4">Захиалгын дугаар: #{bookingId}</p>
                 )}
                 {!verifying && (
-                    <div className="pt-4">
+                    <div className="pt-6">
                         <Link href="/">
                             <Button className="bg-rose-600/90 hover:bg-rose-600/100 text-white px-8">
                                 Нүүр хуудас руу буцах
