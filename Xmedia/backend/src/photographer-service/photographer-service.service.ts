@@ -42,6 +42,7 @@ export class PhotographerServiceService {
                         create: packages.map((p: any) => ({
                             subTypeId: p.subTypeId,
                             price: p.price,
+                            duration: p.duration !== undefined ? p.duration : 1,
                             priceLabel: p.priceLabel,
                         })),
                     },
@@ -93,6 +94,7 @@ export class PhotographerServiceService {
                         photographerServiceId: id,
                         subTypeId: p.subTypeId,
                         price: p.price,
+                        duration: p.duration !== undefined ? p.duration : 1,
                         priceLabel: p.priceLabel,
                     })),
                 });

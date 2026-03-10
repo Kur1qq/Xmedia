@@ -53,6 +53,7 @@ let PhotographerServiceService = class PhotographerServiceService {
                         create: packages.map((p) => ({
                             subTypeId: p.subTypeId,
                             price: p.price,
+                            duration: p.duration !== undefined ? p.duration : 1,
                             priceLabel: p.priceLabel,
                         })),
                     },
@@ -97,6 +98,7 @@ let PhotographerServiceService = class PhotographerServiceService {
                         photographerServiceId: id,
                         subTypeId: p.subTypeId,
                         price: p.price,
+                        duration: p.duration !== undefined ? p.duration : 1,
                         priceLabel: p.priceLabel,
                     })),
                 });

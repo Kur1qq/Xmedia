@@ -251,6 +251,7 @@ model PhotographerSubType {
   mainTypeId  Int      @map("main_type_id")
   name        String   @db.VarChar(100) // "Рийл", "Богино контент", "Фото", "Батарей"
   description String?  @db.Text
+  price       Decimal? @db.Decimal(12, 2)
   sortOrder   Int      @default(0) @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
@@ -268,6 +269,7 @@ model PhotographerServicePackage {
   photographerServiceId Int     @map("photographer_service_id")
   subTypeId             Int     @map("sub_type_id")
   price                 Decimal @db.Decimal(12, 2)
+  duration              Int     @default(1)
 
   // Optional name if you want to override subType name
   priceLabel String? @db.VarChar(200)

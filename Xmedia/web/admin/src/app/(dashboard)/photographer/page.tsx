@@ -13,6 +13,7 @@ interface ServicePackage {
     id?: number;
     subTypeId: string;
     price: string;
+    duration: string;
     priceLabel: string;
 }
 
@@ -38,7 +39,7 @@ export default function PhotographerPage() {
     const [isSubTypeModalOpen, setIsSubTypeModalOpen] = useState(false);
     const [isSavingSubType, setIsSavingSubType] = useState(false);
     const [editingSubType, setEditingSubType] = useState<any | null>(null);/* eslint-disable-line @typescript-eslint/no-explicit-any */
-    const [subTypeForm, setSubTypeForm] = useState({ name: "", description: "", sortOrder: "0", mainTypeId: "" });
+    const [subTypeForm, setSubTypeForm] = useState({ name: "", description: "", sortOrder: "0", mainTypeId: "", price: "" });
 
     // --- SERVICE STATE ---
     const [services, setServices] = useState<any[]>([]);/* eslint-disable-line @typescript-eslint/no-explicit-any */
@@ -154,7 +155,7 @@ export default function PhotographerPage() {
     // ==================== SUB TYPE ====================
     const openSubTypeModal = (mainTypeId: number, st: any = null) => {/* eslint-disable-line @typescript-eslint/no-explicit-any */
         setEditingSubType(st);
-        setSubTypeForm({ name: st?.name || "", description: st?.description || "", sortOrder: st?.sortOrder?.toString() || "0", mainTypeId: (st?.mainTypeId || mainTypeId).toString() });
+        setSubTypeForm({ name: st?.name || "", description: st?.description || "", sortOrder: st?.sortOrder?.toString() || "0", mainTypeId: (st?.mainTypeId || mainTypeId).toString(), price: st?.price?.toString() || "" });
         setIsSubTypeModalOpen(true);
     };
     const saveSubType = async (e: React.FormEvent) => {
@@ -162,7 +163,7 @@ export default function PhotographerPage() {
         try {
             const method = editingSubType ? 'PATCH' : 'POST';
             const url = editingSubType ? `${API}/photographer-types/sub/${editingSubType.id}` : `${API}/photographer-types/sub`;
-            const payload = { name: subTypeForm.name, description: subTypeForm.description || undefined, sortOrder: parseInt(subTypeForm.sortOrder) || 0, mainTypeId: parseInt(subTypeForm.mainTypeId) };
+            const payload = { name: subTypeForm.name, description: subTypeForm.description || undefined, sortOrder: parseInt(subTypeForm.sortOrder) || 0, mainTypeId: parseInt(subTypeForm.mainTypeId), ...(subTypeForm.price ? { price: parseFloat(subTypeForm.price) } : {}) };
             const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: JSON.stringify(payload) });
             if (res.ok) { await fetchData(); setIsSubTypeModalOpen(false); toast.success("Хадгалагдлаа"); }
             else toast.error("Алдаа гарлаа");
@@ -187,13 +188,13 @@ export default function PhotographerPage() {
             equipmentIds: svc?.equipments?.map((e: any) => e.equipmentId) || [],
             amenities: Array.isArray(svc?.amenities) ? svc?.amenities : [],
             packages: svc?.packages?.length ? svc.packages.map((p: any) => ({
-                id: p.id, subTypeId: p.subTypeId?.toString() || "", price: p.price?.toString() || "", priceLabel: p.priceLabel || ""
-            })) : [{ subTypeId: "", price: "", priceLabel: "" }],
+                id: p.id, subTypeId: p.subTypeId?.toString() || "", price: p.price?.toString() || "", duration: p.duration?.toString() || "1", priceLabel: p.priceLabel || ""
+            })) : [{ subTypeId: "", price: "", duration: "1", priceLabel: "" }],
         });
         setIsServiceModalOpen(true);
     };
 
-    const addPackage = () => setServiceFormData(prev => ({ ...prev, packages: [...prev.packages, { subTypeId: "", price: "", priceLabel: "" }] }));
+    const addPackage = () => setServiceFormData(prev => ({ ...prev, packages: [...prev.packages, { subTypeId: "", price: "", duration: "1", priceLabel: "" }] }));
     const removePackage = (idx: number) => setServiceFormData(prev => ({ ...prev, packages: prev.packages.filter((_, i) => i !== idx) }));
     const updatePackage = (idx: number, field: keyof ServicePackage, value: string) => {
         setServiceFormData(prev => {
@@ -224,6 +225,7 @@ export default function PhotographerPage() {
                 packages: serviceFormData.packages.map(p => ({
                     subTypeId: parseInt(p.subTypeId),
                     price: parseFloat(p.price),
+                    duration: parseInt(p.duration) || 1,
                     priceLabel: p.priceLabel || undefined,
                 })),
             };
@@ -300,8 +302,8 @@ export default function PhotographerPage() {
                                                 <td className="px-4 py-3">
                                                     <div className="flex flex-col gap-0.5">
                                                         {s.packages?.map((p: any) => (
-                                                            <span key={p.id} className="text-xs text-muted-foreground">
-                                                                {p.subType?.name || p.priceLabel}: <span className="text-foreground font-medium">{Number(p.price).toLocaleString()} ₮</span>
+                                                            <span key={p.id} className="text-xs text-muted-foreground block">
+                                                                {p.subType?.name || p.priceLabel} ({p.duration} цаг): <span className="text-foreground font-medium">{Number(p.price).toLocaleString()} ₮</span>
                                                             </span>
                                                         ))}
                                                     </div>
@@ -498,6 +500,8 @@ export default function PhotographerPage() {
                                     <textarea value={subTypeForm.description} onChange={e => setSubTypeForm({ ...subTypeForm, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[60px]" /></div>
                                 <div className="space-y-1"><label className="text-xs text-gray-400">Дараалал</label>
                                     <input type="number" value={subTypeForm.sortOrder} onChange={e => setSubTypeForm({ ...subTypeForm, sortOrder: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Цагийн үнэ (₮)</label>
+                                    <input type="number" min={0} placeholder="0" value={subTypeForm.price} onChange={e => setSubTypeForm({ ...subTypeForm, price: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
                             </form>
                         </div>
                         <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
@@ -550,7 +554,7 @@ export default function PhotographerPage() {
                                 {/* Main Type */}
                                 <div className="space-y-1">
                                     <label className="text-xs text-gray-400">Үндсэн төрөл <span className="text-red-500">*</span></label>
-                                    <select required value={serviceFormData.mainTypeId} onChange={e => setServiceFormData({ ...serviceFormData, mainTypeId: e.target.value, packages: [{ subTypeId: "", price: "", priceLabel: "" }] })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
+                                    <select required value={serviceFormData.mainTypeId} onChange={e => setServiceFormData({ ...serviceFormData, mainTypeId: e.target.value, packages: [{ subTypeId: "", price: "", duration: "1", priceLabel: "" }] })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
                                         <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
                                         {mainTypes.map(mt => <option key={mt.id} value={mt.id} className="bg-[#1e1e1e]">{mt.name}</option>)}
                                     </select>
@@ -560,7 +564,7 @@ export default function PhotographerPage() {
                                 <div className="space-y-3 bg-black/10 p-4 rounded-xl border border-white/5">
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs text-gray-400">Үнийн багцууд (Контентийн төрлүүд) <span className="text-red-500">*</span></label>
-                                        <button type="button" onClick={addPackage} disabled={!serviceFormData.mainTypeId || filteredSubTypes.length === 0} className="text-[10px] flex items-center gap-1 bg-primary/20 text-primary px-2 py-1 rounded hover:bg-primary/30 transition-colors disabled:opacity-50">
+                                        <button type="button" onClick={() => setServiceFormData({ ...serviceFormData, packages: [...serviceFormData.packages, { subTypeId: "", price: "", duration: "1", priceLabel: "" }] })} disabled={!serviceFormData.mainTypeId || filteredSubTypes.length === 0} className="text-[10px] flex items-center gap-1 bg-primary/20 text-primary px-2 py-1 rounded hover:bg-primary/30 transition-colors disabled:opacity-50">
                                             <Plus className="w-3 h-3" /> Нэмэх
                                         </button>
                                     </div>
@@ -571,17 +575,21 @@ export default function PhotographerPage() {
                                     ) : (
                                         <div className="space-y-2">
                                             {serviceFormData.packages.map((pkg, idx) => (
-                                                <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
+                                                <div key={idx} className="grid grid-cols-[1.5fr_1.5fr_60px_1fr_32px] gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
                                                     <div>
                                                         <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block">Контентийн төрөл</label>
-                                                        <select required value={pkg.subTypeId} onChange={e => updatePackage(idx, 'subTypeId', e.target.value)} className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary appearance-none">
+                                                        <select required value={pkg.subTypeId} onChange={e => updatePackage(idx, 'subTypeId', e.target.value)} className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary appearance-none truncate">
                                                             <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
                                                             {filteredSubTypes.map((st: any) => <option key={st.id} value={st.id} className="bg-[#1e1e1e]">{st.name}</option>)}
                                                         </select>
                                                     </div>
                                                     <div>
                                                         <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block">Нэршил (Сонголттой)</label>
-                                                        <input type="text" value={pkg.priceLabel || ""} onChange={e => updatePackage(idx, 'priceLabel', e.target.value)} placeholder="Жишээ: Бичлэг + Эвлүүлэг..." className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary" />
+                                                        <input type="text" value={pkg.priceLabel || ""} onChange={e => updatePackage(idx, 'priceLabel', e.target.value)} placeholder="Жишээ: Бичлэг..." className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block" title="Хугацаа (цаг)">Цаг</label>
+                                                        <input type="number" min={1} value={pkg.duration} onChange={e => updatePackage(idx, 'duration', e.target.value)} className="w-full bg-white/5 border border-white/5 rounded-md px-2 py-1.5 text-xs text-center text-white focus:outline-none focus:border-primary" required />
                                                     </div>
                                                     <div>
                                                         <label className="text-[10px] text-gray-500 uppercase font-semibold mb-1 block">Үнэ (₮)</label>

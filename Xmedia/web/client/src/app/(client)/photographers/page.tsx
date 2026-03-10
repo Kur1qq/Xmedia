@@ -24,8 +24,9 @@ interface PhotographerServicePackage {
     id: number;
     subTypeId: number;
     price: number;
+    duration: number;
     priceLabel?: string;
-    subType?: { name: string };
+    subType?: { id: number; name: string; price?: number };
 }
 
 interface PhotographerService {
@@ -47,6 +48,7 @@ export default function PhotographersPage() {
     const [loading, setLoading] = useState(true);
     const [activeServiceId, setActiveServiceId] = useState<number | null>(null);
     const [isBooking, setIsBooking] = useState(false);
+    const [selectedSubTypes, setSelectedSubTypes] = useState<Record<number, number>>({});
     const [selectedPackages, setSelectedPackages] = useState<Record<number, PhotographerServicePackage>>({});
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", duration: "1", name: "", phone: "", email: "" });
@@ -91,6 +93,12 @@ export default function PhotographersPage() {
             setForm(prev => ({ ...prev, time: "" }));
         }
     };
+    const handleSubTypeSelect = (serviceId: number, subTypeId: number) => {
+        setSelectedSubTypes(prev => ({ ...prev, [serviceId]: subTypeId }));
+        // Auto select first package of this subtype
+        const firstPkg = activeService?.packages?.find(p => p.subTypeId === subTypeId);
+        if (firstPkg) handlePackageSelect(serviceId, firstPkg);
+    };
 
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
@@ -111,14 +119,17 @@ export default function PhotographersPage() {
     const handleAddToCart = () => {
         if (!validateForm() || !activeService) return;
 
+        const duration = parseInt(currentPackage?.duration?.toString() || "1", 10);
+        const totalAmount = Number(currentPackage?.price || 0);
+
         addItem({
             serviceType: "PHOTOGRAPHER_SERVICE",
             serviceId: activeService.id,
             serviceName: activeService.name,
             date: format(form.date!, "yyyy-MM-dd"),
             time: form.time,
-            duration: parseInt(form.duration),
-            unitPrice: Number(currentPackage?.price || 0),
+            duration: duration,
+            unitPrice: totalAmount / duration,
         });
 
         toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү." });
@@ -130,14 +141,17 @@ export default function PhotographersPage() {
 
         setSubmitting(true);
         try {
+            const duration = parseInt(currentPackage?.duration?.toString() || "1", 10);
+            const totalAmount = Number(currentPackage?.price || 0);
+
             const payload: any = {
                 name: form.name,
                 phone: form.phone,
                 email: form.email,
                 date: format(form.date!, "yyyy-MM-dd"), time: form.time,
-                duration: parseInt(form.duration),
+                duration,
                 serviceType: "PHOTOGRAPHER_SERVICE", serviceId: activeService.id,
-                unitPrice: Number(currentPackage?.price || 0),
+                unitPrice: totalAmount / duration, // Backend expects unitPrice * duration = totalAmount
                 serviceName: activeService.name,
                 paymentType,
                 ...(orgInfo ? { buyerOrg: orgInfo.orgName, buyerOrgReg: orgInfo.orgReg, buyerOrgAddress: orgInfo.orgAddress, buyerOrgPhone: orgInfo.orgPhone } : {}),
@@ -260,40 +274,71 @@ export default function PhotographersPage() {
                                                     </div>
                                                 )}
 
-                                                {activeService.packages && activeService.packages.length > 0 && (
-                                                    <div className="mb-6 w-full mt-auto pt-4">
-                                                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                            Контентийн төрөл сонгох
-                                                        </h4>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                            {activeService.packages.map(pkg => {
-                                                                const currentSelectedPkg = selectedPackages[activeService.id] || activeService.packages![0];
-                                                                const isSelected = currentSelectedPkg.id === pkg.id;
+                                                {activeService.packages && activeService.packages.length > 0 && (() => {
+                                                    const contentTypes = Array.from(
+                                                        new Map(activeService.packages.filter(p => p.subType).map(p => [p.subType!.id, p.subType!])).values()
+                                                    );
+                                                    const currentSubTypeId = selectedSubTypes[activeService.id] || (contentTypes.length > 0 ? contentTypes[0].id : null);
+                                                    const availablePackages = activeService.packages.filter(p => !currentSubTypeId || p.subTypeId === currentSubTypeId);
 
-                                                                return (
-                                                                    <div
-                                                                        key={pkg.id}
-                                                                        onClick={() => handlePackageSelect(activeService.id, pkg)}
-                                                                        className={`cursor-pointer p-4 rounded-xl border relative transition-all ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
-                                                                    >
-                                                                        {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-rose-600" /></div>}
-                                                                        <p className="text-sm font-medium pr-6">{pkg.subType?.name || pkg.priceLabel || "Үндсэн багц"}</p>
-                                                                        {pkg.priceLabel && pkg.subType && <p className="text-xs text-gray-400 mt-1">{pkg.priceLabel}</p>}
-                                                                        <p className="text-rose-600 font-bold mt-3 text-lg">{Number(pkg.price).toLocaleString()}₮</p>
+                                                    return (
+                                                        <div className="mb-6 w-full mt-auto pt-4 space-y-6">
+                                                            <div>
+                                                                <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                                    Контентийн төрөл сонгох
+                                                                </h4>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {contentTypes.map((ct: any) => {
+                                                                        const isSelected = ct.id === currentSubTypeId;
+                                                                        return (
+                                                                            <button
+                                                                                key={ct.id}
+                                                                                type="button"
+                                                                                onClick={() => handleSubTypeSelect(activeService.id, ct.id)}
+                                                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isSelected ? 'bg-rose-600 text-white shadow-md' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'}`}
+                                                                            >
+                                                                                {ct.name}
+                                                                            </button>
+                                                                        )
+                                                                    })}
+                                                                </div>
+                                                            </div>
+
+                                                            {availablePackages.length > 0 && (
+                                                                <div>
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                        {availablePackages.map(pkg => {
+                                                                            const isSelected = (currentPackage?.id === pkg.id) || (!currentPackage && availablePackages[0].id === pkg.id);
+                                                                            return (
+                                                                                <div
+                                                                                    key={pkg.id}
+                                                                                    onClick={() => handlePackageSelect(activeService.id, pkg)}
+                                                                                    className={`cursor-pointer p-4 rounded-xl border relative transition-all ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
+                                                                                >
+                                                                                    {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-rose-600" /></div>}
+                                                                                    <p className="text-sm font-medium pr-6">{pkg.priceLabel || pkg.subType?.name || "Үндсэн багц"}</p>
+                                                                                    <div className="mt-2 flex items-baseline gap-2">
+                                                                                        <p className="text-rose-600 font-bold text-lg">{Number(pkg.price).toLocaleString()}₮</p>
+                                                                                        <p className="text-xs text-gray-400 font-medium">/ {pkg.duration} цаг</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        })}
                                                                     </div>
-                                                                );
-                                                            })}
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    );
+                                                })()}
 
                                                 <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
                                                     <div className="flex flex-col items-start md:items-center">
                                                         <p className="text-gray-500 text-[10px] uppercase tracking-wider">Нийт үнэ</p>
                                                         <p className="text-2xl font-bold">
                                                             {(() => {
-                                                                const thePkg = selectedPackages[activeService.id] || (activeService.packages && activeService.packages[0]);
-                                                                return thePkg ? `${Number(thePkg.price).toLocaleString()}₮` : 'Сонгоно уу';
+                                                                const thePkg = currentPackage || (activeService.packages && activeService.packages[0]);
+                                                                if (!thePkg) return "Сонгоно уу";
+                                                                return `${Number(thePkg.price || 0).toLocaleString()}₮`;
                                                             })()}
                                                         </p>
                                                     </div>
@@ -336,7 +381,7 @@ export default function PhotographersPage() {
                                                         </p>
                                                         <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                                                             {ALL_TIMES.map(t => {
-                                                                const disabled = isTimeDisabled(t, bookedTimes, parseInt(form.duration || "1"));
+                                                                const disabled = isTimeDisabled(t, bookedTimes, parseInt(currentPackage?.duration?.toString() || "1"));
                                                                 return (
                                                                     <button key={t} type="button"
                                                                         disabled={disabled}
@@ -351,6 +396,17 @@ export default function PhotographersPage() {
                                                                 );
                                                             })}
                                                         </div>
+                                                    </div>
+                                                    <p className="text-sm text-gray-400 mb-2 mt-4">Үргэлжлэх хугацаа: <span className="text-white font-medium">{currentPackage?.duration || 1} цаг</span></p>
+                                                    <div className="flex items-center justify-between py-3 border-t border-white/10 mt-6">
+                                                        <span className="text-sm text-gray-400 uppercase tracking-wider">Нийт төлөх дүн</span>
+                                                        <span className="text-xl font-bold text-rose-600">
+                                                            {(() => {
+                                                                const thePkg = currentPackage;
+                                                                if (!thePkg) return "0₮";
+                                                                return `${Number(thePkg.price || 0).toLocaleString()}₮`;
+                                                            })()}
+                                                        </span>
                                                     </div>
                                                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                                         <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
@@ -372,7 +428,7 @@ export default function PhotographersPage() {
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
 
             <PaymentMethodModal
                 open={showPaymentModal}
@@ -380,7 +436,11 @@ export default function PhotographersPage() {
                 onSelectQpay={() => handleBuyNow("qpay")}
                 onSelectInvoice={(orgInfo) => handleBuyNow("invoice", orgInfo)}
                 loading={submitting}
-                amount={currentPackage ? Number(currentPackage.price) * parseInt(form.duration || "1") : undefined}
+                amount={(() => {
+                    const thePkg = currentPackage;
+                    if (!thePkg) return undefined;
+                    return Number(thePkg.price || 0);
+                })()}
             />
         </div>
     );
