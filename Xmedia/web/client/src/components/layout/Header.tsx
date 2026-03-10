@@ -13,6 +13,7 @@ import { useAuthStore } from "@/lib/store/auth";
 import { motion } from "framer-motion";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { OrderHistoryModal } from "@/components/profile/OrderHistoryModal";
+import { ContactModal } from "@/components/modals/ContactModal";
 
 export function Header() {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -50,13 +51,27 @@ export function Header() {
                     <div className="hidden lg:flex justify-center items-center">
                         <div className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-black/70 border border-white/10 backdrop-blur-md shadow-sm shadow-red-500/10">
                             {siteConfig.nav.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="px-5 py-1 text-sm font-medium text-white/75 rounded-full transition-all duration-200 hover:text-white hover:bg-white/10"
-                                >
-                                    {item.label}
-                                </Link>
+                                item.href === "/contact" ? (
+                                    <ContactModal
+                                        key={item.href}
+                                        trigger={
+                                            <Button
+                                                variant="ghost"
+                                                className="px-5 py-1 text-sm font-medium text-white/75 rounded-full transition-all duration-200 hover:text-white hover:bg-white/10"
+                                            >
+                                                {item.label}
+                                            </Button>
+                                        }
+                                    />
+                                ) : (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className="px-5 py-1 text-sm font-medium text-white/75 rounded-full transition-all duration-200 hover:text-white hover:bg-white/10"
+                                    >
+                                        {item.label}
+                                    </Link>
+                                )
                             ))}
                         </div>
                     </div>
@@ -64,11 +79,14 @@ export function Header() {
                     {/* Desktop: right buttons */}
                     <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
                         <CartDrawer />
-                        <Link href="/contact">
-                            <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
-                                Холбоо барих
-                            </Button>
-                        </Link>
+                        {/* The /contact link is already handled in the loop above, but if it exists separately as a right button, wrap it */}
+                        <ContactModal
+                            trigger={
+                                <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
+                                    Холбоо барих
+                                </Button>
+                            }
+                        />
                         {user && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -112,9 +130,35 @@ export function Header() {
                                         </Link>
                                     ))}
                                     <hr className="my-2 border-white/10" />
-                                    <Link href="/contact" onClick={() => setIsOpen(false)} className="flex justify-center">
-                                        <Button variant="outline" className="w-auto px-8">Холбоо барих</Button>
-                                    </Link>
+                                    <div className="flex flex-col gap-4 text-sm text-left text-gray-300 bg-white/5 p-5 rounded-xl border border-white/10 mx-auto w-full">
+                                        <p className="font-bold text-white mb-2 text-center text-lg">Холбоо барих</p>
+
+                                        <div className="space-y-2">
+                                            <p className="text-rose-400 font-bold text-[13px]">Жижиг дунд бизнесийн үйлчилгээ</p>
+                                            <div className="flex justify-between items-center text-[13px]">
+                                                <span className="text-gray-400">Утас:</span>
+                                                <a href="tel:95905686" className="text-white">9590 5686</a>
+                                            </div>
+                                            <div className="flex justify-between items-center text-[13px]">
+                                                <span className="text-gray-400">И-мэйл:</span>
+                                                <a href="mailto:Contact@xtudio.mn" className="text-white truncate max-w-[150px]">Contact@xtudio.mn</a>
+                                            </div>
+                                        </div>
+
+                                        <div className="h-px bg-white/10 w-full my-1"></div>
+
+                                        <div className="space-y-2">
+                                            <p className="text-blue-400 font-bold text-[13px]">Групп компани</p>
+                                            <div className="flex justify-between items-center text-[13px]">
+                                                <span className="text-gray-400">Утас:</span>
+                                                <a href="tel:91915686" className="text-white">9191 5686</a>
+                                            </div>
+                                            <div className="flex justify-between items-center text-[13px]">
+                                                <span className="text-gray-400">И-мэйл:</span>
+                                                <a href="mailto:Contact@orgilmedia.mn" className="text-white truncate max-w-[150px]">Contact@orgilmedia.mn</a>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {user && (
                                         <div className="pt-4 mt-2 border-t border-white/10 flex flex-col gap-3">
