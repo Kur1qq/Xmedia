@@ -172,7 +172,7 @@ export class InvoiceService {
             y += 25;
 
             fieldWithLine('Голомт банк', 'MN-61001500 – 2025138994', col1, y, colW, 65);
-            fieldWithLine('Төлбөр хийх хугацаа:', data.payByDate || '14 хоног', col2, y, colW, 115);
+            fieldWithLine('Төлбөр хийх хугацаа:', data.payByDate || '5 хоног', col2, y, colW, 115);
             y += 25;
 
             fieldWithLine('Мбанк', 'MN-85003900 - 8000666677 (Г. Сайнбуян)', col1, y, colW, 40);

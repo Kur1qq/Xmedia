@@ -352,17 +352,6 @@ export default function PhotographersPage() {
                                                             })}
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-400 mb-2">Хугацаа (цаг)</p>
-                                                        <Input required type="number" min="1" max="24" className="bg-[#1a1a1a] border-white/10 text-white" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} />
-                                                    </div>
-
-
-
-                                                    <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
-                                                        <span className="text-gray-400 text-sm">Нийт үнэ:</span>
-                                                        <span className="text-xl font-bold text-rose-600">{((Number(selectedPackages[activeService.id]?.price || 0)) * parseInt(form.duration || "0")).toLocaleString()}₮</span>
-                                                    </div>
                                                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                                         <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
                                                             Сагсанд нэмэх
