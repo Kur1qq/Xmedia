@@ -7,10 +7,16 @@ export class MailService {
 
     private async sendViaBrevoApi(to: string, subject: string, htmlContent: string, attachments: any[] = []) {
         return new Promise((resolve, reject) => {
+            let senderEmail = process.env.EMAIL_FROM || 'gnbkk13@gmail.com';
+            const emailMatch = senderEmail.match(/<([^>]+)>/);
+            if (emailMatch) {
+                senderEmail = emailMatch[1];
+            }
+
             const data = JSON.stringify({
                 sender: {
                     name: process.env.COMPANY_NAME || "Xmedia",
-                    email: process.env.EMAIL_FROM || 'gnbkk13@gmail.com'
+                    email: senderEmail
                 },
                 to: [{ email: to }],
                 subject: subject,
