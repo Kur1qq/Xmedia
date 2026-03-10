@@ -1,21 +1,16 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
-import * as mariadb from 'mariadb';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
     constructor() {
-        const connectionString = process.env.DATABASE_URL;
-        if (!connectionString) throw new Error('DATABASE_URL environment variable is not set!');
-
-        const fullConnectionString = connectionString.includes('allowPublicKeyRetrieval')
-            ? connectionString
-            : connectionString + (connectionString.includes('?') ? '&allowPublicKeyRetrieval=true' : '?allowPublicKeyRetrieval=true');
-
-        const adapter = new PrismaMariaDb(fullConnectionString);
-
-        super({ adapter });
+        super({
+            datasources: {
+                db: {
+                    url: process.env.DATABASE_URL,
+                },
+            },
+        });
     }
 
     async onModuleInit() {

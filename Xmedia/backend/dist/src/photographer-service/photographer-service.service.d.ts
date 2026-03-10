@@ -3,50 +3,13 @@ export declare class PhotographerServiceService {
     private prisma;
     constructor(prisma: PrismaService);
     findAll(): Promise<({
-        category: {
-            id: number;
-            name: string;
-            description: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            icon: string | null;
-        };
-        mainType: {
-            id: number;
-            name: string;
-            description: string | null;
-            sortOrder: number;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-        packages: ({
-            subType: {
-                id: number;
-                mainTypeId: number;
-                name: string;
-                description: string | null;
-                sortOrder: number;
-                createdAt: Date;
-                updatedAt: Date;
-                price: import("@prisma/client-runtime-utils").Decimal | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            photographerServiceId: number;
-            subTypeId: number;
-            price: import("@prisma/client-runtime-utils").Decimal;
-            duration: number;
-            priceLabel: string | null;
-        })[];
         equipments: ({
             equipment: {
                 id: number;
-                name: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
@@ -54,68 +17,68 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            photographerServiceId: number;
             equipmentId: number;
+            photographerServiceId: number;
         })[];
+        packages: ({
+            subType: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                price: import("@prisma/client-runtime-utils").Decimal | null;
+                mainTypeId: number;
+                sortOrder: number;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            price: import("@prisma/client-runtime-utils").Decimal;
+            photographerServiceId: number;
+            subTypeId: number;
+            duration: number;
+            priceLabel: string | null;
+        })[];
+        category: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            icon: string | null;
+        };
+        mainType: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            sortOrder: number;
+        };
     } & {
         id: number;
-        categoryId: number;
-        mainTypeId: number;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         description: string | null;
         image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isActive: boolean;
+        categoryId: number;
+        mainTypeId: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
         photographerSubTypeId: number | null;
     })[]>;
     findOne(id: number): Promise<{
-        category: {
-            id: number;
-            name: string;
-            description: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            icon: string | null;
-        };
-        mainType: {
-            id: number;
-            name: string;
-            description: string | null;
-            sortOrder: number;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-        packages: ({
-            subType: {
-                id: number;
-                mainTypeId: number;
-                name: string;
-                description: string | null;
-                sortOrder: number;
-                createdAt: Date;
-                updatedAt: Date;
-                price: import("@prisma/client-runtime-utils").Decimal | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            photographerServiceId: number;
-            subTypeId: number;
-            price: import("@prisma/client-runtime-utils").Decimal;
-            duration: number;
-            priceLabel: string | null;
-        })[];
         equipments: ({
             equipment: {
                 id: number;
-                name: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
@@ -123,68 +86,68 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            photographerServiceId: number;
             equipmentId: number;
+            photographerServiceId: number;
         })[];
+        packages: ({
+            subType: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                price: import("@prisma/client-runtime-utils").Decimal | null;
+                mainTypeId: number;
+                sortOrder: number;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            price: import("@prisma/client-runtime-utils").Decimal;
+            photographerServiceId: number;
+            subTypeId: number;
+            duration: number;
+            priceLabel: string | null;
+        })[];
+        category: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            icon: string | null;
+        };
+        mainType: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            sortOrder: number;
+        };
     } & {
         id: number;
-        categoryId: number;
-        mainTypeId: number;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         description: string | null;
         image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isActive: boolean;
+        categoryId: number;
+        mainTypeId: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
         photographerSubTypeId: number | null;
     }>;
     create(data: any): Promise<{
-        category: {
-            id: number;
-            name: string;
-            description: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            icon: string | null;
-        };
-        mainType: {
-            id: number;
-            name: string;
-            description: string | null;
-            sortOrder: number;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-        packages: ({
-            subType: {
-                id: number;
-                mainTypeId: number;
-                name: string;
-                description: string | null;
-                sortOrder: number;
-                createdAt: Date;
-                updatedAt: Date;
-                price: import("@prisma/client-runtime-utils").Decimal | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            photographerServiceId: number;
-            subTypeId: number;
-            price: import("@prisma/client-runtime-utils").Decimal;
-            duration: number;
-            priceLabel: string | null;
-        })[];
         equipments: ({
             equipment: {
                 id: number;
-                name: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
@@ -192,68 +155,68 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            photographerServiceId: number;
             equipmentId: number;
+            photographerServiceId: number;
         })[];
+        packages: ({
+            subType: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                price: import("@prisma/client-runtime-utils").Decimal | null;
+                mainTypeId: number;
+                sortOrder: number;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            price: import("@prisma/client-runtime-utils").Decimal;
+            photographerServiceId: number;
+            subTypeId: number;
+            duration: number;
+            priceLabel: string | null;
+        })[];
+        category: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            icon: string | null;
+        };
+        mainType: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            sortOrder: number;
+        };
     } & {
         id: number;
-        categoryId: number;
-        mainTypeId: number;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         description: string | null;
         image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isActive: boolean;
+        categoryId: number;
+        mainTypeId: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
         photographerSubTypeId: number | null;
     }>;
     update(id: number, data: any): Promise<{
-        category: {
-            id: number;
-            name: string;
-            description: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            icon: string | null;
-        };
-        mainType: {
-            id: number;
-            name: string;
-            description: string | null;
-            sortOrder: number;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-        packages: ({
-            subType: {
-                id: number;
-                mainTypeId: number;
-                name: string;
-                description: string | null;
-                sortOrder: number;
-                createdAt: Date;
-                updatedAt: Date;
-                price: import("@prisma/client-runtime-utils").Decimal | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            photographerServiceId: number;
-            subTypeId: number;
-            price: import("@prisma/client-runtime-utils").Decimal;
-            duration: number;
-            priceLabel: string | null;
-        })[];
         equipments: ({
             equipment: {
                 id: number;
-                name: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
+                description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
@@ -261,35 +224,72 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            photographerServiceId: number;
             equipmentId: number;
+            photographerServiceId: number;
         })[];
+        packages: ({
+            subType: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                price: import("@prisma/client-runtime-utils").Decimal | null;
+                mainTypeId: number;
+                sortOrder: number;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            price: import("@prisma/client-runtime-utils").Decimal;
+            photographerServiceId: number;
+            subTypeId: number;
+            duration: number;
+            priceLabel: string | null;
+        })[];
+        category: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            icon: string | null;
+        };
+        mainType: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            sortOrder: number;
+        };
     } & {
         id: number;
-        categoryId: number;
-        mainTypeId: number;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         description: string | null;
         image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isActive: boolean;
+        categoryId: number;
+        mainTypeId: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
         photographerSubTypeId: number | null;
     }>;
     remove(id: number): Promise<{
         id: number;
-        categoryId: number;
-        mainTypeId: number;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         description: string | null;
         image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isActive: boolean;
+        categoryId: number;
+        mainTypeId: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
         photographerSubTypeId: number | null;
     }>;
 }
