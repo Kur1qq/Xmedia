@@ -49,6 +49,7 @@ export default function PhotographerPage() {
     const [serviceFormData, setServiceFormData] = useState({
         name: "", categoryId: "", mainTypeId: "",
         description: "", image: "", isActive: true,
+        sortOrder: "0",
         equipmentIds: [] as number[],
         amenities: [] as string[],
         packages: [] as ServicePackage[],
@@ -185,6 +186,7 @@ export default function PhotographerPage() {
             mainTypeId: svc?.mainTypeId?.toString() || "",
             description: svc?.description || "", image: svc?.image || "",
             isActive: svc?.isActive ?? true,
+            sortOrder: svc?.sortOrder?.toString() || "0",
             equipmentIds: svc?.equipments?.map((e: any) => e.equipmentId) || [],
             amenities: Array.isArray(svc?.amenities) ? svc?.amenities : [],
             packages: svc?.packages?.length ? svc.packages.map((p: any) => ({
@@ -220,6 +222,7 @@ export default function PhotographerPage() {
                 mainTypeId: parseInt(serviceFormData.mainTypeId),
                 description: serviceFormData.description || undefined, image: serviceFormData.image || undefined,
                 isActive: serviceFormData.isActive,
+                sortOrder: parseInt(serviceFormData.sortOrder) || 0,
                 equipmentIds: serviceFormData.equipmentIds,
                 amenities: serviceFormData.amenities,
                 packages: serviceFormData.packages.map(p => ({
@@ -551,13 +554,19 @@ export default function PhotographerPage() {
                                     </div>
                                 </div>
 
-                                {/* Main Type */}
-                                <div className="space-y-1">
-                                    <label className="text-xs text-gray-400">Үндсэн төрөл <span className="text-red-500">*</span></label>
-                                    <select required value={serviceFormData.mainTypeId} onChange={e => setServiceFormData({ ...serviceFormData, mainTypeId: e.target.value, packages: [{ subTypeId: "", price: "", duration: "1", priceLabel: "" }] })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
-                                        <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
-                                        {mainTypes.map(mt => <option key={mt.id} value={mt.id} className="bg-[#1e1e1e]">{mt.name}</option>)}
-                                    </select>
+                                {/* Main Type & Sort Order */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-gray-400">Үндсэн төрөл <span className="text-red-500">*</span></label>
+                                        <select required value={serviceFormData.mainTypeId} onChange={e => setServiceFormData({ ...serviceFormData, mainTypeId: e.target.value, packages: [{ subTypeId: "", price: "", duration: "1", priceLabel: "" }] })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
+                                            <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
+                                            {mainTypes.map(mt => <option key={mt.id} value={mt.id} className="bg-[#1e1e1e]">{mt.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-gray-400">Дараалал</label>
+                                        <input type="number" value={serviceFormData.sortOrder} onChange={e => setServiceFormData({ ...serviceFormData, sortOrder: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                    </div>
                                 </div>
 
                                 {/* Service Packages */}

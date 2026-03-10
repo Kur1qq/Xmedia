@@ -65,6 +65,7 @@ export declare class BookingsController {
                 isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
+                sortOrder: number;
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
@@ -179,6 +180,7 @@ export declare class BookingsController {
                 isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
+                sortOrder: number;
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
@@ -293,6 +295,7 @@ export declare class BookingsController {
                 isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
+                sortOrder: number;
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
@@ -401,6 +404,7 @@ export declare class BookingsController {
                 isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
+                sortOrder: number;
                 photographerSubTypeId: number | null;
             } | null;
             editService: {

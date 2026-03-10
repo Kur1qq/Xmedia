@@ -26,7 +26,7 @@ interface PhotographerServicePackage {
     price: number;
     duration: number;
     priceLabel?: string;
-    subType?: { id: number; name: string; price?: number };
+    subType?: { id: number; name: string; price?: number; sortOrder?: number };
 }
 
 interface PhotographerService {
@@ -277,9 +277,12 @@ export default function PhotographersPage() {
                                                 {activeService.packages && activeService.packages.length > 0 && (() => {
                                                     const contentTypes = Array.from(
                                                         new Map(activeService.packages.filter(p => p.subType).map(p => [p.subType!.id, p.subType!])).values()
-                                                    );
+                                                    ).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
                                                     const currentSubTypeId = selectedSubTypes[activeService.id] || (contentTypes.length > 0 ? contentTypes[0].id : null);
-                                                    const availablePackages = activeService.packages.filter(p => !currentSubTypeId || p.subTypeId === currentSubTypeId);
+                                                    const availablePackages = activeService.packages
+                                                        .filter(p => !currentSubTypeId || p.subTypeId === currentSubTypeId)
+                                                        .sort((a, b) => a.duration - b.duration || Number(a.price) - Number(b.price));
 
                                                     return (
                                                         <div className="mb-6 w-full mt-auto pt-4 space-y-6">

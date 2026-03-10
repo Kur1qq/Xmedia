@@ -7,7 +7,7 @@ export class PhotographerServiceService {
 
     async findAll() {
         return this.prisma.photographerService.findMany({
-            orderBy: { createdAt: 'desc' },
+            orderBy: { sortOrder: 'asc' },
             include: {
                 category: true,
                 mainType: true,
@@ -31,10 +31,11 @@ export class PhotographerServiceService {
     }
 
     async create(data: any) {
-        const { categoryId, mainTypeId, subTypeId, hourlyRate, dailyRate, equipmentIds, packages, ...rest } = data;
+        const { categoryId, mainTypeId, subTypeId, hourlyRate, dailyRate, equipmentIds, packages, sortOrder, ...rest } = data;
         return this.prisma.photographerService.create({
             data: {
                 ...rest,
+                sortOrder: sortOrder || 0,
                 category: { connect: { id: categoryId } },
                 mainType: { connect: { id: mainTypeId } },
                 ...(packages?.length ? {
