@@ -14,8 +14,8 @@ function CancelContent() {
         <div className="min-h-screen bg-black flex items-center justify-center px-4">
             <div className="max-w-md w-full text-center space-y-6">
                 <div className="flex justify-center">
-                    <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center">
-                        <XCircle className="w-10 h-10 text-red-500" />
+                    <div className="w-20 h-20 bg-rose-600/10 rounded-full flex items-center justify-center">
+                        <XCircle className="w-10 h-10 text-rose-600" />
                     </div>
                 </div>
                 <h1 className="text-2xl font-bold text-white">Төлбөр цуцлагдсан</h1>
@@ -24,7 +24,7 @@ function CancelContent() {
                 </p>
                 <div className="pt-4 flex flex-col gap-3">
                     <Link href="/">
-                        <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+                        <Button className="w-full bg-rose-600/90 hover:bg-rose-600/100 text-white">
                             Нүүр хуудас руу буцах
                         </Button>
                     </Link>

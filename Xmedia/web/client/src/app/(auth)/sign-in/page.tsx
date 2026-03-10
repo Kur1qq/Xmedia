@@ -65,14 +65,14 @@ function SignInContent() {
             {/* Back Button */}
             <Link
                 href="/"
-                className="absolute left-4 top-4 md:left-8 md:top-8 z-50 flex items-center gap-2 text-sm font-medium text-white hover:text-primary transition-colors"
+                className="absolute left-4 top-4 md:left-8 md:top-8 z-50 flex items-center gap-2 text-sm font-medium text-white hover:text-rose-600 transition-colors"
             >
                 <ArrowLeft className="h-4 w-4" />
                 Нүүр хуудас руу буцах
             </Link>
 
             {/* Background Ambience */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] pointer-events-none opacity-20" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-600/20 rounded-full blur-[120px] pointer-events-none opacity-20" />
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none opacity-20" />
 
             {/* Form Container */}
@@ -113,7 +113,7 @@ function SignInContent() {
                             <div className="grid gap-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Нууц үг</span>
-                                    <Link href="/forget-password" className="text-xs text-primary hover:underline">Нууц үгээ мартсан уу?</Link>
+                                    <Link href="/forget-password" className="text-xs text-rose-600 hover:underline">Нууц үгээ мартсан уу?</Link>
                                 </div>
                                 <div className="relative">
                                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
@@ -130,7 +130,7 @@ function SignInContent() {
                                     />
                                 </div>
                             </div>
-                            <Button disabled={isLoading} className="bg-primary hover:bg-red-600 text-white font-bold h-10 w-full">
+                            <Button disabled={isLoading} className="bg-rose-600 hover:bg-rose-600/90 text-white font-bold h-10 w-full">
                                 {isLoading && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}
@@ -143,7 +143,7 @@ function SignInContent() {
                         Бүртгэлгүй юу?{" "}
                         <Link
                             href={callbackUrl !== "/" ? `/sign-up?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/sign-up"}
-                            className="hover:text-primary underline underline-offset-4 transition-colors"
+                            className="hover:text-rose-600 underline underline-offset-4 transition-colors"
                         >
                             Бүртгүүлэх
                         </Link>

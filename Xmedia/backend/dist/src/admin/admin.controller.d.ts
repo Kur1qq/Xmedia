@@ -103,9 +103,9 @@ export declare class AdminController {
         username: string;
         createdAt: Date;
         image: string | null;
+        isActive: boolean;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
-        isActive: boolean;
         customRole: {
             id: number;
             name: string;
@@ -117,9 +117,9 @@ export declare class AdminController {
         username: string;
         createdAt: Date;
         image: string | null;
+        isActive: boolean;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
-        isActive: boolean;
         customRole: {
             id: number;
             name: string;
@@ -131,9 +131,9 @@ export declare class AdminController {
         username: string;
         createdAt: Date;
         image: string | null;
+        isActive: boolean;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
-        isActive: boolean;
         customRole: {
             id: number;
             name: string;
@@ -145,9 +145,9 @@ export declare class AdminController {
         username: string;
         createdAt: Date;
         image: string | null;
+        isActive: boolean;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
-        isActive: boolean;
         customRole: {
             id: number;
             name: string;
@@ -159,10 +159,10 @@ export declare class AdminController {
         username: string;
         createdAt: Date;
         updatedAt: Date;
-        password: string;
         image: string | null;
+        isActive: boolean;
+        password: string;
         role: import("@prisma/client").$Enums.AdminRole;
         customRoleId: number | null;
-        isActive: boolean;
     }>;
 }

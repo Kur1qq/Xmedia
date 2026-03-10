@@ -7,8 +7,8 @@ export declare class PortfolioService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         description: string | null;
+        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/client").JsonValue;
         sortOrder: number;
         title: string;
@@ -23,8 +23,8 @@ export declare class PortfolioService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         description: string | null;
+        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/client").JsonValue;
         sortOrder: number;
         title: string;
@@ -51,8 +51,8 @@ export declare class PortfolioService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         description: string | null;
+        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/client").JsonValue;
         sortOrder: number;
         title: string;
@@ -79,8 +79,8 @@ export declare class PortfolioService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         description: string | null;
+        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/client").JsonValue;
         sortOrder: number;
         title: string;
@@ -95,8 +95,8 @@ export declare class PortfolioService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         description: string | null;
+        serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/client").JsonValue;
         sortOrder: number;
         title: string;

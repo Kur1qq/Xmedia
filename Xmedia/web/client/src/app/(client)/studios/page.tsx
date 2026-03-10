@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Mic2, MonitorPlay, Check, Users, Square, Info, ArrowLeft, Calendar as CalendarIcon, Loader2, Sparkles, Star, Shield, ArrowRight, HelpCircle, ChevronDown, ChevronUp, GalleryVerticalEnd } from "lucide-react";
+import { Camera, MapPin, Mic2, MonitorPlay, Check, Users, Square, Info, ArrowLeft, Calendar as CalendarIcon, Loader2, Sparkles, Star, Shield, ArrowRight, HelpCircle, ChevronDown, ChevronUp, GalleryVerticalEnd } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -45,7 +46,7 @@ export default function StudiosPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [selectedPackages, setSelectedPackages] = useState<Record<number, StudioPackage>>({});
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "" });
+    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", name: "", phone: "", email: "" });
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -65,6 +66,12 @@ export default function StudiosPage() {
 
     const activeStudio = studios.find(s => s.id === activeServiceId);
     const currentPackage = activeStudio ? selectedPackages[activeStudio.id] : null;
+
+    useEffect(() => {
+        if (user) {
+            setForm(prev => ({ ...prev, name: user.name || "", phone: user.phone || "", email: user.email || "" }));
+        }
+    }, [user]);
 
     useEffect(() => {
         if (!form.date || !activeStudio || !isBooking) { setBookedTimes([]); return; }
@@ -95,10 +102,13 @@ export default function StudiosPage() {
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
         setIsBooking(false);
-        setForm(prev => ({ ...prev, date: undefined, time: "" }));
+        setForm(prev => ({ ...prev, date: undefined, time: "", name: "", phone: "", email: "" }));
     };
 
-    const validateForm = () => {
+    const validateForm = (isBuyNow: boolean = false) => {
+        if (isBuyNow) {
+            if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) { toast.error("Мэдээллээ бүрэн оруулна уу (Нэр, Утас, Имэйл)."); return false; }
+        }
         if (!form.time) { toast.error("Цагаа сонгоно уу."); return false; }
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return false; }
         if (!currentPackage) { toast.error("Багц сонгоно уу."); return false; }
@@ -106,11 +116,6 @@ export default function StudiosPage() {
     };
 
     const handleAddToCart = () => {
-        if (!user) {
-            toast.error("Та эхлээд нэвтэрнэ үү.");
-            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
-            return;
-        }
         if (!validateForm() || !activeStudio || !currentPackage) return;
 
         addItem({
@@ -122,65 +127,65 @@ export default function StudiosPage() {
             duration: currentPackage.hours,
             unitPrice: Number(currentPackage.price) / currentPackage.hours, // hourly rate
         });
-        toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү.", duration: 4000 });
+        toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү." });
         closeBooking();
     };
 
-    const handleBuyNow = async (paymentType: "qpay" | "invoice") => {
-        if (!user) {
-            toast.error("Та эхлээд нэвтэрнэ үү.");
-            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
-            return;
-        }
-        if (!validateForm() || !activeStudio || !currentPackage) return;
+    const handleBuyNow = async (paymentType: "qpay" | "invoice", orgInfo?: { orgName: string; orgReg: string; orgAddress: string; orgPhone: string }) => {
+        if (!validateForm(true) || !activeStudio || !currentPackage) return;
 
         setSubmitting(true);
         try {
+            const payload: any = {
+                name: form.name,
+                phone: form.phone,
+                email: form.email,
+                date: format(form.date!, "yyyy-MM-dd"), time: form.time,
+                duration: currentPackage.hours,
+                serviceType: "STUDIO", serviceId: activeStudio.id,
+                unitPrice: Number(currentPackage.price) / currentPackage.hours,
+                serviceName: activeStudio.name,
+                paymentType,
+                ...(orgInfo ? { buyerOrg: orgInfo.orgName, buyerOrgReg: orgInfo.orgReg, buyerOrgAddress: orgInfo.orgAddress, buyerOrgPhone: orgInfo.orgPhone } : {}),
+            };
+            if (user && user.id) payload.userId = parseInt(user.id, 10);
+
             const res = await fetch(`${API}/bookings`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    userId: parseInt(user.id, 10),
-                    name: user.name, phone: user.phone || '00000000', email: user.email,
-                    date: format(form.date!, "yyyy-MM-dd"), time: form.time,
-                    duration: currentPackage.hours,
-                    serviceType: "STUDIO", serviceId: activeStudio.id,
-                    unitPrice: Number(currentPackage.price) / currentPackage.hours,
-                    serviceName: activeStudio.name,
-                    paymentType,
-                }),
+                body: JSON.stringify(payload),
             });
             if (!res.ok) throw new Error();
 
             const data = await res.json();
             setShowPaymentModal(false);
             if (paymentType === "qpay" && data.checkoutUrl) {
-                toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
+                toast.success("Төлбөрийн хуудас руу шилжиж байна...");
                 window.location.href = data.checkoutUrl;
                 return;
             }
             const desc = paymentType === "invoice"
                 ? "Нэхэмжлэхийг таны имэйл рүү явууллаа. Хэрэв имэйл оруулаагүй бол бидэнтэй холбогдоно уу."
                 : "Удахгүй холбогдох болно.";
-            toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: desc, duration: 6000 });
+            toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: desc });
             closeBooking();
         } catch {
             toast.error("Захиалга бүртгэхэд алдаа гарлаа.");
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "" })); };
+    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", name: "", phone: "", email: "" })); };
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-primary/20 hover:bg-primary/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-rose-600/20 hover:bg-rose-600/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
 
             <div className="pt-24 md:pt-36 pb-12 md:pb-24 relative z-10">
                 <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
 
                     {loading ? (
                         <div className="flex items-center justify-center h-64">
-                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            <Loader2 className="w-8 h-8 animate-spin text-rose-600" />
                         </div>
                     ) : studios.length === 0 ? (
                         <p className="text-gray-500 text-center py-24">Одоогоор студи нэмэгдээгүй байна.</p>
@@ -217,12 +222,12 @@ export default function StudiosPage() {
 
                                                 <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-red-500/10 text-red-500 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
+                                                        <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-rose-600 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
                                                             Photography Studio
                                                         </div>
                                                         <Link href="/portfolio/studio">
-                                                            <Button variant="outline" className="text-primary hover:text-white hover:bg-primary/20 border-primary/50 bg-primary/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_rgba(255,0,0,0.5)] transition-all duration-300">
-                                                                <GalleryVerticalEnd className="w-3.5 h-3.5 text-primary" />
+                                                            <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
+                                                                <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
                                                                 Өмнөх ажлууд харах
                                                             </Button>
                                                         </Link>
@@ -244,17 +249,28 @@ export default function StudiosPage() {
                                                 </div>
 
                                                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{activeStudio.name}</h2>
+                                                <Link
+                                                    href="https://www.google.com/maps/place/XTUDIO/@48.0082871,106.9214316,671m/data=!3m1!1e3!4m6!3m5!1s0x694d69c46d9c5945:0xc9e3c9408887d71f!8m2!3d48.0082871!4d106.9240065!16s%2Fg%2F11ww0jglbw!5m1!1e1?entry=ttu&g_ep=EgoyMDI2MDMwNC4xIKXMDSoASAFQAw%3D%3D"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="w-fit mb-4 block"
+                                                >
+                                                    <Button variant="outline" className="text-gray-300 hover:text-white hover:bg-white/10 border-white/20 bg-white/5 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm transition-all duration-300 tracking-wide text-left">
+                                                        <MapPin className="w-4 h-4 text-rose-600 shrink-0" />
+                                                        <span className="line-clamp-2">Байршил: 1, CHD - 24 khoroo, Shadivlan, Ulaanbaatar 15020</span>
+                                                    </Button>
+                                                </Link>
                                                 <p className="text-gray-400 mb-5 leading-relaxed text-sm md:text-base">{activeStudio.description}</p>
 
                                                 {(activeStudio.amenities && activeStudio.amenities.length > 0) && (
                                                     <div className="mb-5 w-full">
                                                         <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                            <Info className="w-3.5 h-3.5 text-red-500" />Онцлог талууд
+                                                            <Info className="w-3.5 h-3.5 text-rose-600" />Онцлог талууд
                                                         </h4>
                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                             {activeStudio.amenities.map((amenity, i) => (
                                                                 <div key={i} className="flex items-center gap-2.5 text-xs text-gray-200 bg-[#141414] px-3 py-2 rounded-lg border border-white/5 truncate">
-                                                                    <Check className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                                                                    <Check className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                                                                     <span className="truncate">{amenity}</span>
                                                                 </div>
                                                             ))}
@@ -265,7 +281,7 @@ export default function StudiosPage() {
                                                 {activeStudio.equipment?.length > 0 && (
                                                     <div className="mb-5 w-full">
                                                         <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                            <Info className="w-3.5 h-3.5 text-red-500" />Тоног төхөөрөмж
+                                                            <Info className="w-3.5 h-3.5 text-rose-600" />Тоног төхөөрөмж
                                                         </h4>
                                                         <div className="bg-[#141414] p-4 rounded-lg border border-white/5">
                                                             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -292,9 +308,9 @@ export default function StudiosPage() {
                                                                     <div
                                                                         key={pkg.id}
                                                                         onClick={() => handlePackageSelect(activeStudio.id, pkg)}
-                                                                        className={`cursor-pointer p-4 rounded-xl border relative transition-all flex flex-col items-center justify-center ${isSelected ? 'border-primary bg-primary/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
+                                                                        className={`cursor-pointer p-4 rounded-xl border relative transition-all flex flex-col items-center justify-center ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
                                                                     >
-                                                                        {isSelected && <div className="absolute top-2 right-2"><Check className="w-3 h-3 text-primary" /></div>}
+                                                                        {isSelected && <div className="absolute top-2 right-2"><Check className="w-3 h-3 text-rose-600" /></div>}
                                                                         <p className="text-lg font-bold text-white mb-1">{pkg.hours} цаг</p>
                                                                         <p className="text-gray-400 font-bold mt-1 text-xs">{Number(pkg.price).toLocaleString()}₮</p>
                                                                     </div>
@@ -312,29 +328,30 @@ export default function StudiosPage() {
                                                         </p>
                                                     </div>
                                                     <Button onClick={() => {
-                                                        if (!user) {
-                                                            toast.error("Та захиалга өгөхийн тулд эхлээд нэвтэрнэ үү.");
-                                                            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
-                                                            return;
-                                                        }
                                                         setIsBooking(true);
-                                                    }} disabled={activeStudio.packages?.length > 0 && !selectedPackages[activeStudio.id]} className="w-full md:w-auto px-8 h-12 bg-primary hover:bg-red-600 font-semibold rounded-lg transition-all text-white">Захиалга өгөх</Button>
+                                                    }} disabled={activeStudio.packages?.length > 0 && !selectedPackages[activeStudio.id]} className="w-full md:w-auto px-8 h-12 bg-rose-600 hover:bg-rose-600/90 font-semibold rounded-lg transition-all text-white">Захиалга өгөх</Button>
                                                 </div>
                                             </motion.div>
                                         ) : (
                                             <motion.div key={`booking-${activeStudio.id}`} initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} className="flex flex-col h-full py-4">
                                                 <div className="flex items-center gap-3 mb-6">
                                                     <Button variant="ghost" size="icon" onClick={() => closeBooking()} className="text-gray-400 hover:text-white hover:bg-white/10 shrink-0"><ArrowLeft className="w-5 h-5" /></Button>
-                                                    <h2 className="text-xl font-bold text-white line-clamp-1">Захиалга өгөх — <span className="text-primary">{activeStudio.name}</span></h2>
+                                                    <h2 className="text-xl font-bold text-white line-clamp-1">Захиалга өгөх — <span className="text-rose-600">{activeStudio.name}</span></h2>
                                                 </div>
                                                 <div className="space-y-4 flex-1">
+                                                    <div className="space-y-3 rounded-lg bg-white/5 border border-white/10 p-4">
+                                                        <p className="text-sm text-white font-medium">Захиалагчийн мэдээлэл</p>
+                                                        <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Таны нэр *" />
+                                                        <Input type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Утасны дугаар *" />
+                                                        <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Имэйл хаяг *" />
+                                                    </div>
                                                     {activeStudio.packages && activeStudio.packages.length > 0 && (
                                                         <div>
                                                             <p className="text-sm text-gray-400 mb-2">Сонгосон багц</p>
                                                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                                                                 {activeStudio.packages.map(pkg => (
                                                                     <button key={pkg.id} type="button" onClick={() => handlePackageSelect(activeStudio.id, pkg)}
-                                                                        className={`py-2 px-3 text-xs text-center rounded-lg border transition-all ${selectedPackages[activeStudio.id]?.id === pkg.id ? "bg-red-500/10 border-red-500 text-red-500" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
+                                                                        className={`py-2 px-3 text-xs text-center rounded-lg border transition-all ${selectedPackages[activeStudio.id]?.id === pkg.id ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
                                                                         <div className="font-semibold">{pkg.hours} цаг</div>
                                                                         <div className="mt-0.5">{Number(pkg.price).toLocaleString()}₮</div>
                                                                     </button>
@@ -373,7 +390,7 @@ export default function StudiosPage() {
                                                                         className={`py-2 text-xs rounded-lg border transition-all relative ${disabled
                                                                             ? "bg-white/5 border-white/5 text-gray-600 cursor-not-allowed opacity-40 line-through"
                                                                             : form.time === t
-                                                                                ? "bg-red-500/10 border-red-500 text-red-500"
+                                                                                ? "bg-rose-600/10 border-rose-600 text-rose-600"
                                                                                 : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:text-white"
                                                                             }`}
                                                                     >{t}</button>
@@ -381,6 +398,7 @@ export default function StudiosPage() {
                                                             })}
                                                         </div>
                                                     </div>
+
                                                     <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
                                                         <span className="text-gray-400 text-sm">Нийт үнэ:</span>
                                                         <span className="text-xl font-bold text-white">{selectedPackages[activeStudio.id] ? Number(selectedPackages[activeStudio.id].price).toLocaleString() : 0}₮</span>
@@ -390,9 +408,9 @@ export default function StudiosPage() {
                                                             Сагсанд нэмэх
                                                         </Button>
                                                         <Button type="button"
-                                                            onClick={() => { if (validateForm()) setShowPaymentModal(true); }}
+                                                            onClick={() => { if (validateForm(true)) setShowPaymentModal(true); }}
                                                             disabled={submitting}
-                                                            className="flex-1 h-11 bg-primary hover:bg-red-600 font-semibold text-white">
+                                                            className="flex-1 h-11 bg-rose-600 hover:bg-rose-600/90 font-semibold text-white">
                                                             {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Уншиж байна...</> : "Шууд авах"}
                                                         </Button>
                                                     </div>
@@ -413,7 +431,7 @@ export default function StudiosPage() {
                 open={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
                 onSelectQpay={() => handleBuyNow("qpay")}
-                onSelectInvoice={() => handleBuyNow("invoice")}
+                onSelectInvoice={(orgInfo) => handleBuyNow("invoice", orgInfo)}
                 loading={submitting}
                 amount={currentPackage ? Number(currentPackage.price) : undefined}
             />

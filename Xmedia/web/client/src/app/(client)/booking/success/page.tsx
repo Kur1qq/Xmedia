@@ -62,7 +62,7 @@ function SuccessContent() {
                 {!verifying && (
                     <div className="pt-4">
                         <Link href="/">
-                            <Button className="bg-red-600 hover:bg-red-700 text-white px-8">
+                            <Button className="bg-rose-600/90 hover:bg-rose-600/100 text-white px-8">
                                 Нүүр хуудас руу буцах
                             </Button>
                         </Link>

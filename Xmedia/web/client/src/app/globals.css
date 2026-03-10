@@ -51,7 +51,7 @@
   --radius: 0.625rem;
 
   /* User Palette Mapping
-     #FF0000 -> Primary (Red)
+     #e11d48 -> Primary (Red)
      #000000 -> Background (Black)
      #303030 -> Card/Surface (Dark Gray)
      #797979 -> Muted/Border (Medium Gray)
@@ -67,7 +67,7 @@
   --popover: #303030;
   --popover-foreground: #C2C2C2;
 
-  --primary: #FF0000;
+  --primary: #e11d48;
   --primary-foreground: #FFFFFF;
 
   --secondary: #303030;
@@ -84,7 +84,7 @@
 
   --border: #797979;
   --input: #797979;
-  --ring: #FF0000;
+  --ring: #e11d48;
 
   --chart-1: #e76e50;
   --chart-2: #2a9d8f;
@@ -94,12 +94,12 @@
 
   --sidebar: #303030;
   --sidebar-foreground: #C2C2C2;
-  --sidebar-primary: #FF0000;
+  --sidebar-primary: #e11d48;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #000000;
   --sidebar-accent-foreground: #C2C2C2;
   --sidebar-border: #797979;
-  --sidebar-ring: #FF0000;
+  --sidebar-ring: #e11d48;
 }
 
 .dark {
@@ -109,7 +109,7 @@
   --card-foreground: #C2C2C2;
   --popover: #303030;
   --popover-foreground: #C2C2C2;
-  --primary: #FF0000;
+  --primary: #e11d48;
   --primary-foreground: #FFFFFF;
   --secondary: #303030;
   --secondary-foreground: #C2C2C2;
@@ -121,7 +121,7 @@
   --destructive-foreground: #fafafa;
   --border: #797979;
   --input: #797979;
-  --ring: #FF0000;
+  --ring: #e11d48;
   --chart-1: #2200cc;
   --chart-2: #1600aa;
   --chart-3: #ffcc00;
@@ -129,12 +129,12 @@
   --chart-5: #ff00cc;
   --sidebar: #303030;
   --sidebar-foreground: #C2C2C2;
-  --sidebar-primary: #FF0000;
+  --sidebar-primary: #e11d48;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #000000;
   --sidebar-accent-foreground: #C2C2C2;
   --sidebar-border: #797979;
-  --sidebar-ring: #FF0000;
+  --sidebar-ring: #e11d48;
 }
 
 @layer utilities {

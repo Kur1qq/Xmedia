@@ -43,7 +43,7 @@ export function LivestreamSection() {
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-bold mb-4 text-white font-sans">
-                            Live <span className="text-primary">Streaming</span>
+                            Live <span className="text-rose-600">Streaming</span>
                         </h2>
                         <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                             Бидний зохион байгуулсан томоохон эвент, хурал, тоглолт болон нэвтрүүлгүүдийн архивыг үзэх.
@@ -71,14 +71,14 @@ export function LivestreamSection() {
 
                                     {/* Overlay */}
                                     <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
-                                        <div className="w-14 h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center scale-90 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+                                        <div className="w-14 h-14 rounded-full bg-rose-600/90 text-white flex items-center justify-center scale-90 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(220,38,38,0.5)]">
                                             <Play className="w-5 h-5 fill-current ml-1" />
                                         </div>
                                     </div>
 
                                     {/* Live Badge (Recorded) */}
                                     <div className="absolute top-4 left-4 flex gap-2">
-                                        <span className="px-2 py-1 bg-red-600 text-white text-[10px] font-bold uppercase rounded flex items-center gap-1">
+                                        <span className="px-2 py-1 bg-rose-600 text-white text-[10px] font-bold uppercase rounded flex items-center gap-1">
                                             <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                                             Replay
                                         </span>
@@ -91,7 +91,7 @@ export function LivestreamSection() {
                                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {stream.date}</span>
                                         <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {stream.viewers}</span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors leading-tight mb-1">
+                                    <h3 className="text-xl font-bold text-white group-hover:text-rose-600 transition-colors leading-tight mb-1">
                                         {stream.title}
                                     </h3>
                                     <p className="text-sm text-gray-400">{stream.client}</p>

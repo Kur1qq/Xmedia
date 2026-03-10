@@ -10,16 +10,34 @@ function detectBookingType(booking: any): string {
     const items: any[] = booking.items || [];
     for (const item of items) {
         if (item.itemType === 'STUDIO') return 'studio';
+        if (item.itemType === 'LIVE_SERVICE') return 'live';
+        if (item.itemType === 'EDIT_SERVICE') return 'edit';
+        if (item.itemType === 'PHOTOGRAPHER_SERVICE') return 'photographer';
+        if (item.itemType === 'BUNDLE_SERVICE') return 'bundle';
+
+        // Legacy fallback for generic 'SERVICE' ItemType
         const catName: string = (item.service?.category?.name || '').toLowerCase();
         if (catName.includes('шууд') || catName.includes('live')) return 'live';
         if (catName.includes('эдит') || catName.includes('edit')) return 'edit';
         if (catName.includes('зурагла') || catName.includes('photo') || catName.includes('camera')) return 'photographer';
     }
-    const t = (booking.type || '').toLowerCase();
-    if (t.includes('studio')) return 'studio';
-    if (t.includes('live')) return 'live';
-    if (t.includes('edit')) return 'edit';
+
+    // Default fallback
     return 'photographer';
+}
+
+function getBookingTitle(booking: any): string {
+    const item = booking.items?.[0];
+    if (!item) return `Захиалга #${booking.id}`;
+
+    switch (item.itemType) {
+        case 'STUDIO': return `Студи: ${item.studio?.name || '(Нэргүй)'}`;
+        case 'LIVE_SERVICE': return `Шууд дамжуулалт: ${item.liveService?.name || '(Нэргүй)'}`;
+        case 'EDIT_SERVICE': return `Эдит: ${item.editService?.name || '(Нэргүй)'}`;
+        case 'PHOTOGRAPHER_SERVICE': return `Зураглаач: ${item.photographerService?.name || '(Нэргүй)'}`;
+        case 'BUNDLE_SERVICE': return `Багц: ${item.bundleService?.name || '(Нэргүй)'}`;
+        default: return `Үйлчилгээ: ${item.service?.name || '(Нэргүй)'}`;
+    }
 }
 
 const TYPE_COLORS: Record<string, { bg: string; text: string; dot: string; label: string }> = {
@@ -27,6 +45,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; dot: string; label
     edit: { bg: 'bg-yellow-400/15', text: 'text-yellow-600 dark:text-yellow-400', dot: 'bg-yellow-400', label: 'Эдит' },
     photographer: { bg: 'bg-slate-400/15', text: 'text-slate-500 dark:text-slate-400', dot: 'bg-slate-400', label: 'Зураглаач' },
     live: { bg: 'bg-pink-500/15', text: 'text-pink-600 dark:text-pink-400', dot: 'bg-pink-500', label: 'Шууд дамжуулалт' },
+    bundle: { bg: 'bg-purple-500/15', text: 'text-purple-600 dark:text-purple-400', dot: 'bg-purple-500', label: 'Багц' },
 };
 
 const WEEKDAYS = ['Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя', 'Ня'];
@@ -748,7 +767,7 @@ export default function BookingsPage() {
                                 </div>
                                 <div className="flex-1">
                                     <h2 className="text-[22px] font-normal text-white leading-tight mb-1 cursor-text select-text">
-                                        {selectedBooking.items?.[0]?.itemType === 'STUDIO' ? `Студи: ${selectedBooking.items?.[0]?.studio?.name || '(Нэргүй)'}` : `Үйлчилгээ: ${selectedBooking.items?.[0]?.service?.name || '(Нэргүй)'}`}
+                                        {getBookingTitle(selectedBooking)}
                                     </h2>
                                     <div className="text-[13px] text-gray-300 tracking-wide mt-1.5">
                                         {new Date(selectedBooking.items?.[0]?.bookingDate).toLocaleDateString('mn-MN', { weekday: 'long', month: 'long', day: 'numeric' })}

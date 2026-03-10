@@ -3,6 +3,23 @@ export declare class PhotographerServiceService {
     private prisma;
     constructor(prisma: PrismaService);
     findAll(): Promise<({
+        equipments: ({
+            equipment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            equipmentId: number;
+            photographerServiceId: number;
+        })[];
         packages: ({
             subType: {
                 id: number;
@@ -17,8 +34,8 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            photographerServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
+            photographerServiceId: number;
             subTypeId: number;
             priceLabel: string | null;
         })[];
@@ -30,23 +47,6 @@ export declare class PhotographerServiceService {
             description: string | null;
             icon: string | null;
         };
-        equipments: ({
-            equipment: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            photographerServiceId: number;
-            equipmentId: number;
-        })[];
         mainType: {
             id: number;
             createdAt: Date;
@@ -60,15 +60,32 @@ export declare class PhotographerServiceService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
         mainTypeId: number;
         photographerSubTypeId: number | null;
     })[]>;
     findOne(id: number): Promise<{
+        equipments: ({
+            equipment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            equipmentId: number;
+            photographerServiceId: number;
+        })[];
         packages: ({
             subType: {
                 id: number;
@@ -83,8 +100,8 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            photographerServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
+            photographerServiceId: number;
             subTypeId: number;
             priceLabel: string | null;
         })[];
@@ -96,23 +113,6 @@ export declare class PhotographerServiceService {
             description: string | null;
             icon: string | null;
         };
-        equipments: ({
-            equipment: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            photographerServiceId: number;
-            equipmentId: number;
-        })[];
         mainType: {
             id: number;
             createdAt: Date;
@@ -126,15 +126,32 @@ export declare class PhotographerServiceService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
         mainTypeId: number;
         photographerSubTypeId: number | null;
     }>;
     create(data: any): Promise<{
+        equipments: ({
+            equipment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            equipmentId: number;
+            photographerServiceId: number;
+        })[];
         packages: ({
             subType: {
                 id: number;
@@ -149,8 +166,8 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            photographerServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
+            photographerServiceId: number;
             subTypeId: number;
             priceLabel: string | null;
         })[];
@@ -162,23 +179,6 @@ export declare class PhotographerServiceService {
             description: string | null;
             icon: string | null;
         };
-        equipments: ({
-            equipment: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            photographerServiceId: number;
-            equipmentId: number;
-        })[];
         mainType: {
             id: number;
             createdAt: Date;
@@ -192,15 +192,32 @@ export declare class PhotographerServiceService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
         mainTypeId: number;
         photographerSubTypeId: number | null;
     }>;
     update(id: number, data: any): Promise<{
+        equipments: ({
+            equipment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            equipmentId: number;
+            photographerServiceId: number;
+        })[];
         packages: ({
             subType: {
                 id: number;
@@ -215,8 +232,8 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            photographerServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
+            photographerServiceId: number;
             subTypeId: number;
             priceLabel: string | null;
         })[];
@@ -228,23 +245,6 @@ export declare class PhotographerServiceService {
             description: string | null;
             icon: string | null;
         };
-        equipments: ({
-            equipment: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            photographerServiceId: number;
-            equipmentId: number;
-        })[];
         mainType: {
             id: number;
             createdAt: Date;
@@ -258,10 +258,10 @@ export declare class PhotographerServiceService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
         mainTypeId: number;
         photographerSubTypeId: number | null;
@@ -271,10 +271,10 @@ export declare class PhotographerServiceService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
         mainTypeId: number;
         photographerSubTypeId: number | null;

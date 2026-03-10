@@ -39,13 +39,13 @@ export function VideoEditingSection() {
     <>
       <section className="w-full py-24 bg-[#0a0a0a] border-t border-white/5 relative overflow-hidden">
         {/* Background Ambience */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-600/5 rounded-full blur-[120px] pointer-events-none" />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
             <div className="max-w-2xl">
               <h2 className="text-4xl md:text-5xl font-bold mb-4 text-white font-sans">
-                Video <span className="text-primary">Editing</span> & Post-Production
+                Video <span className="text-rose-600">Editing</span> & Post-Production
               </h2>
               <p className="text-gray-400 text-lg">
                 Бид таны түүхий дүрсийг мэргэжлийн түвшинд эвлүүлж, өнгө шүүлт (color grading) болон дуу дүрсний гайхалтай хослолыг бүтээнэ.
@@ -92,8 +92,8 @@ export function VideoEditingSection() {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <span className="text-primary text-xs font-bold tracking-wider uppercase">{project.category}</span>
-                      <h3 className="text-xl font-bold text-white mt-1 group-hover:text-primary transition-colors">{project.title}</h3>
+                      <span className="text-rose-600 text-xs font-bold tracking-wider uppercase">{project.category}</span>
+                      <h3 className="text-xl font-bold text-white mt-1 group-hover:text-rose-600 transition-colors">{project.title}</h3>
                     </div>
                     <button className="text-gray-400 hover:text-white transition-colors">
                       <Maximize2 className="w-5 h-5" />

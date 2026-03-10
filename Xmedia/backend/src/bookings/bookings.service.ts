@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma.service';
+import { BundleServiceService } from '../bundle-service/bundle-service.service';
 import { BookingStatus, ItemType, PaymentStatus } from '@prisma/client';
 import { BylPaymentService } from './byl-payment.service';
 import { MailService } from './mail.service';
@@ -42,6 +44,53 @@ export class BookingsService {
         });
     }
 
+    // Cron job to automatically delete PENDING & UNPAID bookings older than 14 days
+    // Runs every day at midnight server time.
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+    async cleanupExpiredBookings() {
+        this.logger.log('Running cleanup mechanism for expired pending bookings...');
+
+        // Calculate the date 14 days ago
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+        try {
+            // Find bookings that meet the criteria
+            const expiredBookings = await this.prisma.booking.findMany({
+                where: {
+                    status: 'PENDING',
+                    paymentStatus: 'UNPAID',
+                    createdAt: {
+                        lt: fourteenDaysAgo // Older than 14 days
+                    }
+                },
+                select: { id: true }
+            });
+
+            if (expiredBookings.length === 0) {
+                this.logger.log('No expired pending bookings found to clean up.');
+                return;
+            }
+
+            // Extract IDs
+            const bookingIds = expiredBookings.map(b => b.id);
+
+            // Delete them in bulk
+            // Assuming Prisma schema has onDelete: Cascade for items and payments
+            const result = await this.prisma.booking.deleteMany({
+                where: {
+                    id: {
+                        in: bookingIds
+                    }
+                }
+            });
+
+            this.logger.log(`Successfully deleted ${result.count} expired pending bookings older than 14 days: ${bookingIds.join(', ')}`);
+        } catch (error) {
+            this.logger.error('Error occurred while cleaning up expired bookings', error);
+        }
+    }
+
     // Find pending (invoice/unpaid) bookings
     async findPending() {
         return this.prisma.booking.findMany({
@@ -78,7 +127,7 @@ export class BookingsService {
         return this.prisma.booking.findMany({
             where: { userId },
             include: {
-                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true, bundleService: true } },
                 payments: true,
             },
             orderBy: { createdAt: 'desc' }
@@ -100,6 +149,11 @@ export class BookingsService {
         serviceName?: string;
         paymentType?: 'qpay' | 'invoice'; // new
         userId?: number; // Use explicit user logic if logged in
+        // Buyer organization fields (optional, for invoice)
+        buyerOrg?: string;
+        buyerOrgReg?: string;
+        buyerOrgAddress?: string;
+        buyerOrgPhone?: string;
     }) {
         // Find by explicit userId first
         let user: any = null;
@@ -159,14 +213,18 @@ export class BookingsService {
                 booking.id, dto.name, dto.email, dto.phone,
                 [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }],
                 dto.date,
+                { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone },
             );
+            if (dto.email) {
+                await this.mailService.sendOrderConfirmationEmail(dto.email, booking.id, dto.name, total, 1);
+            }
             return { ...booking, checkoutUrl: null };
         }
 
         // QPay path — create Byl checkout
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
-            //const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+            //const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
+            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3002';
 
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
@@ -195,6 +253,7 @@ export class BookingsService {
                 booking.id, dto.name, dto.email, dto.phone,
                 [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }],
                 dto.date,
+                { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone },
             );
             return { ...booking, checkoutUrl: null };
         }
@@ -210,7 +269,7 @@ export class BookingsService {
             date: string;     // 'YYYY-MM-DD'
             time: string;     // 'HH:MM'
             duration: number; // hours
-            serviceType: 'STUDIO' | 'LIVE_SERVICE' | 'PHOTOGRAPHER_SERVICE' | 'EDIT_SERVICE';
+            serviceType: 'STUDIO' | 'LIVE_SERVICE' | 'PHOTOGRAPHER_SERVICE' | 'EDIT_SERVICE' | 'BUNDLE_SERVICE';
             serviceId: number;
             unitPrice: number;
             serviceName?: string;
@@ -245,7 +304,7 @@ export class BookingsService {
             const total = item.unitPrice * item.duration;
             totalAmount += total;
 
-            const itemData: any = {
+            const bookingItemData: any = {
                 itemType: item.serviceType as ItemType,
                 quantity: item.duration,
                 unitPrice: item.unitPrice,
@@ -255,12 +314,25 @@ export class BookingsService {
                 endTime,
             };
 
-            if (item.serviceType === 'STUDIO') itemData.studioId = item.serviceId;
-            if (item.serviceType === 'LIVE_SERVICE') itemData.liveServiceId = item.serviceId;
-            if (item.serviceType === 'PHOTOGRAPHER_SERVICE') itemData.photographerServiceId = item.serviceId;
-            if (item.serviceType === 'EDIT_SERVICE') itemData.serviceId = item.serviceId;
+            switch (item.serviceType) {
+                case 'STUDIO':
+                    bookingItemData.studioId = item.serviceId;
+                    break;
+                case 'LIVE_SERVICE':
+                    bookingItemData.liveServiceId = item.serviceId;
+                    break;
+                case 'PHOTOGRAPHER_SERVICE':
+                    bookingItemData.photographerServiceId = item.serviceId;
+                    break;
+                case 'EDIT_SERVICE':
+                    bookingItemData.editServiceId = item.serviceId;
+                    break;
+                case 'BUNDLE_SERVICE':
+                    bookingItemData.bundleServiceId = item.serviceId;
+                    break;
+            }
 
-            return itemData;
+            return bookingItemData;
         });
 
         const booking = await this.prisma.booking.create({
@@ -285,12 +357,15 @@ export class BookingsService {
                 booking.id, dto.name, dto.email, dto.phone,
                 invoiceItems, dto.items[0]?.date || new Date().toISOString().slice(0, 10),
             );
+            if (dto.email) {
+                await this.mailService.sendOrderConfirmationEmail(dto.email, booking.id, dto.name, totalAmount, dto.items.length);
+            }
             return { ...booking, checkoutUrl: null };
         }
 
         // QPay path — create Byl checkout
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
+            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3002';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: totalAmount,
@@ -336,6 +411,7 @@ export class BookingsService {
         buyerPhone: string,
         items: { description: string; quantity: number; unitPrice: number; totalPrice: number }[],
         invoiceDate: string,
+        buyerOrgInfo?: { buyerOrg?: string; buyerOrgReg?: string; buyerOrgAddress?: string; buyerOrgPhone?: string },
     ) {
         if (!buyerEmail || !buyerEmail.includes('@')) {
             this.logger.warn(`No valid email for booking #${bookingId} (email: ${buyerEmail}), skipping`);
@@ -352,9 +428,14 @@ export class BookingsService {
             sellerBank: process.env.COMPANY_BANK || 'Хаан банк',
             sellerAccount: process.env.COMPANY_ACCOUNT || '5000000000',
             sellerReg: process.env.COMPANY_REG || '1234567',
-            buyerName,
+            // Buyer details — use org data if passed, fallback to personal info
+            buyerName: buyerOrgInfo?.buyerOrg ? buyerOrgInfo.buyerOrg : buyerName,
             buyerEmail,
-            buyerPhone,
+            buyerPhone: buyerOrgInfo?.buyerOrgPhone || buyerPhone,
+            buyerReg: buyerOrgInfo?.buyerOrgReg || '',
+            buyerAddress: buyerOrgInfo?.buyerOrgAddress || '',
+            // Store original person name for greeting
+            buyerPersonName: buyerName,
             items,
         };
 
@@ -470,12 +551,15 @@ export class BookingsService {
         // Find payment by Byl checkout ID (stored as invoiceId)
         const payment = await this.prisma.payment.findUnique({
             where: { invoiceId: bylCheckoutId },
-            include: { booking: true },
+            include: { booking: { include: { user: true, items: true } } },
         });
 
         if (!payment) {
             throw new NotFoundException(`Payment with Byl checkout ID ${bylCheckoutId} not found`);
         }
+
+        // Capture whether this was already paid BEFORE updating
+        const wasAlreadyPaid = payment.status === 'PAID';
 
         // Update payment status
         await this.prisma.payment.update({
@@ -487,13 +571,25 @@ export class BookingsService {
         });
 
         // Update booking status
-        await this.prisma.booking.update({
+        const updatedBooking = await this.prisma.booking.update({
             where: { id: payment.bookingId },
             data: {
                 paymentStatus: 'PAID',
                 status: 'CONFIRMED',
             },
+            include: { user: true, items: true }
         });
+
+        // Send success email only if payment was NOT already paid before this call
+        if (!wasAlreadyPaid && updatedBooking.user?.email) {
+            await this.mailService.sendOrderConfirmationEmail(
+                updatedBooking.user.email,
+                updatedBooking.id,
+                updatedBooking.user.username,
+                Number(updatedBooking.totalAmount),
+                updatedBooking.items.length
+            );
+        }
 
         return { success: true, bookingId: payment.bookingId };
     }
@@ -503,15 +599,26 @@ export class BookingsService {
         // Find the payment record for this booking
         const payment = await this.prisma.payment.findFirst({
             where: { bookingId },
-            include: { booking: true },
+            include: { booking: { include: { user: true, items: true } } },
         });
 
         if (!payment) {
             throw new NotFoundException(`Payment for booking #${bookingId} not found`);
         }
 
-        // Already paid — no need to check again
+        // Already paid — webhook already confirmed, just send confirmation email if needed
         if (payment.status === 'PAID') {
+            // Ensure success email is sent (in case webhook confirmed but email failed)
+            const booking = (payment as any).booking;
+            if (booking?.user?.email) {
+                await this.mailService.sendOrderConfirmationEmail(
+                    booking.user.email,
+                    bookingId,
+                    booking.user.username,
+                    Number(booking.totalAmount),
+                    booking.items?.length ?? 1,
+                ).catch(err => this.logger.warn(`Email resend failed for booking #${bookingId}: ${err.message}`));
+            }
             return { success: true, bookingId, alreadyPaid: true };
         }
 
@@ -519,7 +626,7 @@ export class BookingsService {
         const bylStatus = await this.bylPayment.getCheckoutStatus(payment.invoiceId);
 
         if (bylStatus.status === 'complete') {
-            // Confirm the payment
+            // Confirm the payment (will also send email)
             return this.confirmPayment(payment.invoiceId);
         }
 
@@ -612,6 +719,17 @@ export class BookingsService {
             );
         }
 
+        // Send confirmation email when status is set to CONFIRMED
+        if (status === 'CONFIRMED' && booking.status !== 'CONFIRMED' && updated.user?.email) {
+            await this.mailService.sendOrderConfirmationEmail(
+                updated.user.email,
+                updated.id,
+                updated.user.username,
+                Number(updated.totalAmount),
+                updated.items.length
+            );
+        }
+
         return updated;
     }
 
@@ -637,7 +755,7 @@ export class BookingsService {
 
     // Update custom payment status from admin
     async updatePaymentStatus(id: number, paymentStatus: PaymentStatus) {
-        const booking = await this.prisma.booking.findUnique({ where: { id } });
+        const booking = await this.prisma.booking.findUnique({ where: { id }, include: { user: true, items: true } });
 
         if (!booking) {
             throw new NotFoundException(`Booking with ID ${id} not found`);
@@ -652,7 +770,17 @@ export class BookingsService {
             }
         });
 
-        // Trigger log or notification if needed...
+        if (paymentStatus === 'PAID' && booking.paymentStatus !== 'PAID') {
+            if (updated.user?.email) {
+                await this.mailService.sendOrderConfirmationEmail(
+                    updated.user.email,
+                    updated.id,
+                    updated.user.username,
+                    Number(updated.totalAmount),
+                    updated.items.length
+                );
+            }
+        }
 
         return updated;
     }

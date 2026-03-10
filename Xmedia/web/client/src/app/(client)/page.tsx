@@ -115,30 +115,30 @@ export default function Home() {
               {slides[currentSlide].image.match(/\.(mp4|webm|ogg|mov)$/i) ? (
                 <video
                   src={slides[currentSlide].image}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear scale-105"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear scale-100"
                   autoPlay
                   muted
                   loop
                   playsInline
-                  style={{ transform: "scale(1.05)" }}
+                  style={{ transform: "scale(1)" }}
                 />
               ) : (
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-105"
-                  style={{ backgroundImage: `url('${slides[currentSlide].image}')`, transform: "scale(1.05)" }}
+                  style={{ backgroundImage: `url('${slides[currentSlide].image}')`, transform: "scale(1)" }}
                 />
               )}
               {/* Added a smoother gradient fade into the background color at the bottom */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-background/80" />
+              <div className="absolute top-2/3 bottom-0 left-0 right-0 bg-gradient-to-b from-transparent via-background/40 to-background" />
               {/* Extra bottom gradient for absolute seamless transition */}
-              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent" />
             </motion.div>
           </AnimatePresence>
         </div>
 
-        <section className="relative flex-1 flex flex-col items-center justify-center pt-10 pb-2 overflow-hidden z-10 w-full">
+        <section className="relative flex-1 flex flex-col items-center justify-end pb-12 md:pb-20 overflow-hidden z-10 w-full">
 
-          <div className="container relative z-10 flex flex-col items-center text-center px-4">
+          <div className="container relative z-10 flex flex-col items-center text-center px-4 mt-16 md:mt-24">
             <AnimatePresence mode="wait">
               <motion.div
                 key={slides[currentSlide].id}
@@ -149,7 +149,7 @@ export default function Home() {
                 className="max-w-4xl mx-auto"
               >
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 font-sans leading-tight">
-                  {slides[currentSlide].title} <span className="text-primary">{slides[currentSlide].highlight}</span> <br />
+                  {slides[currentSlide].title} <span className="text-rose-600">{slides[currentSlide].highlight}</span> <br />
                   {slides[currentSlide].subTitle}
                 </h1>
                 <p className="mt-3 max-w-xl mx-auto text-base sm:text-lg text-gray-300 mb-10 leading-relaxed">
@@ -167,7 +167,7 @@ export default function Home() {
                   initial={{ width: "0%" }}
                   animate={{ width: "100%" }}
                   transition={{ duration: 10, ease: "linear" }}
-                  className="h-full bg-primary"
+                  className="h-full bg-rose-600"
                 />
               </div>
 
@@ -187,32 +187,32 @@ export default function Home() {
       </div>
 
       {/* Services Section - Smoothly overlaps with the hero section */}
-      <section className="mt-auto py-4 sm:py-8 relative z-20 min-h-[100dvh] sm:min-h-0 flex sm:block items-center">
+      <section className="relative z-20 pb-4 sm:pb-8 flex sm:block items-center -mt-8 sm:-mt-12 backdrop-blur-sm">
         <div className="container mx-auto px-4 w-full">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="w-full max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4"
+            className="w-full max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-3 mt-0 sm:gap-4"
           >
             {[
               { icon: Camera, label: "Студио", desc: "Мэргэжлийн зураг авалт", href: "/studios" },
               { icon: Radio, label: "Шууд дамжуулалт", desc: "Онлайн live streaming", href: "/livestream" },
               { icon: Image, label: "Зураглаач", desc: "Гэрэл зурагчны үйлчилгээ", href: "/photographers" },
               { icon: Film, label: "Эдит", desc: "Видео эдит & монтаж", href: "/video-editing" },
-              { icon: Package, label: "Багц", desc: "Хамгийн сайн саналууд", href: "/packages" },
+              { icon: Package, label: "Багц", desc: "Хамгийн сайн саналууд", href: "/bundles" },
             ].map(({ icon: Icon, label, desc, href }) => (
               <Link
                 key={label}
                 href={href}
-                className="group flex flex-col items-center justify-center gap-2 sm:gap-3 p-4 sm:p-5 rounded-2xl bg-muted/30 border border-border hover:bg-muted/50 hover:border-primary/40 transition-all duration-300"
+                className="group flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-xl bg-muted/30 border border-border hover:bg-muted/50 hover:border-rose-600/40 transition-all duration-300 transform translate-y-4"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 mb-1">
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-rose-600/10 group-hover:bg-rose-600/20 transition-colors duration-300 mb-0.5">
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600" />
                 </div>
-                <p className="text-foreground text-sm sm:text-base font-semibold text-center">{label}</p>
-                <p className="text-muted-foreground text-xs text-center leading-snug">{desc}</p>
+                <p className="text-foreground text-xs sm:text-sm font-semibold text-center">{label}</p>
+                <p className="text-muted-foreground text-[10px] sm:text-xs text-center leading-snug">{desc}</p>
               </Link>
             ))}
           </motion.div>

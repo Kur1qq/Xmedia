@@ -15,8 +15,8 @@ export declare class EquipmentController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        type: import("@prisma/client").$Enums.EquipmentType;
         description: string | null;
+        type: import("@prisma/client").$Enums.EquipmentType;
         images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     findAll(): Promise<{
@@ -24,8 +24,8 @@ export declare class EquipmentController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        type: import("@prisma/client").$Enums.EquipmentType;
         description: string | null;
+        type: import("@prisma/client").$Enums.EquipmentType;
         images: import("@prisma/client/runtime/client").JsonValue | null;
     }[]>;
     findOne(id: number): Promise<{
@@ -33,8 +33,8 @@ export declare class EquipmentController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        type: import("@prisma/client").$Enums.EquipmentType;
         description: string | null;
+        type: import("@prisma/client").$Enums.EquipmentType;
         images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     update(id: number, updateData: {
@@ -47,8 +47,8 @@ export declare class EquipmentController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        type: import("@prisma/client").$Enums.EquipmentType;
         description: string | null;
+        type: import("@prisma/client").$Enums.EquipmentType;
         images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     remove(id: number, req: any): Promise<{
@@ -56,8 +56,8 @@ export declare class EquipmentController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        type: import("@prisma/client").$Enums.EquipmentType;
         description: string | null;
+        type: import("@prisma/client").$Enums.EquipmentType;
         images: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
 }

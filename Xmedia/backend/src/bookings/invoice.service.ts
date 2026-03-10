@@ -26,6 +26,9 @@ export interface InvoiceData {
     buyerName: string;
     buyerEmail?: string;
     buyerPhone?: string;
+    buyerReg?: string;
+    buyerAddress?: string;
+    buyerPersonName?: string;
     items: InvoiceItem[];
     notes?: string;
 }
@@ -104,7 +107,7 @@ export class InvoiceService {
         return new Promise((resolve, reject) => {
             const doc = new PDFDocument({ size: 'A4', margin: 40 });
             const buffers: Buffer[] = [];
-            doc.on('data', (chunk) => buffers.push(chunk));
+            doc.on('data', (chunk: Buffer) => buffers.push(chunk));
             doc.on('end', () => resolve(Buffer.concat(buffers)));
             doc.on('error', reject);
 
@@ -116,101 +119,111 @@ export class InvoiceService {
             const RIGHT = LEFT + W;
             const subTotal = data.items.reduce((s, i) => s + i.totalPrice, 0);
 
-            // ── Header note ──
-            doc.font(regular).fontSize(7)
-                .text('Сангийн сайдын 2017 оны 12 дугаар сарын', { align: 'right', width: W })
-                .text('5-ны өдрийн 347 тоот тушаалын хавсралт', { align: 'right', width: W });
-
             // ── Title ──
-            doc.font(bold).fontSize(16)
-                .text(`НЭХЭМЖЛЭХ № ${data.invoiceNumber}`, LEFT, 70, { align: 'center', width: W });
+            doc.font(regular).fontSize(14)
+                .text(`НЭХЭМЖЛЭХ № ${data.invoiceNumber || ''}`, LEFT, 40, { align: 'center', width: W });
 
-            let y = 105;
+            let y = 80;
             const colW = (W - 20) / 2;
             const col1 = LEFT;
             const col2 = LEFT + colW + 20;
 
-            const underline = (x: number, cy: number, w: number) => {
-                doc.moveTo(x, cy + 14).lineTo(x + w, cy + 14).lineWidth(0.4).strokeColor('#000').stroke();
+            const doubleUnderline = (yPos: number) => {
+                doc.moveTo(LEFT, yPos).lineTo(col1 + colW, yPos).lineWidth(1).strokeColor('#000').stroke();
+                doc.moveTo(LEFT, yPos + 3).lineTo(col1 + colW, yPos + 3).lineWidth(1).strokeColor('#000').stroke();
+
+                doc.moveTo(col2, yPos).lineTo(col2 + colW, yPos).lineWidth(1).strokeColor('#000').stroke();
+                doc.moveTo(col2, yPos + 3).lineTo(col2 + colW, yPos + 3).lineWidth(1).strokeColor('#000').stroke();
             };
 
-            const field = (label: string, value: string, x: number, cy: number, w: number) => {
-                doc.font(bold).fontSize(9).text(label, x, cy, { continued: true, width: w });
-                doc.font(regular).fontSize(9).text(' ' + (value || ''), { width: w });
-                underline(x, cy, w);
+            const lineUnder = (x: number, yPos: number, w: number) => {
+                doc.moveTo(x, yPos + 2).lineTo(x + w, yPos + 2).lineWidth(1).strokeColor('#000').stroke();
+            };
+
+            const fieldWithLine = (label: string, value: string, x: number, cy: number, w: number, labelWidth: number) => {
+                doc.font(regular).fontSize(10).text(label, x, cy, { continued: false });
+                doc.font(bold).fontSize(10).text(value || '', x + labelWidth, cy - 2, { width: w - labelWidth, align: 'center' });
+                lineUnder(x + labelWidth, cy + 10, w - labelWidth);
             };
 
             // Seller / Buyer header
-            doc.font(bold).fontSize(10)
-                .text('Нэхэмжлэгч:', col1, y)
-                .text('Төлөгч:', col2, y);
-            y += 18;
+            doc.font(regular).fontSize(10)
+                .text('Нэхэмжлэгч', col1, y)
+                .text('Төлөгч', col2, y);
+            y += 25;
 
-            field('Байгууллагын нэр:', data.sellerName, col1, y, colW);
-            field('Байгууллагын нэр:', data.buyerName, col2, y, colW);
+            fieldWithLine('Байгууллагын нэр', 'Отек менежмент ххк', col1, y, colW, 95);
+            fieldWithLine('Байгууллагын нэр', data.buyerName, col2, y, colW, 95);
             y += 20;
 
-            field('Хаяг:', data.sellerAddress, col1, y, colW);
-            field('Хаяг:', data.buyerEmail || '—', col2, y, colW);
-            y += 20;
+            doubleUnderline(y + 10);
+            y += 25;
 
-            field('Утас: Факс:', data.sellerPhone, col1, y, colW);
-            field('Гэрээний №:', '—', col2, y, colW);
-            y += 20;
+            fieldWithLine('Хаяг', data.sellerAddress, col1, y, colW, 30);
+            fieldWithLine('Хаяг', data.buyerAddress || data.buyerEmail || '—', col2, y, colW, 30);
+            y += 25;
 
-            field('Э_шуудан:', '', col1, y, colW);
-            field('Нэхэмжилсэн огноо:', data.invoiceDate, col2, y, colW);
-            y += 20;
+            fieldWithLine('Утас', data.buyerPhone || '—', col2, y, colW, 30);
+            fieldWithLine('Утас', data.sellerPhone, col1, y, colW, 30);
+            y += 25;
 
-            field('Банкны нэр:', data.sellerBank, col1, y, colW);
-            field('Төлбөр хийх хугацаа:', data.payByDate || '14 хоног', col2, y, colW);
-            y += 20;
+            fieldWithLine('Регистр', '#6959709', col1, y, colW, 45);
+            fieldWithLine('Нэхэмжилсэн огноо:', data.invoiceDate, col2, y, colW, 110);
+            y += 25;
 
-            field('Банкны дансны дугаар:', data.sellerAccount, col1, y, colW);
-            y += 20;
+            fieldWithLine('Голомт банк', 'MN-61001500 – 2025138994', col1, y, colW, 65);
+            fieldWithLine('Төлбөр хийх хугацаа:', data.payByDate || '14 хоног', col2, y, colW, 115);
+            y += 25;
 
-            field('Регистрийн №:', data.sellerReg, col1, y, colW);
-            y += 28;
+            fieldWithLine('Мбанк', 'MN-85003900 - 8000666677 (Г. Сайнбуян)', col1, y, colW, 40);
+            y += 35;
 
             // ── Table ──
             const cols = [
-                { label: '№', w: 28 },
-                { label: 'Гүйлгээний утга', w: W - 28 - 78 - 88 - 78 },
-                { label: 'Тоо хэмжээ', w: 78 },
-                { label: 'Нэгжийн үнэ', w: 88 },
-                { label: 'Нийт үнэ', w: 78 },
+                { label: '№', w: 35 },
+                { label: 'Гүйлгээний утга', w: W - 35 - 80 - 85 - 85 },
+                { label: 'Тоо хэмжээ', w: 80 },
+                { label: 'нэгжийн үнэ', w: 85 },
+                { label: 'Нийт үнэ', w: 85 },
             ];
 
             // Header
             let cx = LEFT;
-            doc.rect(LEFT, y, W, 18).fillAndStroke('#ddd', '#000');
-            doc.fill('#000');
-            cols.forEach(col => {
-                doc.font(bold).fontSize(8).text(col.label, cx + 2, y + 5, { width: col.w - 4, align: 'center' });
+            doc.rect(LEFT, y, W, 25).lineWidth(1).stroke('#000');
+            cols.forEach((col, idx) => {
+                doc.font(regular).fontSize(10).text(col.label, cx, y + 8, { width: col.w, align: 'center' });
+                if (idx > 0) doc.moveTo(cx, y).lineTo(cx, y + 25).stroke('#000');
                 cx += col.w;
             });
-            y += 18;
+            y += 25;
 
-            const rowH = 18;
-            const totalRows = Math.max(data.items.length, 9);
+            const rowH = 25;
+            const totalRows = Math.max(data.items.length, 6);
 
+            // Draw rows
             for (let i = 0; i < totalRows; i++) {
                 const item = data.items[i];
-                const fill = i % 2 === 0 ? '#fff' : '#f9f9f9';
-                doc.rect(LEFT, y, W, rowH).fillAndStroke(fill, '#999');
-                doc.fill('#000');
+                doc.rect(LEFT, y, W, rowH).stroke('#000');
+                cx = LEFT;
+
+                cols.forEach((col, idx) => {
+                    if (idx > 0) doc.moveTo(cx, y).lineTo(cx, y + rowH).stroke('#000');
+                    cx += col.w;
+                });
+
                 cx = LEFT;
                 if (item) {
                     const vals = [
                         String(i + 1),
                         item.description,
-                        `${item.quantity} цаг`,
-                        `${item.unitPrice.toLocaleString('en')}₮`,
-                        `${item.totalPrice.toLocaleString('en')}₮`,
+                        `${item.quantity}`,
+                        `${item.unitPrice.toLocaleString('en')}`,
+                        `${item.totalPrice.toLocaleString('en')}`,
                     ];
                     vals.forEach((val, vi) => {
-                        const align = vi === 0 || vi >= 2 ? 'center' : 'left';
-                        doc.font(regular).fontSize(8).text(val, cx + 2, y + 5, { width: cols[vi].w - 4, align });
+                        const align = vi === 0 || vi === 2 ? 'center' : (vi === 1 ? 'left' : 'right');
+                        const padX = vi === 1 ? 5 : (vi > 2 ? -5 : 0);
+                        doc.font(regular).fontSize(10).text(val, cx + padX, y + 8, { width: cols[vi].w + (vi === 1 ? -5 : (vi > 2 ? -5 : 0)), align });
                         cx += cols[vi].w;
                     });
                 }
@@ -221,40 +234,48 @@ export class InvoiceService {
             const sW3 = cols[2].w, sW4 = cols[3].w, sW5 = cols[4].w;
             const sX = RIGHT - sW3 - sW4 - sW5;
 
-            const summaryRow = (c2: string, c3: string, c4: string, isBold = false) => {
-                doc.rect(sX, y, sW3, rowH).fillAndStroke('#eee', '#999');
-                doc.rect(sX + sW3, y, sW4, rowH).fillAndStroke('#eee', '#999');
-                doc.rect(sX + sW3 + sW4, y, sW5, rowH).fillAndStroke('#fff', '#999');
-                doc.fill('#000');
-                const f = isBold ? bold : regular;
-                doc.font(f).fontSize(8)
-                    .text(c2, sX + 2, y + 5, { width: sW3 - 4, align: 'center' })
-                    .text(c3, sX + sW3 + 2, y + 5, { width: sW4 - 4, align: 'center' })
-                    .text(c4, sX + sW3 + sW4 + 2, y + 5, { width: sW5 - 4, align: 'right' });
+            const summaryRow = (c3: string, c4: string) => {
+                doc.rect(sX + sW3, y, sW4, rowH).stroke('#000');
+                doc.rect(sX + sW3 + sW4, y, sW5, rowH).stroke('#000');
+
+                doc.font(regular).fontSize(10)
+                    .text(c3, sX + sW3, y + 8, { width: sW4, align: 'center' })
+                    .text(c4, sX + sW3 + sW4 - 5, y + 8, { width: sW5, align: 'right' });
                 y += rowH;
             };
 
-            summaryRow('', 'Дүн', `${subTotal.toLocaleString('en')}₮`);
-            summaryRow('', 'НӨАТ', '—');
-            summaryRow('', 'Нийт дүн', `${subTotal.toLocaleString('en')}₮`, true);
+            summaryRow('Дүн', `${subTotal.toLocaleString('en')}`);
+            summaryRow('НӨАТ', '');
+            summaryRow('Нийт дүн', `${subTotal.toLocaleString('en')}`);
 
-            y += 12;
+            y += 35;
 
             // Amount in words
-            doc.font(regular).fontSize(9)
-                .text(`Мөнгөний дүн: ${numberToWords(subTotal)} төгрөг (${subTotal.toLocaleString('en')}₮)`, LEFT, y, { width: W });
-            y += 14;
-            doc.moveTo(LEFT, y + 8).lineTo(RIGHT, y + 8).lineWidth(0.4).strokeColor('#000').stroke();
-            y += 20;
-            doc.font(regular).text('болно.', LEFT, y, { align: 'right', width: W });
-            y += 24;
+            const words = numberToWords(subTotal);
+            doc.font(regular).fontSize(11)
+                .text('Мөнгөний дүн үсгээр', LEFT, y, { continued: false });
+
+            const wordsW = doc.widthOfString('Мөнгөний дүн үсгээр');
+            doc.font(bold).fontSize(11).text(words, LEFT + wordsW + 10, y - 2, { underline: false });
+            lineUnder(LEFT + wordsW + 5, y + 10, W - wordsW - 5);
+            y += 30;
+
+            const dLineTotalUnder = (yPos: number) => {
+                doc.moveTo(LEFT, yPos).lineTo(LEFT + W, yPos).lineWidth(1.5).strokeColor('#000').stroke();
+                doc.moveTo(LEFT, yPos + 3).lineTo(LEFT + W, yPos + 3).lineWidth(0.5).strokeColor('#000').stroke();
+            };
+            dLineTotalUnder(y);
+
+            y += 40;
 
             // Signature
-            doc.font(bold).fontSize(10).text('Тамга', LEFT, y);
-            doc.font(regular).fontSize(9)
-                .text('Дарга .........................................  /                    /', LEFT + 60, y)
-                .text('Хүлээн авсан ............................', LEFT + 60, y + 18)
-                .text('Няглан бодогч ........................', LEFT + 60, y + 36);
+            doc.font(regular).fontSize(11)
+                .text('Дарга', LEFT, y)
+                .text('................................................................/................................................................/', LEFT + 100, y);
+            y += 30;
+            doc.font(regular).fontSize(11)
+                .text('Хүлээн авсан', LEFT, y)
+                .text('................................................................/................................................................/', LEFT + 100, y);
 
             doc.end();
         });
@@ -263,74 +284,111 @@ export class InvoiceService {
     // HTML invoice for email fallback
     generateInvoiceHtml(data: InvoiceData): string {
         const subTotal = data.items.reduce((s, i) => s + i.totalPrice, 0);
-        const td = 'padding:6px 10px;border:1px solid #ccc;font-size:13px';
+
+        let golomtBase64 = 'cid:golomtLogo';
+        let mbankBase64 = 'cid:mbankLogo';
+
         const rows = data.items.map((item, i) => `
-            <tr style="background:${i % 2 ? '#f9f9f9' : '#fff'}">
-                <td style="${td}">${i + 1}</td>
-                <td style="${td}">${item.description}</td>
-                <td style="${td};text-align:center">${item.quantity} цаг</td>
-                <td style="${td};text-align:right">${item.unitPrice.toLocaleString()}₮</td>
-                <td style="${td};text-align:right"><b>${item.totalPrice.toLocaleString()}₮</b></td>
+            <tr>
+                <td style="padding:16px;border-bottom:1px solid #f0f0f0;color:#333;">${item.description}</td>
+                <td style="padding:16px;border-bottom:1px solid #f0f0f0;color:#333;">${item.unitPrice.toLocaleString()}</td>
+                <td style="padding:16px;border-bottom:1px solid #f0f0f0;color:#333;">${item.quantity}</td>
+                <td style="padding:16px;border-bottom:1px solid #f0f0f0;color:#333;text-align:right;">${item.totalPrice.toLocaleString()}</td>
             </tr>`).join('');
 
         return `
-        <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;color:#222">
-            <div style="text-align:right;font-size:11px;color:#666">
-                Сангийн сайдын 2017 оны 12 дугаар сарын 5-ны өдрийн 347 тоот тушаалын хавсралт
-            </div>
-            <h2 style="text-align:center;font-size:20px;margin:16px 0">НЭХЭМЖЛЭХ № ${data.invoiceNumber}</h2>
-            <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-                <tr>
-                    <td style="width:50%;vertical-align:top;padding:8px">
-                        <b>Нэхэмжлэгч:</b><br>
-                        Байгууллагын нэр: <b>${data.sellerName}</b><br>
-                        Хаяг: ${data.sellerAddress}<br>
-                        Утас: ${data.sellerPhone}<br>
-                        Банк: ${data.sellerBank}<br>
-                        Данс: <b>${data.sellerAccount}</b><br>
-                        Регистр: ${data.sellerReg}
-                    </td>
-                    <td style="width:50%;vertical-align:top;padding:8px">
-                        <b>Төлөгч:</b><br>
-                        Байгууллагын нэр: <b>${data.buyerName}</b><br>
-                        Э-шуудан: ${data.buyerEmail || '—'}<br>
-                        Утас: ${data.buyerPhone || '—'}<br><br>
-                        Нэхэмжилсэн огноо: <b>${data.invoiceDate}</b><br>
-                        Төлбөр хийх хугацаа: ${data.payByDate || '14 хоног'}
-                    </td>
-                </tr>
-            </table>
-            <table style="width:100%;border-collapse:collapse">
-                <thead>
-                    <tr style="background:#ddd">
-                        <th style="${td}">№</th>
-                        <th style="${td}">Гүйлгээний утга</th>
-                        <th style="${td}">Тоо хэмжээ</th>
-                        <th style="${td}">Нэгжийн үнэ</th>
-                        <th style="${td}">Нийт үнэ</th>
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#f9fafb;padding:40px 20px;">
+            <div style="max-width:800px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1);padding:40px;border:1px solid #e5e7eb;">
+                
+                <!-- Header -->
+                <table style="width:100%;border-bottom:1px solid #e5e7eb;padding-bottom:20px;margin-bottom:30px;border-collapse:collapse;">
+                    <tr>
+                        <td style="vertical-align:middle;">
+                            <span style="font-size:18px;font-weight:600;color:#111;">Нэхэмжлэхийн дугаар: ${data.invoiceNumber || 'A/102'}</span>
+                            <span style="color:#ef4444;font-size:18px;font-weight:500;margin-left:8px;">ТӨЛӨӨГҮЙ</span>
+                        </td>
+                        <td style="vertical-align:middle;text-align:right;" align="right">
+                            <img src="cid:xtudioLogo" style="height:32px;vertical-align:middle;" alt="XTUDIO" />
+                        </td>
                     </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-                <tfoot>
-                    <tr><td colspan="3"></td><td style="${td};background:#eee"><b>Дүн</b></td><td style="${td};text-align:right">${subTotal.toLocaleString()}₮</td></tr>
-                    <tr><td colspan="3"></td><td style="${td};background:#eee">НӨАТ</td><td style="${td};text-align:right">—</td></tr>
-                    <tr><td colspan="3"></td><td style="${td};background:#ddd"><b>Нийт дүн</b></td><td style="${td};text-align:right"><b>${subTotal.toLocaleString()}₮</b></td></tr>
-                </tfoot>
-            </table>
-            <p style="margin-top:16px;font-size:13px">
-                Мөнгөний дүн: <b>${numberToWords(subTotal)} төгрөг (${subTotal.toLocaleString()}₮)</b> болно.
-            </p>
-            <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
-            <table style="width:100%">
-                <tr>
-                    <td><b>Тамга</b></td>
-                    <td>
-                        Дарга ................................ / &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /<br>
-                        Хүлээн авсан ........................<br>
-                        Няглан бодогч ....................
-                    </td>
-                </tr>
-            </table>
+                </table>
+
+                <!-- Parties -->
+                <table style="width:100%;margin-bottom:40px;border-collapse:collapse;">
+                    <tr>
+                        <td style="width:50%;vertical-align:top;color:#4b5563;font-size:14px;line-height:1.6;">
+                            <div style="margin-bottom:8px;">Нэхэмжлэгч байгууллага:</div>
+                            <div style="color:#111;font-weight:500;">Отек менежмент ххк</div>
+                            <div>Регистрийн дугаар: #6959709</div>
+                            
+                            <div style="margin-top:20px;">
+                                <div style="margin-bottom:4px;">
+                                    ${golomtBase64 ? `<img src="${golomtBase64}" style="width:20px;height:20px;border-radius:4px;vertical-align:middle;object-fit:contain;background:#fff;display:inline-block;" alt="Golomt"/>` : `<div style="width:20px;height:20px;background:#005BBB;border-radius:4px;display:inline-block;vertical-align:middle;"></div>`}
+                                    <span style="font-weight:500;color:#005BBB;vertical-align:middle;margin-left:6px;">Голомт банк</span>
+                                </div>
+                                <div>Отек менежмент ххк</div>
+                                <div style="margin-bottom:16px;">MN-61001500 – 2025138994</div>
+
+                                <div style="margin-bottom:4px;">
+                                    ${mbankBase64 ? `<img src="${mbankBase64}" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;object-fit:contain;background:#fff;display:inline-block;" alt="Mbank"/>` : `<div style="width:20px;height:20px;background:#10b981;border-radius:50%;display:inline-block;vertical-align:middle;"></div>`}
+                                    <span style="font-weight:500;color:#10b981;vertical-align:middle;margin-left:6px;">Мбанк</span>
+                                </div>
+                                <div>Г. Сайнбуян</div>
+                                <div>MN-85003900 - 8000666677</div>
+                            </div>
+                        </td>
+                        
+                        <td style="width:50%;vertical-align:top;color:#4b5563;font-size:14px;line-height:1.6;text-align:right;" align="right">
+                            <div style="text-align:right;width:100%;display:inline-block;">
+                                <div style="margin-bottom:8px;">Төлөгч байгууллага</div>
+                                <div style="color:#111;font-weight:500;">${data.buyerName || 'Хэрэглэгч'}</div>
+                                ${data.buyerReg ? `<div>Регистрийн дугаар: ${data.buyerReg}</div>` : ''}
+                                ${data.buyerPhone ? `<div>Утасны дугаар: ${data.buyerPhone}</div>` : ''}
+                                ${data.buyerAddress ? `<div>Хаяг: ${data.buyerAddress}</div>` : ''}
+                                ${data.buyerEmail ? `<div><a href="mailto:${data.buyerEmail}" style="color:#1d4ed8;text-decoration:underline;">${data.buyerEmail}</a></div>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Table -->
+                <div style="border:1px solid #f3f4f6;border-radius:8px;overflow:hidden;margin-bottom:24px;">
+                    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                        <thead>
+                            <tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+                                <th style="padding:16px;text-align:left;font-weight:600;color:#374151;width:40%;">Нэр, тайлбар</th>
+                                <th style="padding:16px;text-align:left;font-weight:600;color:#374151;">Үнийн дүн</th>
+                                <th style="padding:16px;text-align:left;font-weight:600;color:#374151;">Тоо ширхэг</th>
+                                <th style="padding:16px;text-align:right;font-weight:600;color:#374151;">Нийт</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Total -->
+                <div style="display:flex;justify-content:flex-end;margin-bottom:40px;padding-right:16px;">
+                    <div style="text-align:right;">
+                        <span style="font-size:16px;font-weight:600;color:#374151;margin-right:80px;">Төлөх дүн</span>
+                        <span style="font-size:18px;font-weight:700;color:#111;">${subTotal.toLocaleString()} ₮</span>
+                    </div>
+                </div>
+
+                <!-- Footer & Actions -->
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                    <div style="display:flex;gap:16px;align-items:flex-start;">
+                        <div style="padding-top:4px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <div style="font-size:14px;color:#374151;">
+                            <div style="font-weight:500;margin-bottom:4px;">Нэмэлт мэдээлэл:</div>
+                            <div style="color:#6b7280;">Байхгүй.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>`;
     }
 }

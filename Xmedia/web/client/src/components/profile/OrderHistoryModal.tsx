@@ -120,7 +120,7 @@ export function OrderHistoryModal({ isOpen, onClose }: { isOpen: boolean; onClos
             <DialogContent className="sm:max-w-[600px] bg-black/95 text-white border-white/10 max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                        <PackageOpen className="w-5 h-5 text-primary" />
+                        <PackageOpen className="w-5 h-5 text-rose-600" />
                         Миний захиалгын түүх
                     </DialogTitle>
                 </DialogHeader>
@@ -128,7 +128,7 @@ export function OrderHistoryModal({ isOpen, onClose }: { isOpen: boolean; onClos
                 <div className="mt-4 space-y-4">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                            <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+                            <Loader2 className="w-8 h-8 animate-spin mb-4 text-rose-600" />
                             <p>Уншиж байна...</p>
                         </div>
                     ) : orders.length === 0 ? (
@@ -150,7 +150,7 @@ export function OrderHistoryModal({ isOpen, onClose }: { isOpen: boolean; onClos
                                             )}
                                         </div>
                                         {order.serviceName && (
-                                            <p className="text-sm font-medium text-primary">
+                                            <p className="text-sm font-medium text-rose-600">
                                                 {order.serviceName}
                                             </p>
                                         )}
@@ -162,7 +162,7 @@ export function OrderHistoryModal({ isOpen, onClose }: { isOpen: boolean; onClos
                                         <div className="flex flex-col sm:items-end gap-1">
                                             <p className="font-bold text-lg">{order.totalAmount.toLocaleString()} ₮</p>
                                             <div className="flex items-center gap-2">
-                                                <span className={`flex h-2 w-2 rounded-full ${order.status === 'completed' ? 'bg-green-500' : order.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                                                <span className={`flex h-2 w-2 rounded-full ${order.status === 'completed' ? 'bg-green-500' : order.status === 'pending' ? 'bg-yellow-500' : 'bg-rose-600'}`} />
                                                 <span className="text-xs font-medium text-gray-300 capitalize">
                                                     {order.status === "completed" ? "Баталгаажсан" : order.status === "pending" ? "Хүлээгдэж буй" : "Цуцлагдсан"}
                                                 </span>
@@ -172,7 +172,7 @@ export function OrderHistoryModal({ isOpen, onClose }: { isOpen: boolean; onClos
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-7 px-3 text-xs bg-transparent border-red-500/30 text-red-500 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 w-full sm:w-auto mt-1"
+                                                className="h-7 px-3 text-xs bg-transparent border-rose-600/30 text-rose-600 hover:bg-rose-600/20 hover:text-rose-600 hover:border-rose-600/50 w-full sm:w-auto mt-1"
                                                 onClick={() => handleCancelOrder(order.id)}
                                             >
                                                 Захиалга цуцлах

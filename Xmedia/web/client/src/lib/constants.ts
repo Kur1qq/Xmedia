@@ -6,6 +6,6 @@ export const siteConfig = {
         { label: "Шууд дамжуулалт", href: "/livestream" },
         { label: "Гэрэл зурагчин", href: "/photographers" },
         { label: "Видео эвлүүлэг", href: "/video-editing" },
-        { label: "Багц", href: "/packages" },
+        { label: "Багц үйлчилгээ", href: "/bundles" },
     ],
 };

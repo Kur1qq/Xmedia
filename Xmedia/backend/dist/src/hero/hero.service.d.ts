@@ -6,9 +6,9 @@ export declare class HeroService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         image: string;
         isActive: boolean;
-        description: string | null;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -18,9 +18,9 @@ export declare class HeroService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         image: string;
         isActive: boolean;
-        description: string | null;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -30,9 +30,9 @@ export declare class HeroService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         image: string;
         isActive: boolean;
-        description: string | null;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -42,9 +42,9 @@ export declare class HeroService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         image: string;
         isActive: boolean;
-        description: string | null;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -54,9 +54,9 @@ export declare class HeroService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         image: string;
         isActive: boolean;
-        description: string | null;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -66,9 +66,9 @@ export declare class HeroService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         image: string;
         isActive: boolean;
-        description: string | null;
         title: string;
         highlight: string | null;
         subTitle: string | null;

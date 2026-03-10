@@ -7,6 +7,7 @@ import { Film, ArrowLeft, Loader2, Check, Info, GalleryVerticalEnd, Calendar as 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -48,7 +49,7 @@ export default function VideoEditingPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [selectedPackages, setSelectedPackages] = useState<Record<number, ServicePackage>>({});
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ date: undefined as Date | undefined, notes: "" });
+    const [form, setForm] = useState({ date: undefined as Date | undefined, notes: "", name: "", phone: "", email: "" });
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const { addItem } = useCartStore();
 
@@ -64,6 +65,12 @@ export default function VideoEditingPage() {
             .finally(() => setLoading(false));
     }, []);
 
+    useEffect(() => {
+        if (user) {
+            setForm(prev => ({ ...prev, name: user.name || "", phone: user.phone || "", email: user.email || "" }));
+        }
+    }, [user]);
+
     const activeService = services.find(s => s.id === activeServiceId);
     const currentPackage = activeService ? selectedPackages[activeService.id] : null;
 
@@ -74,21 +81,19 @@ export default function VideoEditingPage() {
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
         setIsBooking(false);
-        setForm(prev => ({ ...prev, date: undefined, notes: "" }));
+        setForm(prev => ({ ...prev, date: undefined, notes: "", name: "", phone: "", email: "" }));
     };
 
-    const validateForm = () => {
+    const validateForm = (isBuyNow: boolean = false) => {
+        if (isBuyNow) {
+            if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) { toast.error("Мэдээллээ бүрэн оруулна уу (Нэр, Утас, Имэйл)."); return false; }
+        }
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return false; }
         if (activeService?.packages && activeService.packages.length > 0 && !currentPackage) { toast.error("Багц сонгоно уу."); return false; }
         return true;
     };
 
     const handleAddToCart = () => {
-        if (!user) {
-            toast.error("Та эхлээд нэвтэрнэ үү.");
-            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
-            return;
-        }
         if (!validateForm() || !activeService) return;
 
         addItem({
@@ -101,63 +106,64 @@ export default function VideoEditingPage() {
             unitPrice: Number(currentPackage ? currentPackage.price : 0),
         });
 
-        toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү.", duration: 4000 });
+        toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү." });
         closeBooking();
     };
 
-    const handleBuyNow = async (paymentType: "qpay" | "invoice") => {
-        if (!user) {
-            toast.error("Та эхлээд нэвтэрнэ үү.");
-            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
-            return;
-        }
-        if (!validateForm() || !activeService) return;
+    const handleBuyNow = async (paymentType: "qpay" | "invoice", orgInfo?: { orgName: string; orgReg: string; orgAddress: string; orgPhone: string }) => {
+        if (!validateForm(true) || !activeService) return;
 
         setSubmitting(true);
         try {
+            const payload: any = {
+                name: form.name,
+                phone: form.phone,
+                email: form.email,
+                date: format(form.date!, "yyyy-MM-dd"), time: "09:00",
+                duration: 1,
+                serviceType: "EDIT_SERVICE", serviceId: activeService.id,
+                unitPrice: Number(currentPackage ? currentPackage.price : 0),
+                serviceName: activeService.name,
+                paymentType,
+                notes: form.notes,
+                ...(orgInfo ? { buyerOrg: orgInfo.orgName, buyerOrgReg: orgInfo.orgReg, buyerOrgAddress: orgInfo.orgAddress, buyerOrgPhone: orgInfo.orgPhone } : {}),
+            };
+            if (user && user.id) payload.userId = parseInt(user.id, 10);
+
             const res = await fetch(`${API}/bookings`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    userId: parseInt(user.id, 10),
-                    name: user.name, phone: user.phone || '00000000', email: user.email,
-                    date: format(form.date!, "yyyy-MM-dd"), time: "09:00",
-                    duration: 1,
-                    serviceType: "EDIT_SERVICE", serviceId: activeService.id,
-                    unitPrice: Number(currentPackage ? currentPackage.price : 0),
-                    serviceName: activeService.name,
-                    paymentType,
-                }),
+                body: JSON.stringify(payload),
             });
             if (!res.ok) throw new Error();
 
             const data = await res.json();
             setShowPaymentModal(false);
             if (paymentType === "qpay" && data.checkoutUrl) {
-                toast.success("Төлбөрийн хуудас руу шилжиж байна...", { duration: 3000 });
+                toast.success("Төлбөрийн хуудас руу шилжиж байна...");
                 window.location.href = data.checkoutUrl;
                 return;
             }
             const desc = paymentType === "invoice"
                 ? "Нэхэмжлэхийг таны имэйл рүү явууллаа."
                 : "Удахгүй холбогдох болно.";
-            toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: desc, duration: 6000 });
+            toast.success("Захиалга амжилттай бүртгэгдлээ!", { description: desc });
             closeBooking();
         } catch {
             toast.error("Захиалга бүртгэхэд алдаа гарлаа.");
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, notes: "" })); };
+    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, notes: "", name: "", phone: "", email: "" })); };
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-primary/20 hover:bg-primary/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-rose-600/20 hover:bg-rose-600/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
             <div className="pt-28 md:pt-36 pb-24 relative z-10">
                 <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
 
                     {loading ? (
-                        <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+                        <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-rose-600" /></div>
                     ) : services.length === 0 ? (
                         <p className="text-gray-500 text-center py-24">Одоогоор үйлчилгээ нэмэгдээгүй байна.</p>
                     ) : activeService && (
@@ -193,12 +199,12 @@ export default function VideoEditingPage() {
 
                                                 <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex w-fit items-center gap-2 px-3 py-1 bg-red-500/10 text-red-500 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase border border-red-500/20">
+                                                        <div className="flex w-fit items-center gap-2 px-3 py-1 bg-rose-600/10 text-rose-600 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase border border-rose-600/20">
                                                             EDITING
                                                         </div>
                                                         <Link href="/portfolio/edit">
-                                                            <Button variant="outline" className="text-primary hover:text-white hover:bg-primary/20 border-primary/50 bg-primary/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_rgba(255,0,0,0.5)] transition-all duration-300">
-                                                                <GalleryVerticalEnd className="w-3.5 h-3.5 text-primary" />
+                                                            <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
+                                                                <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
                                                                 Өмнөх ажлууд харах
                                                             </Button>
                                                         </Link>
@@ -210,12 +216,12 @@ export default function VideoEditingPage() {
                                                 {activeService.amenities && activeService.amenities.length > 0 && (
                                                     <div className="mb-6 w-full">
                                                         <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                            <Info className="w-4 h-4 text-primary" /> Онцлог талуу
+                                                            <Info className="w-4 h-4 text-rose-600" /> Онцлог талуу
                                                         </h4>
                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                             {activeService.amenities.map((amenity, i) => (
                                                                 <div key={i} className="flex items-center gap-2.5 text-xs text-gray-200 bg-white/5 px-3 py-2 rounded-lg border border-white/5 truncate">
-                                                                    <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                                                                    <Check className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                                                                     <span className="truncate">{amenity}</span>
                                                                 </div>
                                                             ))}
@@ -238,12 +244,12 @@ export default function VideoEditingPage() {
                                                                     <div
                                                                         key={pkg.id}
                                                                         onClick={() => handlePackageSelect(activeService.id, pkg)}
-                                                                        className={`cursor-pointer p-4 rounded-xl border relative transition-all ${isSelected ? 'border-primary bg-primary/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
+                                                                        className={`cursor-pointer p-4 rounded-xl border relative transition-all ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
                                                                     >
-                                                                        {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-primary" /></div>}
+                                                                        {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-rose-600" /></div>}
                                                                         <p className="text-sm font-medium pr-6">{pkg.subType?.name || pkg.priceLabel || "Үндсэн багц"}</p>
                                                                         {pkg.priceLabel && pkg.subType && <p className="text-xs text-gray-400 mt-1">{pkg.priceLabel}</p>}
-                                                                        <p className="text-primary font-bold mt-3 text-lg">{Number(pkg.price).toLocaleString()}₮</p>
+                                                                        <p className="text-rose-600 font-bold mt-3 text-lg">{Number(pkg.price).toLocaleString()}₮</p>
                                                                     </div>
                                                                 );
                                                             })}
@@ -262,25 +268,26 @@ export default function VideoEditingPage() {
                                                         </p>
                                                     </div>
                                                     <Button onClick={() => {
-                                                        if (!user) {
-                                                            toast.error("Та захиалга өгөхийн тулд эхлээд нэвтэрнэ үү.");
-                                                            router.push("/sign-in?callbackUrl=" + encodeURIComponent(window.location.pathname));
-                                                            return;
-                                                        }
                                                         if (activeService.packages && activeService.packages.length > 0 && !selectedPackages[activeService.id]) {
                                                             handlePackageSelect(activeService.id, activeService.packages[0]);
                                                         }
                                                         setIsBooking(true);
-                                                    }} className="w-full md:w-auto px-8 h-12 bg-primary hover:bg-red-600 font-semibold rounded-lg transition-all text-white">Захиалга өгөх</Button>
+                                                    }} className="w-full md:w-auto px-8 h-12 bg-rose-600 hover:bg-rose-600/90 font-semibold rounded-lg transition-all text-white">Захиалга өгөх</Button>
                                                 </div>
                                             </motion.div>
                                         ) : (
                                             <motion.div key={`booking-${activeService.id}`} initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} className="flex flex-col h-full py-4">
                                                 <div className="flex items-center gap-3 mb-6">
                                                     <Button variant="ghost" size="icon" onClick={() => closeBooking()} className="text-gray-400 hover:text-white hover:bg-white/10 shrink-0"><ArrowLeft className="w-5 h-5" /></Button>
-                                                    <h2 className="text-xl font-bold line-clamp-1">Захиалга — <span className="text-primary">{activeService.name}</span></h2>
+                                                    <h2 className="text-xl font-bold line-clamp-1">Захиалга — <span className="text-rose-600">{activeService.name}</span></h2>
                                                 </div>
                                                 <div className="space-y-4 flex-1">
+                                                    <div className="space-y-3 rounded-lg bg-white/5 border border-white/10 p-4">
+                                                        <p className="text-sm text-white font-medium">Захиалагчийн мэдээлэл</p>
+                                                        <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Таны нэр *" />
+                                                        <Input type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Утасны дугаар *" />
+                                                        <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Имэйл хаяг *" />
+                                                    </div>
                                                     <Popover>
                                                         <PopoverTrigger asChild>
                                                             <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
@@ -296,18 +303,19 @@ export default function VideoEditingPage() {
                                                         <p className="text-sm text-gray-400 mb-2">Нэмэлт тайлбар (заавал биш)</p>
                                                         <textarea placeholder="Жишээ: 3 минутын хэрчмэл, музыктай, лого нэмэх..." className="w-full h-24 px-4 py-3 bg-[#1a1a1a] border border-white/10 rounded-lg text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-gray-500" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
                                                     </div>
+
                                                     <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
                                                         <span className="text-gray-400 text-sm">Нийт:</span>
-                                                        <span className="text-xl font-bold text-primary">{((Number(selectedPackages[activeService.id]?.price || 0)) * parseInt("1")).toLocaleString()}₮</span>
+                                                        <span className="text-xl font-bold text-rose-600">{((Number(selectedPackages[activeService.id]?.price || 0)) * parseInt("1")).toLocaleString()}₮</span>
                                                     </div>
                                                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                                         <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
                                                             Сагсанд нэмэх
                                                         </Button>
                                                         <Button type="button"
-                                                            onClick={() => { if (validateForm()) setShowPaymentModal(true); }}
+                                                            onClick={() => { if (validateForm(true)) setShowPaymentModal(true); }}
                                                             disabled={submitting}
-                                                            className="flex-1 h-11 bg-primary hover:bg-red-600 font-semibold text-white">
+                                                            className="flex-1 h-11 bg-rose-600 hover:bg-rose-600/90 font-semibold text-white">
                                                             {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Уншиж байна...</> : "Шууд авах"}
                                                         </Button>
                                                     </div>
@@ -326,7 +334,7 @@ export default function VideoEditingPage() {
                 open={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
                 onSelectQpay={() => handleBuyNow("qpay")}
-                onSelectInvoice={() => handleBuyNow("invoice")}
+                onSelectInvoice={(orgInfo) => handleBuyNow("invoice", orgInfo)}
                 loading={submitting}
                 amount={currentPackage ? Number(currentPackage.price) : undefined}
             />

@@ -74,14 +74,14 @@ function SignUpContent() {
             {/* Back Button */}
             <Link
                 href="/"
-                className="absolute left-4 top-4 md:left-8 md:top-8 z-50 flex items-center gap-2 text-sm font-medium text-white hover:text-primary transition-colors"
+                className="absolute left-4 top-4 md:left-8 md:top-8 z-50 flex items-center gap-2 text-sm font-medium text-white hover:text-rose-600 transition-colors"
             >
                 <ArrowLeft className="h-4 w-4" />
                 Нүүр хуудас руу буцах
             </Link>
 
             {/* Background Ambience */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] pointer-events-none opacity-20" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-600/20 rounded-full blur-[120px] pointer-events-none opacity-20" />
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none opacity-20" />
 
             {/* Form Container */}
@@ -178,7 +178,7 @@ function SignUpContent() {
                                 </div>
                             </div>
 
-                            <Button disabled={isLoading} className="bg-primary hover:bg-red-600 text-white font-bold h-10 w-full transition-all duration-300 hover:shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+                            <Button disabled={isLoading} className="bg-rose-600 hover:bg-rose-600/90 text-white font-bold h-10 w-full transition-all duration-300 hover:shadow-[0_0_20px_rgba(220,38,38,0.5)]">
                                 {isLoading && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}
@@ -191,7 +191,7 @@ function SignUpContent() {
                         Бүртгэлтэй юу?{" "}
                         <Link
                             href={callbackUrl !== "/" ? `/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/sign-in"}
-                            className="hover:text-primary underline underline-offset-4 transition-colors"
+                            className="hover:text-rose-600 underline underline-offset-4 transition-colors"
                         >
                             Нэвтрэх
                         </Link>

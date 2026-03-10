@@ -12,6 +12,7 @@ var BookingsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingsService = void 0;
 const common_1 = require("@nestjs/common");
+const schedule_1 = require("@nestjs/schedule");
 const prisma_service_1 = require("../prisma.service");
 const byl_payment_service_1 = require("./byl-payment.service");
 const mail_service_1 = require("./mail.service");
@@ -52,6 +53,39 @@ let BookingsService = BookingsService_1 = class BookingsService {
             orderBy: { createdAt: 'desc' }
         });
     }
+    async cleanupExpiredBookings() {
+        this.logger.log('Running cleanup mechanism for expired pending bookings...');
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+        try {
+            const expiredBookings = await this.prisma.booking.findMany({
+                where: {
+                    status: 'PENDING',
+                    paymentStatus: 'UNPAID',
+                    createdAt: {
+                        lt: fourteenDaysAgo
+                    }
+                },
+                select: { id: true }
+            });
+            if (expiredBookings.length === 0) {
+                this.logger.log('No expired pending bookings found to clean up.');
+                return;
+            }
+            const bookingIds = expiredBookings.map(b => b.id);
+            const result = await this.prisma.booking.deleteMany({
+                where: {
+                    id: {
+                        in: bookingIds
+                    }
+                }
+            });
+            this.logger.log(`Successfully deleted ${result.count} expired pending bookings older than 14 days: ${bookingIds.join(', ')}`);
+        }
+        catch (error) {
+            this.logger.error('Error occurred while cleaning up expired bookings', error);
+        }
+    }
     async findPending() {
         return this.prisma.booking.findMany({
             where: {
@@ -83,7 +117,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         return this.prisma.booking.findMany({
             where: { userId },
             include: {
-                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true } },
+                items: { include: { service: true, studio: true, photographerService: true, editService: true, liveService: true, bundleService: true } },
                 payments: true,
             },
             orderBy: { createdAt: 'desc' }
@@ -139,11 +173,14 @@ let BookingsService = BookingsService_1 = class BookingsService {
             include: { items: true }
         });
         if (dto.paymentType === 'invoice') {
-            await this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }], dto.date);
+            await this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }], dto.date, { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone });
+            if (dto.email) {
+                await this.mailService.sendOrderConfirmationEmail(dto.email, booking.id, dto.name, total, 1);
+            }
             return { ...booking, checkoutUrl: null };
         }
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
+            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3002';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: total,
@@ -164,7 +201,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
         }
         catch (error) {
-            await this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }], dto.date);
+            await this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }], dto.date, { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone });
             return { ...booking, checkoutUrl: null };
         }
     }
@@ -193,7 +230,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             const endTime = new Date(startTime.getTime() + item.duration * 3600000);
             const total = item.unitPrice * item.duration;
             totalAmount += total;
-            const itemData = {
+            const bookingItemData = {
                 itemType: item.serviceType,
                 quantity: item.duration,
                 unitPrice: item.unitPrice,
@@ -202,15 +239,24 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 startTime,
                 endTime,
             };
-            if (item.serviceType === 'STUDIO')
-                itemData.studioId = item.serviceId;
-            if (item.serviceType === 'LIVE_SERVICE')
-                itemData.liveServiceId = item.serviceId;
-            if (item.serviceType === 'PHOTOGRAPHER_SERVICE')
-                itemData.photographerServiceId = item.serviceId;
-            if (item.serviceType === 'EDIT_SERVICE')
-                itemData.serviceId = item.serviceId;
-            return itemData;
+            switch (item.serviceType) {
+                case 'STUDIO':
+                    bookingItemData.studioId = item.serviceId;
+                    break;
+                case 'LIVE_SERVICE':
+                    bookingItemData.liveServiceId = item.serviceId;
+                    break;
+                case 'PHOTOGRAPHER_SERVICE':
+                    bookingItemData.photographerServiceId = item.serviceId;
+                    break;
+                case 'EDIT_SERVICE':
+                    bookingItemData.editServiceId = item.serviceId;
+                    break;
+                case 'BUNDLE_SERVICE':
+                    bookingItemData.bundleServiceId = item.serviceId;
+                    break;
+            }
+            return bookingItemData;
         });
         const booking = await this.prisma.booking.create({
             data: {
@@ -229,10 +275,13 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 totalPrice: i.unitPrice * i.duration,
             }));
             await this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, invoiceItems, dto.items[0]?.date || new Date().toISOString().slice(0, 10));
+            if (dto.email) {
+                await this.mailService.sendOrderConfirmationEmail(dto.email, booking.id, dto.name, totalAmount, dto.items.length);
+            }
             return { ...booking, checkoutUrl: null };
         }
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-six.vercel.app';
+            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3002';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: totalAmount,
@@ -263,7 +312,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { ...booking, checkoutUrl: null };
         }
     }
-    async sendInvoiceForBooking(bookingId, buyerName, buyerEmail, buyerPhone, items, invoiceDate) {
+    async sendInvoiceForBooking(bookingId, buyerName, buyerEmail, buyerPhone, items, invoiceDate, buyerOrgInfo) {
         if (!buyerEmail || !buyerEmail.includes('@')) {
             this.logger.warn(`No valid email for booking #${bookingId} (email: ${buyerEmail}), skipping`);
             return;
@@ -278,9 +327,12 @@ let BookingsService = BookingsService_1 = class BookingsService {
             sellerBank: process.env.COMPANY_BANK || 'Хаан банк',
             sellerAccount: process.env.COMPANY_ACCOUNT || '5000000000',
             sellerReg: process.env.COMPANY_REG || '1234567',
-            buyerName,
+            buyerName: buyerOrgInfo?.buyerOrg ? buyerOrgInfo.buyerOrg : buyerName,
             buyerEmail,
-            buyerPhone,
+            buyerPhone: buyerOrgInfo?.buyerOrgPhone || buyerPhone,
+            buyerReg: buyerOrgInfo?.buyerOrgReg || '',
+            buyerAddress: buyerOrgInfo?.buyerOrgAddress || '',
+            buyerPersonName: buyerName,
             items,
         };
         const total = items.reduce((s, i) => s + i.totalPrice, 0);
@@ -367,11 +419,12 @@ let BookingsService = BookingsService_1 = class BookingsService {
     async confirmPayment(bylCheckoutId) {
         const payment = await this.prisma.payment.findUnique({
             where: { invoiceId: bylCheckoutId },
-            include: { booking: true },
+            include: { booking: { include: { user: true, items: true } } },
         });
         if (!payment) {
             throw new common_1.NotFoundException(`Payment with Byl checkout ID ${bylCheckoutId} not found`);
         }
+        const wasAlreadyPaid = payment.status === 'PAID';
         await this.prisma.payment.update({
             where: { id: payment.id },
             data: {
@@ -379,24 +432,32 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 paidAt: new Date(),
             },
         });
-        await this.prisma.booking.update({
+        const updatedBooking = await this.prisma.booking.update({
             where: { id: payment.bookingId },
             data: {
                 paymentStatus: 'PAID',
                 status: 'CONFIRMED',
             },
+            include: { user: true, items: true }
         });
+        if (!wasAlreadyPaid && updatedBooking.user?.email) {
+            await this.mailService.sendOrderConfirmationEmail(updatedBooking.user.email, updatedBooking.id, updatedBooking.user.username, Number(updatedBooking.totalAmount), updatedBooking.items.length);
+        }
         return { success: true, bookingId: payment.bookingId };
     }
     async verifyAndConfirmPayment(bookingId) {
         const payment = await this.prisma.payment.findFirst({
             where: { bookingId },
-            include: { booking: true },
+            include: { booking: { include: { user: true, items: true } } },
         });
         if (!payment) {
             throw new common_1.NotFoundException(`Payment for booking #${bookingId} not found`);
         }
         if (payment.status === 'PAID') {
+            const booking = payment.booking;
+            if (booking?.user?.email) {
+                await this.mailService.sendOrderConfirmationEmail(booking.user.email, bookingId, booking.user.username, Number(booking.totalAmount), booking.items?.length ?? 1).catch(err => this.logger.warn(`Email resend failed for booking #${bookingId}: ${err.message}`));
+            }
             return { success: true, bookingId, alreadyPaid: true };
         }
         const bylStatus = await this.bylPayment.getCheckoutStatus(payment.invoiceId);
@@ -470,6 +531,9 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (status === 'CANCELLED') {
             await this.adminNotificationService.createNotification('ORDER_CANCELLED', `Захиалга ORD-${id.toString().padStart(4, '0')} цуцлагдлаа`, id);
         }
+        if (status === 'CONFIRMED' && booking.status !== 'CONFIRMED' && updated.user?.email) {
+            await this.mailService.sendOrderConfirmationEmail(updated.user.email, updated.id, updated.user.username, Number(updated.totalAmount), updated.items.length);
+        }
         return updated;
     }
     async updateNotes(id, notes) {
@@ -488,7 +552,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         return updated;
     }
     async updatePaymentStatus(id, paymentStatus) {
-        const booking = await this.prisma.booking.findUnique({ where: { id } });
+        const booking = await this.prisma.booking.findUnique({ where: { id }, include: { user: true, items: true } });
         if (!booking) {
             throw new common_1.NotFoundException(`Booking with ID ${id} not found`);
         }
@@ -500,10 +564,21 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 items: true,
             }
         });
+        if (paymentStatus === 'PAID' && booking.paymentStatus !== 'PAID') {
+            if (updated.user?.email) {
+                await this.mailService.sendOrderConfirmationEmail(updated.user.email, updated.id, updated.user.username, Number(updated.totalAmount), updated.items.length);
+            }
+        }
         return updated;
     }
 };
 exports.BookingsService = BookingsService;
+__decorate([
+    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_DAY_AT_MIDNIGHT),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BookingsService.prototype, "cleanupExpiredBookings", null);
 exports.BookingsService = BookingsService = BookingsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,

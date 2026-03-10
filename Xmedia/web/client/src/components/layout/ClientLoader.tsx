@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function ClientLoader() {
@@ -51,7 +52,7 @@ export function ClientLoader() {
                             <motion.div
                                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                                className="w-2 h-2 bg-primary rounded-full"
+                                className="w-2 h-2 bg-rose-600 rounded-full"
                             />
                         </div>
 
@@ -65,9 +66,16 @@ export function ClientLoader() {
                                     ease: [0.33, 1, 0.68, 1],
                                     delay: 0.2
                                 }}
-                                className="text-4xl sm:text-5xl font-sans font-black tracking-[0.2em] text-white uppercase text-center"
+                                className="flex justify-center items-center"
                             >
-                                XTUDIO
+                                <Image
+                                    src="/x logo.png"
+                                    alt="Xtudio Logo"
+                                    width={180}
+                                    height={80}
+                                    className="object-contain w-auto h-auto"
+                                    priority
+                                />
                             </motion.div>
                         </div>
 
@@ -96,7 +104,7 @@ export function ClientLoader() {
                                     duration: 1.2,
                                     ease: "easeInOut"
                                 }}
-                                className="absolute top-0 left-0 w-full h-full bg-primary"
+                                className="absolute top-0 left-0 w-full h-full bg-rose-600"
                             />
                         </div>
 

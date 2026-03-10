@@ -5,6 +5,23 @@ export declare class LiveServiceController {
     private readonly log;
     constructor(liveServiceService: LiveServiceService, log: AdminLogService);
     create(body: any, req: any): Promise<{
+        equipments: ({
+            equipment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            equipmentId: number;
+            liveServiceId: number;
+        })[];
         category: {
             id: number;
             createdAt: Date;
@@ -13,29 +30,12 @@ export declare class LiveServiceController {
             description: string | null;
             icon: string | null;
         };
-        equipments: ({
-            equipment: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            liveServiceId: number;
-            equipmentId: number;
-        })[];
         priceTiers: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            liveServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
+            liveServiceId: number;
             label: string | null;
             cameraCount: number;
         }[];
@@ -44,13 +44,30 @@ export declare class LiveServiceController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
     }>;
     findAll(): Promise<({
+        equipments: ({
+            equipment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            equipmentId: number;
+            liveServiceId: number;
+        })[];
         category: {
             id: number;
             createdAt: Date;
@@ -59,29 +76,12 @@ export declare class LiveServiceController {
             description: string | null;
             icon: string | null;
         };
-        equipments: ({
-            equipment: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            liveServiceId: number;
-            equipmentId: number;
-        })[];
         priceTiers: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            liveServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
+            liveServiceId: number;
             label: string | null;
             cameraCount: number;
         }[];
@@ -90,13 +90,30 @@ export declare class LiveServiceController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
     })[]>;
     findOne(id: string): Promise<{
+        equipments: ({
+            equipment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            equipmentId: number;
+            liveServiceId: number;
+        })[];
         category: {
             id: number;
             createdAt: Date;
@@ -105,29 +122,12 @@ export declare class LiveServiceController {
             description: string | null;
             icon: string | null;
         };
-        equipments: ({
-            equipment: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            liveServiceId: number;
-            equipmentId: number;
-        })[];
         priceTiers: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            liveServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
+            liveServiceId: number;
             label: string | null;
             cameraCount: number;
         }[];
@@ -136,13 +136,30 @@ export declare class LiveServiceController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
     }>;
     update(id: string, body: any, req: any): Promise<{
+        equipments: ({
+            equipment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
+                images: import("@prisma/client/runtime/client").JsonValue | null;
+            };
+        } & {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            equipmentId: number;
+            liveServiceId: number;
+        })[];
         category: {
             id: number;
             createdAt: Date;
@@ -151,29 +168,12 @@ export declare class LiveServiceController {
             description: string | null;
             icon: string | null;
         };
-        equipments: ({
-            equipment: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
-                description: string | null;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            liveServiceId: number;
-            equipmentId: number;
-        })[];
         priceTiers: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            liveServiceId: number;
             price: import("@prisma/client-runtime-utils").Decimal;
+            liveServiceId: number;
             label: string | null;
             cameraCount: number;
         }[];
@@ -182,10 +182,10 @@ export declare class LiveServiceController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
     }>;
     remove(id: string, req: any): Promise<{
@@ -193,10 +193,10 @@ export declare class LiveServiceController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        image: string | null;
-        isActive: boolean;
         description: string | null;
+        image: string | null;
         amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        isActive: boolean;
         categoryId: number;
     }>;
 }

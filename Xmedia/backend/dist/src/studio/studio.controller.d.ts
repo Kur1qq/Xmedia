@@ -11,24 +11,24 @@ export declare class StudioController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
                 description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            studioId: number;
             equipmentId: number;
+            studioId: number;
         })[];
         packages: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            price: import("@prisma/client-runtime-utils").Decimal;
             studioId: number;
             hours: number;
-            price: import("@prisma/client-runtime-utils").Decimal;
         }[];
     } & {
         id: number;
@@ -36,11 +36,11 @@ export declare class StudioController {
         updatedAt: Date;
         name: string;
         description: string | null;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isAvailable: boolean;
     }>;
     findAll(): Promise<({
@@ -50,24 +50,24 @@ export declare class StudioController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
                 description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            studioId: number;
             equipmentId: number;
+            studioId: number;
         })[];
         packages: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            price: import("@prisma/client-runtime-utils").Decimal;
             studioId: number;
             hours: number;
-            price: import("@prisma/client-runtime-utils").Decimal;
         }[];
     } & {
         id: number;
@@ -75,11 +75,11 @@ export declare class StudioController {
         updatedAt: Date;
         name: string;
         description: string | null;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isAvailable: boolean;
     })[]>;
     findOne(id: string): Promise<{
@@ -89,24 +89,24 @@ export declare class StudioController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
                 description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            studioId: number;
             equipmentId: number;
+            studioId: number;
         })[];
         packages: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            price: import("@prisma/client-runtime-utils").Decimal;
             studioId: number;
             hours: number;
-            price: import("@prisma/client-runtime-utils").Decimal;
         }[];
     } & {
         id: number;
@@ -114,11 +114,11 @@ export declare class StudioController {
         updatedAt: Date;
         name: string;
         description: string | null;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isAvailable: boolean;
     }>;
     update(id: string, dto: any, req: any): Promise<{
@@ -128,24 +128,24 @@ export declare class StudioController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                type: import("@prisma/client").$Enums.EquipmentType;
                 description: string | null;
+                type: import("@prisma/client").$Enums.EquipmentType;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
             };
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            studioId: number;
             equipmentId: number;
+            studioId: number;
         })[];
         packages: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            price: import("@prisma/client-runtime-utils").Decimal;
             studioId: number;
             hours: number;
-            price: import("@prisma/client-runtime-utils").Decimal;
         }[];
     } & {
         id: number;
@@ -153,11 +153,11 @@ export declare class StudioController {
         updatedAt: Date;
         name: string;
         description: string | null;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isAvailable: boolean;
     }>;
     remove(id: string, req: any): Promise<{
@@ -166,11 +166,11 @@ export declare class StudioController {
         updatedAt: Date;
         name: string;
         description: string | null;
+        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         images: import("@prisma/client/runtime/client").JsonValue | null;
         address: string | null;
         sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
         capacity: number | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
         isAvailable: boolean;
     }>;
 }

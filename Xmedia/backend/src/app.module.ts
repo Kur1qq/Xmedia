@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -20,9 +21,11 @@ import { AdminModule } from './admin/admin.module';
 import { LogModule } from './log/log.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { HeroModule } from './hero/hero.module';
+import { BundleServiceModule } from './bundle-service/bundle-service.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     LogModule,
     PrismaModule,
     UsersModule,
@@ -40,6 +43,7 @@ import { HeroModule } from './hero/hero.module';
     AdminModule,
     PortfolioModule,
     HeroModule,
+    BundleServiceModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

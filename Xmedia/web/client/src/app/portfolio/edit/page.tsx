@@ -109,11 +109,11 @@ export default function EditPortfolioPage() {
             {/* Column labels — sticky below top bar */}
             <div className="sticky top-14 z-40 flex gap-1 px-1 pb-2 bg-gradient-to-b from-black via-black to-transparent">
                 <div className="flex-1 flex items-center justify-center gap-2 py-3">
-                    <ImageIcon className="w-4 h-4 text-primary" />
+                    <ImageIcon className="w-4 h-4 text-rose-600" />
                     <span className="text-sm font-bold tracking-widest uppercase text-white/70">Зураг эдит</span>
                 </div>
                 <div className="flex-1 flex items-center justify-center gap-2 py-3">
-                    <Film className="w-4 h-4 text-red-500" />
+                    <Film className="w-4 h-4 text-rose-600" />
                     <span className="text-sm font-bold tracking-widest uppercase text-white/70">Видео эдит</span>
                 </div>
             </div>
@@ -219,7 +219,7 @@ export default function EditPortfolioPage() {
                                     <div className="flex gap-2 shrink-0">
                                         {lightbox.youtubeUrl && (
                                             <a href={lightbox.youtubeUrl} target="_blank" rel="noopener noreferrer"
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-600/10 border border-red-600/30 text-red-500 text-xs hover:bg-red-600/20 transition-colors">
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600/90/10 border border-rose-600/90/30 text-rose-600 text-xs hover:bg-rose-600/90/20 transition-colors">
                                                 <Youtube className="w-3.5 h-3.5" /> YouTube
                                             </a>
                                         )}
@@ -269,7 +269,7 @@ function PhotoCard({ item, index, onClick }: { item: PortfolioItem; index: numbe
 
             {/* Badge */}
             <div className="absolute top-3 left-3">
-                <div className="px-2.5 py-1 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30 text-[10px] font-bold tracking-wider uppercase text-primary">
+                <div className="px-2.5 py-1 rounded-full bg-rose-600/20 backdrop-blur-sm border border-rose-600/30 text-[10px] font-bold tracking-wider uppercase text-rose-600">
                     Фото
                 </div>
             </div>
@@ -323,14 +323,14 @@ function VideoCard({ item, index, onClick }: { item: PortfolioItem; index: numbe
 
             {/* Badge */}
             <div className="absolute top-3 left-3">
-                <div className="px-2.5 py-1 rounded-full bg-red-500/20 backdrop-blur-sm border border-red-500/30 text-[10px] font-bold tracking-wider uppercase text-red-500">
+                <div className="px-2.5 py-1 rounded-full bg-rose-600/20 backdrop-blur-sm border border-rose-600/30 text-[10px] font-bold tracking-wider uppercase text-rose-600">
                     Видео
                 </div>
             </div>
 
             {/* Platform badges */}
             <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                {item.youtubeUrl && <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center"><Youtube className="w-3.5 h-3.5 text-white" /></div>}
+                {item.youtubeUrl && <div className="w-7 h-7 rounded-full bg-rose-600/90 flex items-center justify-center"><Youtube className="w-3.5 h-3.5 text-white" /></div>}
                 {item.facebookUrl && <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center"><Facebook className="w-3.5 h-3.5 text-white" /></div>}
             </div>
 

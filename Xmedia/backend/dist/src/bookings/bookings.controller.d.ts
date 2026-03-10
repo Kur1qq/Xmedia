@@ -22,11 +22,11 @@ export declare class BookingsController {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
+                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
                 capacity: number | null;
-                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 isAvailable: boolean;
             } | null;
             service: {
@@ -34,9 +34,9 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client-runtime-utils").Decimal;
+                isActive: boolean;
                 priceUnit: string;
                 durationMinutes: number | null;
                 portfolioImages: string | null;
@@ -48,10 +48,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
             } | null;
             photographerService: {
@@ -59,10 +59,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
                 photographerSubTypeId: number | null;
@@ -72,10 +72,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
                 subTypeId: number | null;
@@ -84,8 +84,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -135,11 +136,11 @@ export declare class BookingsController {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
+                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
                 capacity: number | null;
-                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 isAvailable: boolean;
             } | null;
             service: {
@@ -147,9 +148,9 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client-runtime-utils").Decimal;
+                isActive: boolean;
                 priceUnit: string;
                 durationMinutes: number | null;
                 portfolioImages: string | null;
@@ -161,10 +162,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
             } | null;
             photographerService: {
@@ -172,10 +173,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
                 photographerSubTypeId: number | null;
@@ -185,10 +186,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
                 subTypeId: number | null;
@@ -197,8 +198,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -248,11 +250,11 @@ export declare class BookingsController {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
+                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
                 capacity: number | null;
-                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 isAvailable: boolean;
             } | null;
             service: {
@@ -260,9 +262,9 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client-runtime-utils").Decimal;
+                isActive: boolean;
                 priceUnit: string;
                 durationMinutes: number | null;
                 portfolioImages: string | null;
@@ -274,10 +276,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
             } | null;
             photographerService: {
@@ -285,10 +287,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
                 photographerSubTypeId: number | null;
@@ -298,10 +300,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
                 subTypeId: number | null;
@@ -310,8 +312,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -355,11 +358,11 @@ export declare class BookingsController {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
+                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 images: import("@prisma/client/runtime/client").JsonValue | null;
                 address: string | null;
                 sizeSqm: import("@prisma/client-runtime-utils").Decimal | null;
                 capacity: number | null;
-                amenities: import("@prisma/client/runtime/client").JsonValue | null;
                 isAvailable: boolean;
             } | null;
             service: {
@@ -367,9 +370,9 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client-runtime-utils").Decimal;
+                isActive: boolean;
                 priceUnit: string;
                 durationMinutes: number | null;
                 portfolioImages: string | null;
@@ -381,10 +384,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
             } | null;
             photographerService: {
@@ -392,10 +395,10 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
                 photographerSubTypeId: number | null;
@@ -405,20 +408,33 @@ export declare class BookingsController {
                 createdAt: Date;
                 updatedAt: Date;
                 name: string;
-                image: string | null;
-                isActive: boolean;
                 description: string | null;
+                image: string | null;
                 amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
                 categoryId: number;
                 mainTypeId: number;
                 subTypeId: number | null;
+            } | null;
+            bundleService: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+                price: import("@prisma/client-runtime-utils").Decimal;
+                image: string | null;
+                includedServices: import("@prisma/client/runtime/client").JsonValue | null;
+                amenities: import("@prisma/client/runtime/client").JsonValue | null;
+                isActive: boolean;
             } | null;
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -471,8 +487,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -501,8 +518,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -529,8 +547,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -558,8 +577,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -586,8 +606,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -652,8 +673,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -690,8 +712,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;
@@ -728,8 +751,9 @@ export declare class BookingsController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            itemType: import("@prisma/client").$Enums.ItemType;
             quantity: number;
+            bundleServiceId: number | null;
+            itemType: import("@prisma/client").$Enums.ItemType;
             unitPrice: import("@prisma/client-runtime-utils").Decimal;
             totalPrice: import("@prisma/client-runtime-utils").Decimal;
             bookingDate: Date;

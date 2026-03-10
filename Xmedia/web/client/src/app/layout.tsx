@@ -14,8 +14,13 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Xmedia - Premium Studio & Production Services",
-  description: "Rent studios, hire photographers, editors, and livestream services.",
+  title: "Xtudio",
+  description: "Premium Studio & Production Services",
+  icons: {
+    icon: [
+      { url: "/Xtudio_Logo_X (1)-1.png", sizes: "48x48", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -33,6 +38,7 @@ export default function RootLayout({
         <Toaster
           position="top-right"
           theme="dark"
+          duration={2000}
           toastOptions={{
             style: {
               background: '#111',

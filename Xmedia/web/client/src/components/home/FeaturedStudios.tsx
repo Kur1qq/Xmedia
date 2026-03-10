@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useAuthStore } from "@/lib/store/auth";
+import { useEffect } from "react";
 
 interface Studio {
     id: number;
@@ -76,6 +78,7 @@ const studios: Studio[] = [
 ];
 
 export function FeaturedStudios() {
+    const { user } = useAuthStore();
     const [selectedStudio, setSelectedStudio] = useState<Studio | null>(null);
     const [isBooking, setIsBooking] = useState(false);
 
@@ -83,16 +86,24 @@ export function FeaturedStudios() {
     const [bookingData, setBookingData] = useState<{
         name: string;
         phone: string;
+        email: string;
         date: Date | undefined;
         time: string;
         duration: string;
     }>({
         name: "",
         phone: "",
+        email: "",
         date: undefined,
         time: "",
         duration: "1"
     });
+
+    useEffect(() => {
+        if (user) {
+            setBookingData(prev => ({ ...prev, name: user.name || "", phone: user.phone || "", email: user.email || "" }));
+        }
+    }, [user]);
 
     const handleBookingSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -105,7 +116,7 @@ export function FeaturedStudios() {
         });
         setIsBooking(false);
         setSelectedStudio(null);
-        setBookingData({ name: "", phone: "", date: undefined, time: "", duration: "1" });
+        setBookingData({ name: user?.name || "", phone: user?.phone || "", email: user?.email || "", date: undefined, time: "", duration: "1" });
     };
 
     const closeHandler = () => {
@@ -119,7 +130,7 @@ export function FeaturedStudios() {
                 <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
                     <div className="max-w-2xl">
                         <h2 className="text-4xl md:text-5xl font-bold mb-4 text-white font-sans">
-                            Онцлох <span className="text-primary">Студиуд</span>
+                            Онцлох <span className="text-rose-600">Студиуд</span>
                         </h2>
                         <p className="text-gray-400 text-lg">
                             Манай студиуд таны бүх төрлийн контент бүтээх хэрэгцээг хангах хамгийн сүүлийн үеийн тоног төхөөрөмжөөр тоноглогдсон.
@@ -138,11 +149,11 @@ export function FeaturedStudios() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: 0.1 * (index + 1) }}
-                            className="group relative bg-[#1a1a1a] rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-300 cursor-pointer"
+                            className="group relative bg-[#1a1a1a] rounded-2xl overflow-hidden hover:border-rose-600/50 transition-all duration-300 cursor-pointer"
                             onClick={() => setSelectedStudio(studio)}
                         >
                             <div className="relative h-64 overflow-hidden">
-                                <div className="absolute top-4 right-4 z-10 bg-primary p-2.5 rounded-full text-white shadow-lg">
+                                <div className="absolute top-4 right-4 z-10 bg-rose-600 p-2.5 rounded-full text-white shadow-lg">
                                     {studio.icon}
                                 </div>
                                 <div
@@ -163,7 +174,7 @@ export function FeaturedStudios() {
                                     <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {studio.capacity}</span>
                                 </div>
 
-                                <Button className="w-full h-14 rounded-none bg-white/5 border border-white/30 backdrop-blur-sm text-white font-semibold flex items-center justify-center gap-2 group-hover:border-red-500/50 group-hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] transition-all duration-300 relative overflow-hidden">
+                                <Button className="w-full h-14 rounded-none bg-white/5 border border-white/30 backdrop-blur-sm text-white font-semibold flex items-center justify-center gap-2 group-hover:border-rose-600/50 group-hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] transition-all duration-300 relative overflow-hidden">
                                     <span className="relative z-10">Дэлгэрэнгүй</span>
                                 </Button>
                             </div>
@@ -206,7 +217,7 @@ export function FeaturedStudios() {
 
                                 <div className="absolute bottom-6 left-6 right-6 md:hidden">
                                     <h3 className="text-2xl font-bold text-white mb-1">{selectedStudio.title}</h3>
-                                    <p className="text-primary font-bold">{selectedStudio.hourlyPrice}</p>
+                                    <p className="text-rose-600 font-bold">{selectedStudio.hourlyPrice}</p>
                                 </div>
                             </div>
 
@@ -225,7 +236,7 @@ export function FeaturedStudios() {
                                         >
                                             <div className="hidden md:block mb-8">
                                                 <div className="flex justify-between items-center mb-4">
-                                                    <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-wider border border-primary/20">
+                                                    <span className="px-3 py-1 rounded-full bg-rose-600/20 text-rose-600 text-xs font-bold uppercase tracking-wider border border-rose-600/20">
                                                         {selectedStudio.category}
                                                     </span>
                                                     <div className="flex items-center gap-4 text-sm text-gray-400">
@@ -249,12 +260,12 @@ export function FeaturedStudios() {
                                                 {/* Features Grid */}
                                                 <div>
                                                     <h4 className="text-white font-bold mb-4 flex items-center gap-2">
-                                                        <Info className="w-4 h-4 text-primary" /> Онцлог талууд
+                                                        <Info className="w-4 h-4 text-rose-600" /> Онцлог талууд
                                                     </h4>
                                                     <div className="grid grid-cols-2 gap-3">
                                                         {selectedStudio.features.map((feature, i) => (
                                                             <div key={i} className="flex items-center gap-2 text-sm text-gray-300 bg-white/5 p-2 rounded-lg border border-white/5">
-                                                                <Check className="w-4 h-4 text-primary shrink-0" />
+                                                                <Check className="w-4 h-4 text-rose-600 shrink-0" />
                                                                 <span>{feature}</span>
                                                             </div>
                                                         ))}
@@ -290,7 +301,7 @@ export function FeaturedStudios() {
                                                     </div>
                                                 </div>
                                                 <Button
-                                                    className="w-full sm:w-auto font-semibold text-lg px-4 h-12 bg-white/5 border border-white/20 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/10 hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] hover:border-red-500/50 hover:scale-105"
+                                                    className="w-full sm:w-auto font-semibold text-lg px-4 h-12 bg-white/5 border border-white/20 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/10 hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] hover:border-rose-600/50 hover:scale-105"
                                                     onClick={() => setIsBooking(true)}
                                                 >
                                                     Захиалга өгөх
@@ -351,6 +362,21 @@ export function FeaturedStudios() {
                                                     </div>
 
                                                     <div className="grid gap-2">
+                                                        <span className="text-sm font-medium text-gray-300">Имэйл хаяг</span>
+                                                        <div className="relative">
+                                                            <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                                                            <Input
+                                                                required
+                                                                type="email"
+                                                                className="pl-10 bg-white/5 border-white/10 text-white focus-visible:ring-primary"
+                                                                placeholder="Имэйл хаяг"
+                                                                value={bookingData.email}
+                                                                onChange={(e) => setBookingData({ ...bookingData, email: e.target.value })}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid gap-2">
                                                         <span className="text-sm font-medium text-gray-300">Огноо</span>
                                                         <Popover>
                                                             <PopoverTrigger asChild>
@@ -386,7 +412,7 @@ export function FeaturedStudios() {
                                                                     type="button"
                                                                     onClick={() => setBookingData({ ...bookingData, time })}
                                                                     className={`px-2 py-2 text-sm rounded-md border transition-all duration-200 ${bookingData.time === time
-                                                                        ? "bg-primary border-primary text-white shadow-[0_0_15px_rgba(255,0,0,0.4)] scale-105"
+                                                                        ? "bg-rose-600 border-rose-600 text-white shadow-[0_0_15px_rgba(255,0,0,0.4)] scale-105"
                                                                         : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20 hover:text-white"
                                                                         }`}
                                                                 >
@@ -394,7 +420,7 @@ export function FeaturedStudios() {
                                                                 </button>
                                                             ))}
                                                         </div>
-                                                        {!bookingData.time && <p className="text-xs text-red-500/80">* Цагаа сонгоно уу</p>}
+                                                        {!bookingData.time && <p className="text-xs text-rose-600/80">* Цагаа сонгоно уу</p>}
                                                     </div>
 
                                                     <div className="grid gap-2">
@@ -414,11 +440,11 @@ export function FeaturedStudios() {
                                                 <div className="pt-4 border-t border-white/10">
                                                     <div className="flex justify-between items-center mb-6">
                                                         <span className="text-gray-400">Нийт төлбөр (тооцоолсон):</span>
-                                                        <span className="text-2xl font-bold text-primary">
+                                                        <span className="text-2xl font-bold text-rose-600">
                                                             {(parseInt(selectedStudio.hourlyPrice.replace(/\D/g, '')) * parseInt(bookingData.duration || "0")).toLocaleString()}₮
                                                         </span>
                                                     </div>
-                                                    <Button type="submit" className="w-full font-semibold text-lg h-12 bg-primary hover:bg-red-600 text-white shadow-lg shadow-red-900/20">
+                                                    <Button type="submit" className="w-full font-semibold text-lg h-12 bg-rose-600 hover:bg-rose-600 text-white shadow-lg shadow-red-900/20">
                                                         Баталгаажуулах
                                                     </Button>
                                                 </div>

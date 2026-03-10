@@ -184,7 +184,7 @@ export default function LivePortfolioPage() {
                                 <div className="flex gap-2 shrink-0">
                                     {active.youtubeUrl && (
                                         <a href={active.youtubeUrl} target="_blank" rel="noopener noreferrer"
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-600/10 border border-red-600/30 text-red-500 text-xs hover:bg-red-600/20 transition-colors">
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600/90/10 border border-rose-600/90/30 text-rose-600 text-xs hover:bg-rose-600/90/20 transition-colors">
                                             <Youtube className="w-3.5 h-3.5" /> YouTube
                                         </a>
                                     )}
@@ -241,7 +241,7 @@ function LiveCard({ item, index, onClick }: { item: PortfolioItem; index: number
 
             {/* Platform badge */}
             <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                {item.youtubeUrl && <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center"><Youtube className="w-3.5 h-3.5 text-white" /></div>}
+                {item.youtubeUrl && <div className="w-7 h-7 rounded-full bg-rose-600/90 flex items-center justify-center"><Youtube className="w-3.5 h-3.5 text-white" /></div>}
                 {item.facebookUrl && <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center"><Facebook className="w-3.5 h-3.5 text-white" /></div>}
             </div>
 

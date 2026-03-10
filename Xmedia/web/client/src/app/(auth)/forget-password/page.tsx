@@ -87,14 +87,14 @@ export default function ForgetPasswordPage() {
             {/* Back Button */}
             <Link
                 href="/sign-in"
-                className="absolute left-4 top-4 md:left-8 md:top-8 z-50 flex items-center gap-2 text-sm font-medium text-white hover:text-primary transition-colors"
+                className="absolute left-4 top-4 md:left-8 md:top-8 z-50 flex items-center gap-2 text-sm font-medium text-white hover:text-rose-600 transition-colors"
             >
                 <ArrowLeft className="h-4 w-4" />
                 Нэвтрэх хэсэг рүү буцах
             </Link>
 
             {/* Background Ambience */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] pointer-events-none opacity-20" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-600/20 rounded-full blur-[120px] pointer-events-none opacity-20" />
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none opacity-20" />
 
             {/* Form Container */}
@@ -104,7 +104,7 @@ export default function ForgetPasswordPage() {
                         <span className="text-2xl font-bold font-serif tracking-tight">{siteConfig.name}</span>
                     </Link>
                     <div className="mx-auto w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-2">
-                        <KeyRound className="w-6 h-6 text-primary" />
+                        <KeyRound className="w-6 h-6 text-rose-600" />
                     </div>
                     <h1 className="text-2xl font-semibold tracking-tight">
                         Нууц үг сэргээх
@@ -137,7 +137,7 @@ export default function ForgetPasswordPage() {
                                     </div>
                                 </div>
 
-                                <Button disabled={isLoading} className="bg-primary hover:bg-red-600 text-white font-bold h-10 w-full mt-2">
+                                <Button disabled={isLoading} className="bg-rose-600 hover:bg-rose-600/90 text-white font-bold h-10 w-full mt-2">
                                     {isLoading && (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     )}
@@ -184,7 +184,7 @@ export default function ForgetPasswordPage() {
                                     </div>
                                 </div>
 
-                                <Button disabled={isLoading} className="bg-primary hover:bg-red-600 text-white font-bold h-10 w-full mt-2">
+                                <Button disabled={isLoading} className="bg-rose-600 hover:bg-rose-600/90 text-white font-bold h-10 w-full mt-2">
                                     {isLoading && (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     )}
@@ -202,7 +202,7 @@ export default function ForgetPasswordPage() {
                         Нууц үгээ санасан уу?{" "}
                         <Link
                             href="/sign-in"
-                            className="hover:text-primary underline underline-offset-4 transition-colors"
+                            className="hover:text-rose-600 underline underline-offset-4 transition-colors"
                         >
                             Нэвтрэх
                         </Link>

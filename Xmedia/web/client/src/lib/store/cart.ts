@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 
 export interface CartItem {
     id: string; // unique internal ID for the cart item
-    serviceType: 'STUDIO' | 'LIVE_SERVICE' | 'PHOTOGRAPHER_SERVICE' | 'EDIT_SERVICE';
+    serviceType: 'STUDIO' | 'LIVE_SERVICE' | 'PHOTOGRAPHER_SERVICE' | 'EDIT_SERVICE' | 'BUNDLE_SERVICE';
     serviceId: number;
     serviceName: string;
     date: string;     // 'YYYY-MM-DD'

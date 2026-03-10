@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Users, LogOut, Menu, X, Camera, Tv, Film, BookOpen, Sliders, ShieldCheck, ScrollText, User, KeyRound, Image as ImageIcon, PanelTop } from "lucide-react";
+import { Home, Users, LogOut, Menu, X, Camera, Tv, Film, BookOpen, Sliders, ShieldCheck, ScrollText, User, KeyRound, Image as ImageIcon, PanelTop, PackageCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getAdminInfo, getAdminPermissions, logout, fetchWithAuth } from "@/lib/auth";
 
@@ -18,6 +19,7 @@ const ALL_NAV = [
     { name: "Шууд дамжуулалт", href: "/live", icon: Tv },
     { name: "Зураглаач", href: "/photographer", icon: Camera },
     { name: "Эдит", href: "/edit", icon: Film },
+    { name: "Багц үйлчилгээ", href: "/bundles", icon: PackageCheck },
     { name: "Өмнөх ажлууд", href: "/portfolio", icon: ImageIcon },
     { name: "Нүүрний слайд", href: "/hero", icon: PanelTop },
     { name: "Админ удирдлага", href: "/admins", icon: ShieldCheck },
@@ -97,9 +99,9 @@ export function Sidebar() {
       `}>
                 {/* Logo */}
                 <div className="h-16 flex items-center px-6 border-b border-border shrink-0">
-                    <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                        Xtudio-Admin
-                    </span>
+                    <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+                        <Image src="/x logo.png" alt="Xtudio Admin" width={130} height={36} className="object-contain w-auto h-auto" priority />
+                    </Link>
                 </div>
 
                 {/* Navigation */}

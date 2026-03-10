@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { siteConfig } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,8 +41,8 @@ export function Header() {
                 <div className="container flex h-14 items-center justify-between">
                     {/* Logo */}
                     <div className="flex-1 flex justify-start">
-                        <Link href="/" className="font-serif font-bold text-3xl tracking-tight text-white hover:opacity-90 transition-opacity">
-                            {siteConfig.name}
+                        <Link href="/" className="hover:opacity-90 transition-opacity">
+                            <Image src="/x logo.png" alt={siteConfig.name} width={180} height={80} className="object-contain w-auto h-auto" priority />
                         </Link>
                     </div>
 
@@ -64,15 +65,15 @@ export function Header() {
                     <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
                         <CartDrawer />
                         <Link href="/contact">
-                            <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-primary hover:bg-white/10">
+                            <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
                                 Холбоо барих
                             </Button>
                         </Link>
-                        {user ? (
+                        {user && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button className="font-semibold text-sm px-4 bg-white/5 border border-white/20 backdrop-blur-sm text-white hover:bg-white/10 flex items-center gap-2">
-                                        <UserIcon className="w-4 h-4" />
+                                        <Image src="/xtudio_logo_favico.ico" alt="user" width={16} height={16} className="w-4 h-4 object-contain rounded-sm" />
                                         {user.name}
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -80,18 +81,12 @@ export function Header() {
                                     <DropdownMenuItem onClick={() => setIsOrderHistoryOpen(true)} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer">
                                         <UserIcon className="w-4 h-4 mr-2" /> Миний захиалгын түүх
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => logout()} className="text-red-500 hover:bg-red-500/10 focus:bg-red-500/10 cursor-pointer mt-1 font-medium focus:text-red-500">
+                                    <DropdownMenuItem onClick={() => logout()} className="text-rose-600 hover:bg-rose-600/10 focus:bg-rose-600/10 cursor-pointer mt-1 font-medium focus:text-rose-600">
                                         <LogOut className="w-4 h-4 mr-2" />
                                         Гарах
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                        ) : (
-                            <Link href="/sign-in">
-                                <Button className="font-semibold text-sm px-5 bg-white/5 border border-white/20 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/10 hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] hover:border-red-500/50 hover:scale-105">
-                                    Нэвтрэх
-                                </Button>
-                            </Link>
                         )}
                     </div>
 
@@ -111,8 +106,8 @@ export function Header() {
                                     <SheetDescription className="sr-only">Access site navigation links</SheetDescription>
                                 </SheetHeader>
                                 <nav className="grid gap-6 text-lg font-medium">
-                                    <Link href="#" className="flex items-center gap-2 text-xl font-bold">
-                                        {siteConfig.name}
+                                    <Link href="#" className="flex items-center gap-2">
+                                        <Image src="/x logo.png" alt={siteConfig.name} width={135} height={60} className="object-contain w-auto h-auto" />
                                     </Link>
                                     {siteConfig.nav.map((item) => (
                                         <Link key={item.href} href={item.href} className="hover:text-foreground" onClick={() => setIsOpen(false)}>
@@ -124,11 +119,11 @@ export function Header() {
                                         <Button variant="outline" className="w-full">Холбоо барих</Button>
                                     </Link>
 
-                                    {user ? (
+                                    {user && (
                                         <div className="pt-4 mt-2 border-t border-white/10 flex flex-col gap-3">
                                             <div className="flex items-center gap-3 px-2 mb-2">
-                                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                                                    <UserIcon className="w-5 h-5 text-gray-300" />
+                                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
+                                                    <Image src="/xtudio_logo_favico.ico" alt="user" width={28} height={28} className="object-contain" />
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-white">{user.name}</p>
@@ -138,14 +133,10 @@ export function Header() {
                                             <Button variant="outline" onClick={() => { setIsOpen(false); setIsOrderHistoryOpen(true); }} className="w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10">
                                                 <UserIcon className="w-4 h-4" /> Миний захиалгын түүх
                                             </Button>
-                                            <Button variant="outline" onClick={() => { logout(); setIsOpen(false); }} className="w-full text-red-500 hover:text-red-400 border-red-500/20 hover:bg-red-500/10 justify-start gap-2">
+                                            <Button variant="outline" onClick={() => { logout(); setIsOpen(false); }} className="w-full text-rose-600 hover:text-rose-600 border-rose-600/20 hover:bg-rose-600/10 justify-start gap-2">
                                                 <LogOut className="w-4 h-4" /> Гарах
                                             </Button>
                                         </div>
-                                    ) : (
-                                        <Link href="/sign-in" onClick={() => setIsOpen(false)}>
-                                            <Button className="w-full">Нэвтрэх</Button>
-                                        </Link>
                                     )}
                                 </nav>
                             </SheetContent>

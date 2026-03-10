@@ -17,6 +17,9 @@ export interface InvoiceData {
     buyerName: string;
     buyerEmail?: string;
     buyerPhone?: string;
+    buyerReg?: string;
+    buyerAddress?: string;
+    buyerPersonName?: string;
     items: InvoiceItem[];
     notes?: string;
 }
