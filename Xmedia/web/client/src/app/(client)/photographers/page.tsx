@@ -71,7 +71,13 @@ export default function PhotographersPage() {
 
     useEffect(() => {
         if (user) {
-            setForm(prev => ({ ...prev, name: user.name || "", phone: user.phone || "", email: user.email || "" }));
+            const info = loadCustomerInfo();
+            setForm(prev => ({
+                ...prev,
+                name: user.name || info?.name || "",
+                phone: user.phone || info?.phone || "",
+                email: user.email || info?.email || "",
+            }));
         } else {
             const info = loadCustomerInfo();
             if (info) {

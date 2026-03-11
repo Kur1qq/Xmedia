@@ -48,7 +48,8 @@ function SignInContent() {
             login({
                 id: data.id.toString(),
                 name: data.username,
-                email: data.email
+                email: data.email,
+                phone: data.phone || "",
             });
 
             toast.success("Амжилттай нэвтэрлээ");
