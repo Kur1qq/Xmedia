@@ -446,6 +446,9 @@ model Payment {
   qpayQrText String? @map("qpay_qr_text") @db.Text // QR код үүсгэх текст
   qpayUrls   String? @map("qpay_urls") @db.Text // Банкны аппликейшнүүдийн deep link (JSON)
 
+  // Cart booking: бусад холбоотой booking-уудын ID-ууд (JSON array as string)
+  linkedBookingIds String? @map("linked_booking_ids") @db.Text
+
   // Төлбөрийн мэдээлэл
   amount Decimal       @db.Decimal(12, 2)
   status PaymentStatus @default(UNPAID)

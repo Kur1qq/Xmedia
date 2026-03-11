@@ -399,13 +399,15 @@ export class BookingsService {
                 cancelUrl: `${clientBaseUrl}/booking/cancel`,
             });
 
-            // Save checkout ID linked to the first booking
+            // Save checkout ID — store other booking IDs for group confirmation
+            const otherBookingIds = createdBookings.slice(1).map(b => b.booking.id);
             await this.prisma.payment.create({
                 data: {
                     bookingId: firstBooking.id,
                     invoiceId: String(checkout.checkoutId),
                     amount: totalAmount,
                     status: 'UNPAID',
+                    linkedBookingIds: otherBookingIds.length > 0 ? JSON.stringify(otherBookingIds) : null,
                 }
             });
 
@@ -595,7 +597,7 @@ export class BookingsService {
             },
         });
 
-        // Update booking status
+        // Update the primary booking status
         const updatedBooking = await this.prisma.booking.update({
             where: { id: payment.bookingId },
             data: {
@@ -604,6 +606,25 @@ export class BookingsService {
             },
             include: { user: true, items: true }
         });
+
+        // Also confirm all linked bookings from the same cart session
+        if (payment.linkedBookingIds) {
+            try {
+                const linkedIds: number[] = JSON.parse(payment.linkedBookingIds);
+                if (linkedIds.length > 0) {
+                    await this.prisma.booking.updateMany({
+                        where: { id: { in: linkedIds } },
+                        data: {
+                            paymentStatus: 'PAID',
+                            status: 'CONFIRMED',
+                        },
+                    });
+                    this.logger.log(`Confirmed linked bookings: ${linkedIds.join(', ')} along with booking #${payment.bookingId}`);
+                }
+            } catch (e) {
+                this.logger.error(`Failed to parse/confirm linkedBookingIds for payment #${payment.id}: ${e.message}`);
+            }
+        }
 
         // Send success email only if payment was NOT already paid before this call
         if (!wasAlreadyPaid && updatedBooking.user?.email) {
