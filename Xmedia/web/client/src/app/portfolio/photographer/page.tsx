@@ -38,17 +38,13 @@ export default function PhotographerPortfolioPage() {
         item.tags?.some(t => t.toLowerCase().includes(search.toLowerCase()))
     );
 
-    const col1 = filtered.filter((_, i) => i % 3 === 0);
-    const col2 = filtered.filter((_, i) => i % 3 === 1);
-    const col3 = filtered.filter((_, i) => i % 3 === 2);
+    // No columns needed, just list items in a horizontal scroll
+    const col1 = filtered.filter((_, i) => i % 2 === 0);
+    const col2 = filtered.filter((_, i) => i % 2 === 1);
 
-    // Parallax: scroll progress of the entire page
     const { scrollYProgress } = useScroll({ container: containerRef });
-
-    // Left column moves UP (-8%), right column moves DOWN (+8%) as scroll progresses
     const yLeft = useTransform(scrollYProgress, [0, 1], ["0%", "-8%"]);
-    const yMiddle = useTransform(scrollYProgress, [0, 1], ["0%", "8%"]);
-    const yRight = useTransform(scrollYProgress, [0, 1], ["0%", "-8%"]);
+    const yRight = useTransform(scrollYProgress, [0, 1], ["0%", "8%"]);
 
     return (
         <div ref={containerRef} className="h-screen overflow-y-scroll bg-black text-white">
@@ -86,37 +82,22 @@ export default function PhotographerPortfolioPage() {
                 </div>
             </div>
 
-            {/* Three-column parallax grid */}
-            <div className="flex gap-1 p-1 pt-0">
-                {/* Left column — scrolls UP */}
-                <motion.div
-                    style={{ y: yLeft }}
-                    className="flex-1 flex flex-col gap-1 will-change-transform"
-                >
+            {/* Horizontal Scroll Grid (2 rows) */}
+            <div className="flex flex-col gap-1 p-1 pt-0 overflow-x-auto snap-x snap-mandatory hide-scrollbar">
+                <div className="flex gap-1 w-max">
                     {col1.map((item, i) => (
-                        <GridCard key={item.id} item={item} index={i} onClick={() => setLightbox(item)} />
+                        <div key={item.id} className="w-[85vw] sm:w-[50vw] md:w-[39vw] lg:w-[39vw] flex-shrink-0 snap-center">
+                            <GridCard item={item} index={i} onClick={() => setLightbox(item)} />
+                        </div>
                     ))}
-                </motion.div>
-
-                {/* Middle column — scrolls DOWN */}
-                <motion.div
-                    style={{ y: yMiddle }}
-                    className="flex-1 flex flex-col gap-1 will-change-transform"
-                >
+                </div>
+                <div className="flex gap-1 w-max">
                     {col2.map((item, i) => (
-                        <GridCard key={item.id} item={item} index={i} onClick={() => setLightbox(item)} />
+                        <div key={item.id} className="w-[85vw] sm:w-[50vw] md:w-[39vw] lg:w-[39vw] flex-shrink-0 snap-center">
+                            <GridCard item={item} index={i} onClick={() => setLightbox(item)} />
+                        </div>
                     ))}
-                </motion.div>
-
-                {/* Right column — scrolls UP */}
-                <motion.div
-                    style={{ y: yRight }}
-                    className="flex-1 flex flex-col gap-1 will-change-transform"
-                >
-                    {col3.map((item, i) => (
-                        <GridCard key={item.id} item={item} index={i} onClick={() => setLightbox(item)} />
-                    ))}
-                </motion.div>
+                </div>
             </div>
 
             {/* Lightbox */}
