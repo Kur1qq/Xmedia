@@ -38,12 +38,14 @@ export default function StudioPortfolioPage() {
         item.tags?.some(t => t.toLowerCase().includes(search.toLowerCase()))
     );
 
-    const col1 = filtered.filter((_, i) => i % 2 === 0);
-    const col2 = filtered.filter((_, i) => i % 2 === 1);
+    const col1 = filtered.filter((_, i) => i % 3 === 0);
+    const col2 = filtered.filter((_, i) => i % 3 === 1);
+    const col3 = filtered.filter((_, i) => i % 3 === 2);
 
     const { scrollYProgress } = useScroll({ container: containerRef });
     const yLeft = useTransform(scrollYProgress, [0, 1], ["0%", "-8%"]);
-    const yRight = useTransform(scrollYProgress, [0, 1], ["0%", "8%"]);
+    const yMiddle = useTransform(scrollYProgress, [0, 1], ["0%", "8%"]);
+    const yRight = useTransform(scrollYProgress, [0, 1], ["0%", "-8%"]);
 
     return (
         <div ref={containerRef} className="h-screen overflow-y-scroll bg-black text-white">
@@ -81,7 +83,7 @@ export default function StudioPortfolioPage() {
                 </div>
             </div>
 
-            {/* Two-column parallax grid */}
+            {/* Three-column parallax grid */}
             <div className="flex gap-1 p-1 pt-0">
                 <motion.div
                     style={{ y: yLeft }}
@@ -93,10 +95,19 @@ export default function StudioPortfolioPage() {
                 </motion.div>
 
                 <motion.div
-                    style={{ y: yRight }}
+                    style={{ y: yMiddle }}
                     className="flex-1 flex flex-col gap-1 will-change-transform"
                 >
                     {col2.map((item, i) => (
+                        <GridCard key={item.id} item={item} index={i} onClick={() => setLightbox(item)} />
+                    ))}
+                </motion.div>
+
+                <motion.div
+                    style={{ y: yRight }}
+                    className="flex-1 flex flex-col gap-1 will-change-transform"
+                >
+                    {col3.map((item, i) => (
                         <GridCard key={item.id} item={item} index={i} onClick={() => setLightbox(item)} />
                     ))}
                 </motion.div>
