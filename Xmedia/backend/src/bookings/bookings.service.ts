@@ -181,8 +181,11 @@ export class BookingsService {
 
         const bookingDate = new Date(dto.date);
         const [h, m] = dto.time.split(':').map(Number);
-        const startTime = new Date(`1970-01-01T${dto.time}:00`);
-        const endTime = new Date(startTime.getTime() + dto.duration * 3600000);
+        const startDate = new Date(`1970-01-01T${dto.time}:00`);
+        const endDate = new Date(startDate.getTime() + dto.duration * 3600000);
+        const toTimeStr = (d: Date) => d.toTimeString().slice(0, 8);
+        const startTime = toTimeStr(startDate);
+        const endTime = toTimeStr(endDate);
         const total = dto.unitPrice * dto.duration;
 
         const itemData: any = {
@@ -305,8 +308,11 @@ export class BookingsService {
         let totalAmount = 0;
         const prismaItems = dto.items.map(item => {
             const bookingDate = new Date(item.date);
-            const startTime = new Date(`1970-01-01T${item.time}:00`);
-            const endTime = new Date(startTime.getTime() + item.duration * 3600000);
+            const startDate2 = new Date(`1970-01-01T${item.time}:00`);
+            const endDate2 = new Date(startDate2.getTime() + item.duration * 3600000);
+            const toTimeStr2 = (d: Date) => d.toTimeString().slice(0, 8);
+            const startTime = toTimeStr2(startDate2);
+            const endTime = toTimeStr2(endDate2);
             const total = item.unitPrice * item.duration;
             totalAmount += total;
 
@@ -528,8 +534,8 @@ export class BookingsService {
             unitPrice,
             totalPrice: dto.totalAmount,
             bookingDate,
-            startTime: start,
-            endTime: end,
+            startTime: `${dto.startTime}:00`,
+            endTime: `${dto.endTime}:00`,
         };
 
         if (dto.serviceType === 'STUDIO') itemData.studioId = dto.serviceId;
@@ -689,8 +695,8 @@ export class BookingsService {
 
             const overlaps = items.some(item => {
                 if (!item.startTime || !item.endTime) return false;
-                const s = item.startTime as Date;
-                const e = item.endTime as Date;
+                const s = new Date(`1970-01-01T${item.startTime}`);
+                const e = new Date(`1970-01-01T${item.endTime}`);
                 const bookedStart = s.getHours() * 60 + s.getMinutes();
                 const bookedEnd = e.getHours() * 60 + e.getMinutes();
                 // Overlap: slot starts before booking ends AND slot ends after booking starts
