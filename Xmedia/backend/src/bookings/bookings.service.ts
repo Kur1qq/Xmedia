@@ -266,6 +266,7 @@ export class BookingsService {
     }
 
     // Cart booking — multi-items, guest or auth
+    // Each item in the cart creates a SEPARATE booking record
     async createCartBooking(dto: {
         name: string;
         phone: string;
@@ -280,8 +281,8 @@ export class BookingsService {
             unitPrice: number;
             serviceName?: string;
         }>;
-        paymentType?: 'qpay' | 'invoice'; // new
-        userId?: number; // Explicit explicit user logic
+        paymentType?: 'qpay' | 'invoice';
+        userId?: number;
     }) {
         let user: any = null;
         if (dto.userId) {
@@ -305,8 +306,11 @@ export class BookingsService {
             });
         }
 
-        let totalAmount = 0;
-        const prismaItems = dto.items.map(item => {
+        const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+        const createdBookings: any[] = [];
+
+        // Create a SEPARATE booking for each cart item
+        for (const item of dto.items) {
             const bookingDate = item.date.slice(0, 10);
             const startDate2 = new Date(`1970-01-01T${item.time}:00`);
             const endDate2 = new Date(startDate2.getTime() + item.duration * 3600000);
@@ -314,7 +318,6 @@ export class BookingsService {
             const startTime = toTimeStr2(startDate2);
             const endTime = toTimeStr2(endDate2);
             const total = item.unitPrice * item.duration;
-            totalAmount += total;
 
             const bookingItemData: any = {
                 itemType: item.serviceType as ItemType,
@@ -344,81 +347,82 @@ export class BookingsService {
                     break;
             }
 
-            return bookingItemData;
-        });
+            const booking = await this.prisma.booking.create({
+                data: {
+                    userId: user.id,
+                    totalAmount: total,
+                    notes: dto.notes,
+                    items: { create: [bookingItemData] },
+                },
+                include: { items: true }
+            });
 
-        const booking = await this.prisma.booking.create({
-            data: {
-                userId: user.id,
-                totalAmount,
-                notes: dto.notes,
-                items: { create: prismaItems },
-            },
-            include: { items: true }
-        });
+            createdBookings.push({ booking, item, total });
+        }
 
-        // Invoice path — skip Byl, send invoice PDF directly
+        const totalAmount = createdBookings.reduce((sum, b) => sum + b.total, 0);
+        const firstBooking = createdBookings[0].booking;
+
+        // Invoice path — send one combined invoice PDF
         if (dto.paymentType === 'invoice') {
-            const invoiceItems = dto.items.map(i => ({
-                description: i.serviceName || i.serviceType,
-                quantity: i.duration,
-                unitPrice: i.unitPrice,
-                totalPrice: i.unitPrice * i.duration,
+            const invoiceItems = createdBookings.map(b => ({
+                description: b.item.serviceName || b.item.serviceType,
+                quantity: b.item.duration,
+                unitPrice: b.item.unitPrice,
+                totalPrice: b.total,
             }));
             this.sendInvoiceForBooking(
-                booking.id, dto.name, dto.email, dto.phone,
+                firstBooking.id, dto.name, dto.email, dto.phone,
                 invoiceItems, new Date().toISOString().slice(0, 10),
             ).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             if (dto.email) {
-                this.mailService.sendOrderConfirmationEmail(dto.email, booking.id, dto.name, totalAmount, dto.items.length)
+                this.mailService.sendOrderConfirmationEmail(dto.email, firstBooking.id, dto.name, totalAmount, createdBookings.length)
                     .catch(err => this.logger.error(`Failed to send confirmation email async: ${err.message}`));
             }
-            return { ...booking, checkoutUrl: null };
+            return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
 
-        // QPay path — create Byl checkout
+        // QPay path — create one Byl checkout for the combined amount
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
-
             const checkout = await this.bylPayment.createCheckout({
-                bookingId: booking.id,
+                bookingId: firstBooking.id,
                 amount: totalAmount,
-                serviceName: `Xmedia багц (${dto.items.length} үйлчилгээ)`,
-                items: dto.items.map(i => ({
-                    name: i.serviceName || i.serviceType,
-                    amount: i.unitPrice,
-                    quantity: i.duration,
+                serviceName: `Xmedia багц (${createdBookings.length} үйлчилгээ)`,
+                items: createdBookings.map(b => ({
+                    name: b.item.serviceName || b.item.serviceType,
+                    amount: b.item.unitPrice,
+                    quantity: b.item.duration,
                 })),
                 quantity: 1,
                 customerEmail: dto.email,
-                successUrl: `${clientBaseUrl}/booking/success?bookingId=${booking.id}`,
+                successUrl: `${clientBaseUrl}/booking/success?bookingId=${firstBooking.id}`,
                 cancelUrl: `${clientBaseUrl}/booking/cancel`,
             });
 
-            // Save checkout ID in payment record
+            // Save checkout ID linked to the first booking
             await this.prisma.payment.create({
                 data: {
-                    bookingId: booking.id,
+                    bookingId: firstBooking.id,
                     invoiceId: String(checkout.checkoutId),
                     amount: totalAmount,
                     status: 'UNPAID',
                 }
             });
 
-            return { ...booking, checkoutUrl: checkout.checkoutUrl };
+            return { ...firstBooking, checkoutUrl: checkout.checkoutUrl, bookingIds: createdBookings.map(b => b.booking.id) };
         } catch (error) {
             // Byl failed — send invoice PDF by email instead
-            const invoiceItems = dto.items.map(i => ({
-                description: i.serviceName || i.serviceType,
-                quantity: i.duration,
-                unitPrice: i.unitPrice,
-                totalPrice: i.unitPrice * i.duration,
+            const invoiceItems = createdBookings.map(b => ({
+                description: b.item.serviceName || b.item.serviceType,
+                quantity: b.item.duration,
+                unitPrice: b.item.unitPrice,
+                totalPrice: b.total,
             }));
             this.sendInvoiceForBooking(
-                booking.id, dto.name, dto.email, dto.phone,
-                invoiceItems, dto.items[0]?.date || new Date().toISOString().slice(0, 10),
+                firstBooking.id, dto.name, dto.email, dto.phone,
+                invoiceItems, createdBookings[0]?.item.date || new Date().toISOString().slice(0, 10),
             ).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
-            return { ...booking, checkoutUrl: null };
+            return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
     }
 
