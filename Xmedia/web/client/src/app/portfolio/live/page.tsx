@@ -55,12 +55,8 @@ export default function LivePortfolioPage() {
         !search || item.title.toLowerCase().includes(search.toLowerCase())
     );
 
-    const col1 = filtered.filter((_, i) => i % 2 === 0);
-    const col2 = filtered.filter((_, i) => i % 2 === 1);
-
+    // No scroll animation needed for horizontal view
     const { scrollYProgress } = useScroll({ container: containerRef });
-    const yLeft = useTransform(scrollYProgress, [0, 1], ["0%", "-8%"]);
-    const yRight = useTransform(scrollYProgress, [0, 1], ["0%", "8%"]);
 
     const embedUrl = active ? toEmbedUrl(active.youtubeUrl, active.facebookUrl) : null;
 
@@ -97,17 +93,10 @@ export default function LivePortfolioPage() {
                 </div>
             </div>
 
-            {/* Horizontal Scroll Grid (2 rows) */}
-            <div className="flex flex-col gap-1 p-1 pt-0 overflow-x-auto snap-x snap-mandatory hide-scrollbar">
-                <div className="flex gap-1 w-max">
-                    {col1.map((item, i) => (
-                        <div key={item.id} className="w-[85vw] sm:w-[50vw] md:w-[39vw] lg:w-[39vw] flex-shrink-0 snap-center">
-                            <LiveCard item={item} index={i} onClick={() => setActive(item)} />
-                        </div>
-                    ))}
-                </div>
-                <div className="flex gap-1 w-max">
-                    {col2.map((item, i) => (
+            {/* Horizontal Grid */}
+            <div className="p-1 pt-0 overflow-x-auto snap-x snap-mandatory hide-scrollbar">
+                <div className="flex gap-1 w-max grid-rows-2 grid grid-flow-col">
+                    {filtered.map((item, i) => (
                         <div key={item.id} className="w-[85vw] sm:w-[50vw] md:w-[39vw] lg:w-[39vw] flex-shrink-0 snap-center">
                             <LiveCard item={item} index={i} onClick={() => setActive(item)} />
                         </div>
