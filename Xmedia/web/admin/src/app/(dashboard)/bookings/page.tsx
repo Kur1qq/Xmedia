@@ -229,6 +229,13 @@ export default function BookingsPage() {
         return days;
     }, [calYear, calMonth]);
 
+    // Helper: parse "HH:MM:SS" string → hour number
+    const parseTimeStrHour = (timeStr: string): number => {
+        if (!timeStr) return 0;
+        const parts = timeStr.split(':');
+        return parseInt(parts[0], 10) || 0;
+    };
+
     // Bookings indexed by "YYYY-MM-DD" for efficient lookup
     const bookingsByDateKey = useMemo(() => {
         const map: Record<string, any[]> = {};
@@ -237,24 +244,34 @@ export default function BookingsPage() {
             const items: any[] = b.items || [];
             if (items.length === 0) {
                 const d = new Date(b.createdAt);
-                const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                // Use zero-padded key to match getBookingsForDate
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 map[key] = map[key] || [];
                 map[key].push({ ...b, _type: type });
                 continue;
             }
             for (const item of items) {
-                const d = new Date(item.bookingDate || b.createdAt);
-                const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                // bookingDate is stored as 'YYYY-MM-DD' string in DB
+                const rawDate: string = item.bookingDate || '';
+                let key: string;
+                if (rawDate && rawDate.length >= 10) {
+                    // Use directly — already 'YYYY-MM-DD'
+                    key = rawDate.slice(0, 10);
+                } else {
+                    const d = new Date(b.createdAt);
+                    key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                }
                 map[key] = map[key] || [];
                 map[key].push({ ...b, _type: type, _item: item });
             }
         }
         return map;
-    }, [bookings]);
+    }, [activeBookings]);
 
     // Helper to get bookings for a specific date
     const getBookingsForDate = useCallback((date: Date) => {
-        const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        // Build zero-padded key matching the map above
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         const found = bookingsByDateKey[key] || [];
         // deduplicate by booking id
         return found.filter((b, idx, arr) => arr.findIndex(x => x.id === b.id) === idx);
@@ -278,8 +295,9 @@ export default function BookingsPage() {
         for (const b of allBookings) {
             const item = b._item;
             if (item?.startTime) {
-                const startHour = new Date(item.startTime).getHours();
-                const endHour = item.endTime ? new Date(item.endTime).getHours() : startHour + 1;
+                // startTime is stored as "HH:MM:SS" string — parse directly
+                const startHour = parseTimeStrHour(item.startTime);
+                const endHour = item.endTime ? parseTimeStrHour(item.endTime) : startHour + 1;
                 for (let h = startHour; h < endHour; h++) {
                     map[h] = map[h] || [];
                     if (!map[h].find((x: any) => x.id === b.id)) {
@@ -629,8 +647,9 @@ export default function BookingsPage() {
                                                 {dayBookings.map((b, idx) => {
                                                     const col = TYPE_COLORS[b._type] || TYPE_COLORS.photographer;
                                                     const item = b._item;
+                                                    // startTime is "HH:MM:SS" string — display first 5 chars
                                                     const timeStr = item?.startTime
-                                                        ? new Date(item.startTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })
+                                                        ? item.startTime.slice(0, 5)
                                                         : '';
                                                     return (
                                                         <button
@@ -694,12 +713,9 @@ export default function BookingsPage() {
                                                     {hourBookings.map((b, idx) => {
                                                         const col = TYPE_COLORS[b._type] || TYPE_COLORS.photographer;
                                                         const item = b._item;
-                                                        const startStr = item?.startTime
-                                                            ? new Date(item.startTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })
-                                                            : '';
-                                                        const endStr = item?.endTime
-                                                            ? new Date(item.endTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })
-                                                            : '';
+                                                        // startTime/endTime are "HH:MM:SS" strings
+                                                        const startStr = item?.startTime ? item.startTime.slice(0, 5) : '';
+                                                        const endStr = item?.endTime ? item.endTime.slice(0, 5) : '';
                                                         return (
                                                             <button
                                                                 key={idx}
@@ -770,11 +786,13 @@ export default function BookingsPage() {
                                         {getBookingTitle(selectedBooking)}
                                     </h2>
                                     <div className="text-[13px] text-gray-300 tracking-wide mt-1.5">
-                                        {new Date(selectedBooking.items?.[0]?.bookingDate).toLocaleDateString('mn-MN', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                        {selectedBooking.items?.[0]?.bookingDate
+                                            ? new Date(selectedBooking.items[0].bookingDate + 'T00:00:00').toLocaleDateString('mn-MN', { weekday: 'long', month: 'long', day: 'numeric' })
+                                            : ''}
                                         {selectedBooking.items?.[0]?.startTime && (
                                             <span>
                                                 {' '}•{' '}
-                                                {new Date(selectedBooking.items?.[0]?.startTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })} – {new Date(selectedBooking.items?.[0]?.endTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })}
+                                                {selectedBooking.items[0].startTime.slice(0, 5)} – {selectedBooking.items[0].endTime?.slice(0, 5) || ''}
                                             </span>
                                         )}
                                     </div>
