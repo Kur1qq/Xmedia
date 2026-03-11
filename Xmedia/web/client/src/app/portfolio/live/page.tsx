@@ -55,8 +55,12 @@ export default function LivePortfolioPage() {
         !search || item.title.toLowerCase().includes(search.toLowerCase())
     );
 
-    // No scroll animation needed for horizontal view
+    const col1 = filtered.filter((_, i) => i % 2 === 0);
+    const col2 = filtered.filter((_, i) => i % 2 === 1);
+
     const { scrollYProgress } = useScroll({ container: containerRef });
+    const yLeft = useTransform(scrollYProgress, [0, 1], ["0%", "-8%"]);
+    const yRight = useTransform(scrollYProgress, [0, 1], ["0%", "8%"]);
 
     const embedUrl = active ? toEmbedUrl(active.youtubeUrl, active.facebookUrl) : null;
 
@@ -93,15 +97,18 @@ export default function LivePortfolioPage() {
                 </div>
             </div>
 
-            {/* Horizontal Grid */}
-            <div className="p-1 pt-0 overflow-x-auto snap-x snap-mandatory hide-scrollbar">
-                <div className="flex gap-1 w-max grid-rows-2 grid grid-flow-col">
-                    {filtered.map((item, i) => (
-                        <div key={item.id} className="w-[85vw] sm:w-[50vw] md:w-[39vw] lg:w-[39vw] flex-shrink-0 snap-center">
-                            <LiveCard item={item} index={i} onClick={() => setActive(item)} />
-                        </div>
+            {/* Grid */}
+            <div className="flex gap-1 p-1 pt-0">
+                <motion.div style={{ y: yLeft }} className="flex-1 flex flex-col gap-1 will-change-transform">
+                    {col1.map((item, i) => (
+                        <LiveCard key={item.id} item={item} index={i} onClick={() => setActive(item)} />
                     ))}
-                </div>
+                </motion.div>
+                <motion.div style={{ y: yRight }} className="flex-1 flex flex-col gap-1 will-change-transform">
+                    {col2.map((item, i) => (
+                        <LiveCard key={item.id} item={item} index={i} onClick={() => setActive(item)} />
+                    ))}
+                </motion.div>
             </div>
 
             {/* Video modal */}
@@ -209,7 +216,7 @@ function LiveCard({ item, index, onClick }: { item: PortfolioItem; index: number
             transition={{ duration: 0.5, delay: index * 0.05 }}
             onClick={onClick}
             className="relative w-full overflow-hidden cursor-pointer group"
-            style={{ aspectRatio: "903/620" }}
+            style={{ height: "40vh" }}
         >
             {img ? (
                 <img src={img} alt={item.title}
