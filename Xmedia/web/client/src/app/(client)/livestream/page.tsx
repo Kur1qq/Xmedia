@@ -75,6 +75,11 @@ export default function LivestreamPage() {
     useEffect(() => {
         if (user) {
             setForm(prev => ({ ...prev, name: user.name || "", phone: user.phone || "", email: user.email || "" }));
+        } else {
+            const info = loadCustomerInfo();
+            if (info) {
+                setForm(prev => ({ ...prev, name: info.name || prev.name, phone: info.phone || prev.phone, email: info.email || prev.email }));
+            }
         }
     }, [user]);
 
@@ -120,11 +125,15 @@ export default function LivestreamPage() {
     const handleBuyNow = async (paymentType: "qpay" | "invoice", orgInfo?: { orgName: string; orgReg: string; orgAddress: string; orgPhone: string }) => {
         if (!validateForm(true) || !activeService) return;
 
+        if (!user) {
+            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+        }
+
         setSubmitting(true);
         try {
             const unitPrice = activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0;
 
-            const payload: any = {
+            const payload: Record<string, unknown> = {
                 name: form.name,
                 phone: form.phone,
                 email: form.email,

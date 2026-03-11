@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
+import { loadCustomerInfo, saveCustomerInfo } from "@/lib/customer";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -34,6 +35,20 @@ export function CartDrawer() {
     // Customer Info Form
     const [customer, setCustomer] = useState({ name: "", phone: "", email: "", notes: "" });
 
+    useEffect(() => {
+        if (open && !user) {
+            const info = loadCustomerInfo();
+            if (info) {
+                setCustomer(prev => ({
+                    ...prev,
+                    name: info.name || prev.name,
+                    phone: info.phone || prev.phone,
+                    email: info.email || prev.email,
+                }));
+            }
+        }
+    }, [open, user]);
+
     const handleCheckout = async (paymentType: "qpay" | "invoice") => {
         if (!user) {
             if (!customer.name.trim() || !customer.phone.trim() || !customer.email.trim()) {
@@ -44,6 +59,9 @@ export function CartDrawer() {
         if (items.length === 0) return toast.error("Сагс хоосон байна");
 
         setLoading(true);
+        if (!user) {
+            saveCustomerInfo({ name: customer.name, phone: customer.phone, email: customer.email });
+        }
 
         try {
             const payload = {
@@ -65,7 +83,7 @@ export function CartDrawer() {
 
             // Add userId only if user is logged in
             if (user && user.id) {
-                (payload as any).userId = parseInt(user.id, 10);
+                (payload as Record<string, unknown>).userId = parseInt(user.id, 10);
             }
 
             const res = await fetch(`${API}/bookings/cart`, {

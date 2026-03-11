@@ -101,6 +101,7 @@ export function FeaturedStudios() {
 
     useEffect(() => {
         if (user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setBookingData(prev => ({ ...prev, name: user.name || "", phone: user.phone || "", email: user.email || "" }));
         }
     }, [user]);

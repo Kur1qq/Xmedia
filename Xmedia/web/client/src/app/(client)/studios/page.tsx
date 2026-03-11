@@ -16,6 +16,7 @@ import { fetchBookedSlots, isTimeDisabled, ALL_TIMES } from "@/lib/booking-slots
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 import { useAuthStore } from "@/lib/store/auth";
 import { useRouter } from "next/navigation";
+import { loadCustomerInfo, saveCustomerInfo } from "@/lib/customer";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -69,7 +70,14 @@ export default function StudiosPage() {
 
     useEffect(() => {
         if (user) {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
             setForm(prev => ({ ...prev, name: user.name || "", phone: user.phone || "", email: user.email || "" }));
+        } else {
+            const info = loadCustomerInfo();
+            if (info) {
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+                setForm(prev => ({ ...prev, name: info.name || prev.name, phone: info.phone || prev.phone, email: info.email || prev.email }));
+            }
         }
     }, [user]);
 
@@ -134,9 +142,13 @@ export default function StudiosPage() {
     const handleBuyNow = async (paymentType: "qpay" | "invoice", orgInfo?: { orgName: string; orgReg: string; orgAddress: string; orgPhone: string }) => {
         if (!validateForm(true) || !activeStudio || !currentPackage) return;
 
+        if (!user) {
+            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+        }
+
         setSubmitting(true);
         try {
-            const payload: any = {
+            const payload: Record<string, unknown> = {
                 name: form.name,
                 phone: form.phone,
                 email: form.email,

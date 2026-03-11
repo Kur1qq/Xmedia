@@ -76,7 +76,6 @@ export default function Home() {
 
       // If image, can add fetchPriority
       if (!isVideo) {
-        // @ts-ignore - fetchpriority is a valid web attribute, distinct from TypeScript types momentarily
         link.fetchPriority = "high";
       }
 

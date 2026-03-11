@@ -62,8 +62,8 @@ function SignUpContent() {
 
             toast.success("Амжилттай бүртгүүллээ");
             router.push(callbackUrl);
-        } catch (error: any) {
-            toast.error(error.message || "Бүртгүүлэх үед алдаа гарлаа");
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Бүртгүүлэх үед алдаа гарлаа");
         } finally {
             setIsLoading(false);
         }

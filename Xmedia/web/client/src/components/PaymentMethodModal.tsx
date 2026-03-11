@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Building2, CreditCard, FileText, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { loadCustomerInfo, saveCustomerInfo } from "@/lib/customer";
 
 interface OrgInfo {
     orgName: string;
@@ -43,10 +44,21 @@ export function PaymentMethodModal({
     };
 
     const handleInvoiceSubmit = () => {
+        saveCustomerInfo({ orgInfo });
         onSelectInvoice(orgInfo);
         setStep("select");
         setOrgInfo({ orgName: "", orgReg: "", orgAddress: "", orgPhone: "" });
     };
+
+    useEffect(() => {
+        if (open) {
+            const info = loadCustomerInfo();
+            if (info?.orgInfo) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setOrgInfo(info.orgInfo);
+            }
+        }
+    }, [open]);
 
     return (
         <AnimatePresence>

@@ -15,6 +15,7 @@ import { useCartStore } from "@/lib/store/cart";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 import { useAuthStore } from "@/lib/store/auth";
 import { useRouter } from "next/navigation";
+import { loadCustomerInfo, saveCustomerInfo } from "@/lib/customer";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -68,6 +69,11 @@ export default function VideoEditingPage() {
     useEffect(() => {
         if (user) {
             setForm(prev => ({ ...prev, name: user.name || "", phone: user.phone || "", email: user.email || "" }));
+        } else {
+            const info = loadCustomerInfo();
+            if (info) {
+                setForm(prev => ({ ...prev, name: info.name || prev.name, phone: info.phone || prev.phone, email: info.email || prev.email }));
+            }
         }
     }, [user]);
 
@@ -113,9 +119,13 @@ export default function VideoEditingPage() {
     const handleBuyNow = async (paymentType: "qpay" | "invoice", orgInfo?: { orgName: string; orgReg: string; orgAddress: string; orgPhone: string }) => {
         if (!validateForm(true) || !activeService) return;
 
+        if (!user) {
+            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+        }
+
         setSubmitting(true);
         try {
-            const payload: any = {
+            const payload: Record<string, unknown> = {
                 name: form.name,
                 phone: form.phone,
                 email: form.email,

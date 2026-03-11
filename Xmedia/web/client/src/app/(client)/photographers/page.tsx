@@ -72,6 +72,11 @@ export default function PhotographersPage() {
     useEffect(() => {
         if (user) {
             setForm(prev => ({ ...prev, name: user.name || "", phone: user.phone || "", email: user.email || "" }));
+        } else {
+            const info = loadCustomerInfo();
+            if (info) {
+                setForm(prev => ({ ...prev, name: info.name || prev.name, phone: info.phone || prev.phone, email: info.email || prev.email }));
+            }
         }
     }, [user]);
 
@@ -139,12 +144,16 @@ export default function PhotographersPage() {
     const handleBuyNow = async (paymentType: "qpay" | "invoice", orgInfo?: { orgName: string; orgReg: string; orgAddress: string; orgPhone: string }) => {
         if (!validateForm(true) || !activeService) return;
 
+        if (!user) {
+            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+        }
+
         setSubmitting(true);
         try {
             const duration = parseInt(currentPackage?.duration?.toString() || "1", 10);
             const totalAmount = Number(currentPackage?.price || 0);
 
-            const payload: any = {
+            const payload: Record<string, unknown> = {
                 name: form.name,
                 phone: form.phone,
                 email: form.email,
@@ -277,7 +286,7 @@ export default function PhotographersPage() {
                                                 {activeService.packages && activeService.packages.length > 0 && (() => {
                                                     const contentTypes = Array.from(
                                                         new Map(activeService.packages.filter(p => p.subType && p.subType.name !== 'Сурталчилгаа').map(p => [p.subType!.id, p.subType!])).values()
-                                                    ).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+                                                    ).sort((a: { sortOrder?: number }, b: { sortOrder?: number }) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
                                                     const currentSubTypeId = selectedSubTypes[activeService.id] || (contentTypes.length > 0 ? contentTypes[0].id : null);
                                                     const availablePackages = activeService.packages
@@ -291,7 +300,7 @@ export default function PhotographersPage() {
                                                                     Контентийн төрөл сонгох
                                                                 </h4>
                                                                 <div className="flex flex-wrap gap-2">
-                                                                    {contentTypes.map((ct: any) => {
+                                                                    {contentTypes.map((ct: { id: number; name: string }) => {
                                                                         const isSelected = ct.id === currentSubTypeId;
                                                                         return (
                                                                             <button

@@ -1,23 +1,47 @@
-// Save customer info to localStorage (expires in 30 days)
-export function saveCustomerInfo(data: { name: string; phone: string; email: string }) {
-    if (typeof window === "undefined") return;
-    const expiresAt = new Date().getTime() + 30 * 24 * 60 * 60 * 1000; // 30 days from now
-    localStorage.setItem("xmedia_customer", JSON.stringify({ ...data, expiresAt }));
+export interface CustomerInfo {
+    name?: string;
+    phone?: string;
+    email?: string;
+    orgInfo?: {
+        orgName: string;
+        orgReg: string;
+        orgAddress: string;
+        orgPhone: string;
+    };
 }
 
-// Load customer info if not expired
-export function loadCustomerInfo(): { name: string; phone: string; email: string } | null {
+const STORAGE_KEY = 'xmedia_customer';
+const EXPIRY_DAYS = 90;
+
+export function saveCustomerInfo(info: Partial<CustomerInfo>) {
+    if (typeof window === "undefined") return;
+    try {
+        const existing = loadCustomerInfo() || {};
+        const merged = { ...existing, ...info };
+        const data = {
+            ...merged,
+            expiresAt: new Date().getTime() + EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+        console.error("Failed to save customer info", e);
+    }
+}
+
+export function loadCustomerInfo(): Partial<CustomerInfo> | null {
     if (typeof window === "undefined") return null;
     try {
-        const raw = localStorage.getItem("xmedia_customer");
-        if (!raw) return null;
-        const data = JSON.parse(raw);
-        if (data.expiresAt && new Date().getTime() > data.expiresAt) {
-            localStorage.removeItem("xmedia_customer");
+        const itemStr = localStorage.getItem(STORAGE_KEY);
+        if (!itemStr) return null;
+        
+        const item = JSON.parse(itemStr);
+        if (item.expiresAt && new Date().getTime() > item.expiresAt) {
+            localStorage.removeItem(STORAGE_KEY);
             return null;
         }
-        return { name: data.name || "", phone: data.phone || "", email: data.email || "" };
-    } catch {
+        
+        return item;
+    } catch (e) {
         return null;
     }
 }

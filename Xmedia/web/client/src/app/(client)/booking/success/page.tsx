@@ -16,6 +16,7 @@ function SuccessContent() {
 
     useEffect(() => {
         if (!bookingId) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setVerifying(false);
             return;
         }
