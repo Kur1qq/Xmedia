@@ -181,11 +181,11 @@ export class BookingsService {
 
         const bookingDate = dto.date.slice(0, 10);
         const [h, m] = dto.time.split(':').map(Number);
-        const startDate = new Date(`1970-01-01T${dto.time}:00`);
-        const endDate = new Date(startDate.getTime() + dto.duration * 3600000);
-        const toTimeStr = (d: Date) => d.toTimeString().slice(0, 8);
-        const startTime = toTimeStr(startDate);
-        const endTime = toTimeStr(endDate);
+        // Build startTime/endTime as plain strings to avoid timezone issues
+        const startHour = h;
+        const endHour = h + dto.duration;
+        const startTime = `${String(startHour).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
         const total = dto.unitPrice * dto.duration;
 
         const itemData: any = {
@@ -312,11 +312,10 @@ export class BookingsService {
         // Create a SEPARATE booking for each cart item
         for (const item of dto.items) {
             const bookingDate = item.date.slice(0, 10);
-            const startDate2 = new Date(`1970-01-01T${item.time}:00`);
-            const endDate2 = new Date(startDate2.getTime() + item.duration * 3600000);
-            const toTimeStr2 = (d: Date) => d.toTimeString().slice(0, 8);
-            const startTime = toTimeStr2(startDate2);
-            const endTime = toTimeStr2(endDate2);
+            const [ih, im] = item.time.split(':').map(Number);
+            // Build startTime/endTime as plain strings to avoid timezone issues
+            const startTime = `${String(ih).padStart(2, '0')}:${String(im).padStart(2, '0')}:00`;
+            const endTime = `${String(ih + item.duration).padStart(2, '0')}:${String(im).padStart(2, '0')}:00`;
             const total = item.unitPrice * item.duration;
 
             const bookingItemData: any = {
@@ -726,10 +725,12 @@ export class BookingsService {
 
             const overlaps = items.some(item => {
                 if (!item.startTime || !item.endTime) return false;
-                const s = new Date(`1970-01-01T${item.startTime}`);
-                const e = new Date(`1970-01-01T${item.endTime}`);
-                const bookedStart = s.getHours() * 60 + s.getMinutes();
-                const bookedEnd = e.getHours() * 60 + e.getMinutes();
+                // Parse time string directly to avoid timezone issues
+                // startTime/endTime stored as "HH:MM:SS" — just split and parse
+                const [sh, sm] = item.startTime.split(':').map(Number);
+                const [eh, em] = item.endTime.split(':').map(Number);
+                const bookedStart = sh * 60 + sm;
+                const bookedEnd = eh * 60 + em;
                 // Overlap: slot starts before booking ends AND slot ends after booking starts
                 return slotStart < bookedEnd && slotEnd > bookedStart;
             });
