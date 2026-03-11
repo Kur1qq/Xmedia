@@ -218,7 +218,7 @@ export class BookingsService {
             this.sendInvoiceForBooking(
                 booking.id, dto.name, dto.email, dto.phone,
                 [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }],
-                dto.date,
+                new Date().toISOString().slice(0, 10),
                 { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone },
             ).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             if (dto.email) {
@@ -258,7 +258,7 @@ export class BookingsService {
             this.sendInvoiceForBooking(
                 booking.id, dto.name, dto.email, dto.phone,
                 [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }],
-                dto.date,
+                new Date().toISOString().slice(0, 10),
                 { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone },
             ).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             return { ...booking, checkoutUrl: null };
@@ -367,7 +367,7 @@ export class BookingsService {
             }));
             this.sendInvoiceForBooking(
                 booking.id, dto.name, dto.email, dto.phone,
-                invoiceItems, dto.items[0]?.date || new Date().toISOString().slice(0, 10),
+                invoiceItems, new Date().toISOString().slice(0, 10),
             ).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             if (dto.email) {
                 this.mailService.sendOrderConfirmationEmail(dto.email, booking.id, dto.name, totalAmount, dto.items.length)
