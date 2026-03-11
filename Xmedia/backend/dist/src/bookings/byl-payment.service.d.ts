@@ -12,6 +12,11 @@ export declare class BylPaymentService {
         customerEmail?: string;
         successUrl?: string;
         cancelUrl?: string;
+        items?: Array<{
+            name: string;
+            amount: number;
+            quantity: number;
+        }>;
     }): Promise<{
         checkoutId: number;
         checkoutUrl: string;

@@ -300,6 +300,11 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 bookingId: booking.id,
                 amount: totalAmount,
                 serviceName: `Xmedia багц (${dto.items.length} үйлчилгээ)`,
+                items: dto.items.map(i => ({
+                    name: i.serviceName || i.serviceType,
+                    amount: i.unitPrice,
+                    quantity: i.duration,
+                })),
                 quantity: 1,
                 customerEmail: dto.email,
                 successUrl: `${clientBaseUrl}/booking/success?bookingId=${booking.id}`,

@@ -22,13 +22,22 @@ let BylPaymentService = BylPaymentService_1 = class BylPaymentService {
         this.bylToken = process.env.BYL_TOKEN || '';
     }
     async createCheckout(params) {
-        const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-h8bp.vercel.app';
+        const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
         const body = {
             success_url: params.successUrl || `${clientBaseUrl}/`,
             cancel_url: params.cancelUrl || `${clientBaseUrl}/`,
             client_reference_id: String(params.bookingId),
             customer_email: params.customerEmail || undefined,
-            items: [
+            items: params.items?.map(item => ({
+                price_data: {
+                    unit_amount: item.amount,
+                    product_data: {
+                        name: item.name,
+                        client_reference_id: String(params.bookingId),
+                    },
+                },
+                quantity: item.quantity,
+            })) || [
                 {
                     price_data: {
                         unit_amount: params.amount,

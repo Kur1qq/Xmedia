@@ -24,10 +24,11 @@ export class BylPaymentService {
         customerEmail?: string;
         successUrl?: string;
         cancelUrl?: string;
+        items?: Array<{ name: string; amount: number; quantity: number }>;
     }): Promise<{ checkoutId: number; checkoutUrl: string }> {
         // Strictly use CLIENT_URL or fallback to the explicit Vercel frontend app URL.
         // We do not parse CORS_ORIGINS here because it might contain the Admin panel URL instead of the Client.
-        const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-h8bp.vercel.app';
+        const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
 
 
 
@@ -36,7 +37,16 @@ export class BylPaymentService {
             cancel_url: params.cancelUrl || `${clientBaseUrl}/`,
             client_reference_id: String(params.bookingId),
             customer_email: params.customerEmail || undefined,
-            items: [
+            items: params.items?.map(item => ({
+                price_data: {
+                    unit_amount: item.amount,
+                    product_data: {
+                        name: item.name,
+                        client_reference_id: String(params.bookingId),
+                    },
+                },
+                quantity: item.quantity,
+            })) || [
                 {
                     price_data: {
                         unit_amount: params.amount,
