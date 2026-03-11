@@ -187,7 +187,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { ...booking, checkoutUrl: null };
         }
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-h8bp.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: total,
@@ -295,7 +295,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { ...booking, checkoutUrl: null };
         }
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-h8bp.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: totalAmount,

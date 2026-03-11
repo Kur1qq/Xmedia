@@ -230,7 +230,7 @@ export class BookingsService {
 
         // QPay path — create Byl checkout
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-h8bp.vercel.app';
 
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
@@ -378,8 +378,7 @@ export class BookingsService {
 
         // QPay path — create Byl checkout
         try {
-            //const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
-            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+            const clientBaseUrl = process.env.CLIENT_URL || 'https://xmedia-h8bp.vercel.app';
 
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
