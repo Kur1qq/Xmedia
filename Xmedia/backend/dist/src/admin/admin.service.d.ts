@@ -15,7 +15,7 @@ export declare class AdminService {
             customRole: {
                 id: number;
                 name: string;
-                permissions: import("@prisma/client/runtime/client").JsonValue;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
             } | null;
         };
     }>;
@@ -30,7 +30,7 @@ export declare class AdminService {
         customRole: {
             id: number;
             name: string;
-            permissions: import("@prisma/client/runtime/client").JsonValue;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
         } | null;
     }[]>;
     findOne(id: number): Promise<{
@@ -44,7 +44,7 @@ export declare class AdminService {
         customRole: {
             id: number;
             name: string;
-            permissions: import("@prisma/client/runtime/client").JsonValue;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
         } | null;
     }>;
     create(data: {
@@ -64,7 +64,7 @@ export declare class AdminService {
         customRole: {
             id: number;
             name: string;
-            permissions: import("@prisma/client/runtime/client").JsonValue;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
         } | null;
     }>;
     update(id: number, data: {
@@ -85,7 +85,7 @@ export declare class AdminService {
         customRole: {
             id: number;
             name: string;
-            permissions: import("@prisma/client/runtime/client").JsonValue;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
         } | null;
     }>;
     remove(id: number): Promise<{
@@ -108,14 +108,14 @@ export declare class AdminService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        permissions: import("@prisma/client/runtime/client").JsonValue;
+        permissions: import("@prisma/client/runtime/library").JsonValue;
     })[]>;
     findOneRole(id: number): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        permissions: import("@prisma/client/runtime/client").JsonValue;
+        permissions: import("@prisma/client/runtime/library").JsonValue;
     }>;
     createRole(data: {
         name: string;
@@ -125,7 +125,7 @@ export declare class AdminService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        permissions: import("@prisma/client/runtime/client").JsonValue;
+        permissions: import("@prisma/client/runtime/library").JsonValue;
     }>;
     updateRole(id: number, data: {
         name?: string;
@@ -135,14 +135,14 @@ export declare class AdminService {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        permissions: import("@prisma/client/runtime/client").JsonValue;
+        permissions: import("@prisma/client/runtime/library").JsonValue;
     }>;
     removeRole(id: number): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        permissions: import("@prisma/client/runtime/client").JsonValue;
+        permissions: import("@prisma/client/runtime/library").JsonValue;
     }>;
     seed(): Promise<void>;
 }

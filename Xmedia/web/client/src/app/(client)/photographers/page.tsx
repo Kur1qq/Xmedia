@@ -276,12 +276,12 @@ export default function PhotographersPage() {
 
                                                 {activeService.packages && activeService.packages.length > 0 && (() => {
                                                     const contentTypes = Array.from(
-                                                        new Map(activeService.packages.filter(p => p.subType).map(p => [p.subType!.id, p.subType!])).values()
+                                                        new Map(activeService.packages.filter(p => p.subType && p.subType.name !== 'Сурталчилгаа').map(p => [p.subType!.id, p.subType!])).values()
                                                     ).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
                                                     const currentSubTypeId = selectedSubTypes[activeService.id] || (contentTypes.length > 0 ? contentTypes[0].id : null);
                                                     const availablePackages = activeService.packages
-                                                        .filter(p => !currentSubTypeId || p.subTypeId === currentSubTypeId)
+                                                        .filter(p => (!currentSubTypeId || p.subTypeId === currentSubTypeId) && p.subType?.name !== 'Сурталчилгаа')
                                                         .sort((a, b) => a.duration - b.duration || Number(a.price) - Number(b.price));
 
                                                     return (
@@ -319,7 +319,6 @@ export default function PhotographersPage() {
                                                                                     className={`cursor-pointer p-4 rounded-xl border relative transition-all ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
                                                                                 >
                                                                                     {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-rose-600" /></div>}
-                                                                                    <p className="text-sm font-medium pr-6">{pkg.priceLabel || pkg.subType?.name || "Үндсэн багц"}</p>
                                                                                     <div className="mt-2 flex items-baseline gap-2">
                                                                                         <p className="text-rose-600 font-bold text-lg">{Number(pkg.price).toLocaleString()}₮</p>
                                                                                         <p className="text-xs text-gray-400 font-medium">/ {pkg.duration} цаг</p>

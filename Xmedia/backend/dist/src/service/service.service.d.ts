@@ -25,7 +25,7 @@ export declare class ServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;
@@ -56,7 +56,7 @@ export declare class ServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;
@@ -87,7 +87,7 @@ export declare class ServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;
@@ -118,7 +118,7 @@ export declare class ServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;
@@ -132,7 +132,7 @@ export declare class ServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;

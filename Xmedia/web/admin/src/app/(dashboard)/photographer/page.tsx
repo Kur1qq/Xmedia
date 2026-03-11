@@ -558,7 +558,14 @@ export default function PhotographerPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
                                         <label className="text-xs text-gray-400">Үндсэн төрөл <span className="text-red-500">*</span></label>
-                                        <select required value={serviceFormData.mainTypeId} onChange={e => setServiceFormData({ ...serviceFormData, mainTypeId: e.target.value, packages: [{ subTypeId: "", price: "", duration: "1", priceLabel: "" }] })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
+                                        <select required value={serviceFormData.mainTypeId} onChange={e => {
+                                            const newId = e.target.value;
+                                            const subs = mainTypes.find(m => m.id === parseInt(newId))?.subTypes || [];
+                                            const autoPackages = subs.length > 0
+                                                ? subs.map((st: any) => ({ subTypeId: st.id.toString(), price: "", duration: "1", priceLabel: "" }))/* eslint-disable-line @typescript-eslint/no-explicit-any */
+                                                : [{ subTypeId: "", price: "", duration: "1", priceLabel: "" }];
+                                            setServiceFormData({ ...serviceFormData, mainTypeId: newId, packages: autoPackages });
+                                        }} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
                                             <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
                                             {mainTypes.map(mt => <option key={mt.id} value={mt.id} className="bg-[#1e1e1e]">{mt.name}</option>)}
                                         </select>
@@ -573,8 +580,11 @@ export default function PhotographerPage() {
                                 <div className="space-y-3 bg-black/10 p-4 rounded-xl border border-white/5">
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs text-gray-400">Үнийн багцууд (Контентийн төрлүүд) <span className="text-red-500">*</span></label>
-                                        <button type="button" onClick={() => setServiceFormData({ ...serviceFormData, packages: [...serviceFormData.packages, { subTypeId: "", price: "", duration: "1", priceLabel: "" }] })} disabled={!serviceFormData.mainTypeId || filteredSubTypes.length === 0} className="text-[10px] flex items-center gap-1 bg-primary/20 text-primary px-2 py-1 rounded hover:bg-primary/30 transition-colors disabled:opacity-50">
-                                            <Plus className="w-3 h-3" /> Нэмэх
+                                        <button type="button" onClick={() => {
+                                            const newRows = filteredSubTypes.map((st: any) => ({ subTypeId: st.id.toString(), price: "", duration: "1", priceLabel: "" }));/* eslint-disable-line @typescript-eslint/no-explicit-any */
+                                            setServiceFormData({ ...serviceFormData, packages: [...serviceFormData.packages, ...newRows] });
+                                        }} disabled={!serviceFormData.mainTypeId || filteredSubTypes.length === 0} className="text-[10px] flex items-center gap-1 bg-primary/20 text-primary px-2 py-1 rounded hover:bg-primary/30 transition-colors disabled:opacity-50">
+                                            <Plus className="w-3 h-3" /> +{filteredSubTypes.length} Нэмэх
                                         </button>
                                     </div>
                                     {!serviceFormData.mainTypeId ? (

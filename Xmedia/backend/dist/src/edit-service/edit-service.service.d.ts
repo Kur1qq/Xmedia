@@ -17,7 +17,7 @@ export declare class EditServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client-runtime-utils").Decimal;
+            price: import("@prisma/client/runtime/library").Decimal;
             editServiceId: number;
             subTypeId: number;
             priceLabel: string | null;
@@ -54,7 +54,7 @@ export declare class EditServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;
@@ -75,7 +75,7 @@ export declare class EditServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client-runtime-utils").Decimal;
+            price: import("@prisma/client/runtime/library").Decimal;
             editServiceId: number;
             subTypeId: number;
             priceLabel: string | null;
@@ -112,7 +112,7 @@ export declare class EditServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;
@@ -133,7 +133,7 @@ export declare class EditServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client-runtime-utils").Decimal;
+            price: import("@prisma/client/runtime/library").Decimal;
             editServiceId: number;
             subTypeId: number;
             priceLabel: string | null;
@@ -170,7 +170,7 @@ export declare class EditServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;
@@ -191,7 +191,7 @@ export declare class EditServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client-runtime-utils").Decimal;
+            price: import("@prisma/client/runtime/library").Decimal;
             editServiceId: number;
             subTypeId: number;
             priceLabel: string | null;
@@ -228,7 +228,7 @@ export declare class EditServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;
@@ -241,7 +241,7 @@ export declare class EditServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;

@@ -11,7 +11,7 @@ export declare class PhotographerServiceService {
                 name: string;
                 description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
+                images: import("@prisma/client/runtime/library").JsonValue | null;
             };
         } & {
             id: number;
@@ -27,7 +27,7 @@ export declare class PhotographerServiceService {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                price: import("@prisma/client-runtime-utils").Decimal | null;
+                price: import("@prisma/client/runtime/library").Decimal | null;
                 mainTypeId: number;
                 sortOrder: number;
             };
@@ -35,7 +35,7 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client-runtime-utils").Decimal;
+            price: import("@prisma/client/runtime/library").Decimal;
             photographerServiceId: number;
             subTypeId: number;
             duration: number;
@@ -64,7 +64,7 @@ export declare class PhotographerServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;
@@ -80,7 +80,7 @@ export declare class PhotographerServiceService {
                 name: string;
                 description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
+                images: import("@prisma/client/runtime/library").JsonValue | null;
             };
         } & {
             id: number;
@@ -96,7 +96,7 @@ export declare class PhotographerServiceService {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                price: import("@prisma/client-runtime-utils").Decimal | null;
+                price: import("@prisma/client/runtime/library").Decimal | null;
                 mainTypeId: number;
                 sortOrder: number;
             };
@@ -104,7 +104,7 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client-runtime-utils").Decimal;
+            price: import("@prisma/client/runtime/library").Decimal;
             photographerServiceId: number;
             subTypeId: number;
             duration: number;
@@ -133,7 +133,7 @@ export declare class PhotographerServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;
@@ -149,7 +149,7 @@ export declare class PhotographerServiceService {
                 name: string;
                 description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
+                images: import("@prisma/client/runtime/library").JsonValue | null;
             };
         } & {
             id: number;
@@ -165,7 +165,7 @@ export declare class PhotographerServiceService {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                price: import("@prisma/client-runtime-utils").Decimal | null;
+                price: import("@prisma/client/runtime/library").Decimal | null;
                 mainTypeId: number;
                 sortOrder: number;
             };
@@ -173,7 +173,7 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client-runtime-utils").Decimal;
+            price: import("@prisma/client/runtime/library").Decimal;
             photographerServiceId: number;
             subTypeId: number;
             duration: number;
@@ -202,7 +202,7 @@ export declare class PhotographerServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;
@@ -218,7 +218,7 @@ export declare class PhotographerServiceService {
                 name: string;
                 description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
+                images: import("@prisma/client/runtime/library").JsonValue | null;
             };
         } & {
             id: number;
@@ -234,7 +234,7 @@ export declare class PhotographerServiceService {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                price: import("@prisma/client-runtime-utils").Decimal | null;
+                price: import("@prisma/client/runtime/library").Decimal | null;
                 mainTypeId: number;
                 sortOrder: number;
             };
@@ -242,7 +242,7 @@ export declare class PhotographerServiceService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client-runtime-utils").Decimal;
+            price: import("@prisma/client/runtime/library").Decimal;
             photographerServiceId: number;
             subTypeId: number;
             duration: number;
@@ -271,7 +271,7 @@ export declare class PhotographerServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;
@@ -285,7 +285,7 @@ export declare class PhotographerServiceService {
         name: string;
         description: string | null;
         image: string | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
         mainTypeId: number;

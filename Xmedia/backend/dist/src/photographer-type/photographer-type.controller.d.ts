@@ -14,7 +14,7 @@ export declare class PhotographerTypeController {
             updatedAt: Date;
             name: string;
             description: string | null;
-            price: import("@prisma/client-runtime-utils").Decimal | null;
+            price: import("@prisma/client/runtime/library").Decimal | null;
             mainTypeId: number;
             sortOrder: number;
         }[];
@@ -56,7 +56,7 @@ export declare class PhotographerTypeController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal | null;
+        price: import("@prisma/client/runtime/library").Decimal | null;
         mainTypeId: number;
         sortOrder: number;
     }[]>;
@@ -66,7 +66,7 @@ export declare class PhotographerTypeController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal | null;
+        price: import("@prisma/client/runtime/library").Decimal | null;
         mainTypeId: number;
         sortOrder: number;
     }>;
@@ -76,7 +76,7 @@ export declare class PhotographerTypeController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal | null;
+        price: import("@prisma/client/runtime/library").Decimal | null;
         mainTypeId: number;
         sortOrder: number;
     }>;
@@ -86,7 +86,7 @@ export declare class PhotographerTypeController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal | null;
+        price: import("@prisma/client/runtime/library").Decimal | null;
         mainTypeId: number;
         sortOrder: number;
     }>;

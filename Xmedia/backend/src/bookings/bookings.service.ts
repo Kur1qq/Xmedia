@@ -378,7 +378,9 @@ export class BookingsService {
 
         // QPay path — create Byl checkout
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+            //const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: totalAmount,

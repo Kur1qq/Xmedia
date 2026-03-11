@@ -28,6 +28,8 @@ export class BylPaymentService {
         // Strictly use CLIENT_URL or fallback to the explicit Vercel frontend app URL.
         // We do not parse CORS_ORIGINS here because it might contain the Admin panel URL instead of the Client.
         const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+        //const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+
 
 
         const body = {

@@ -17,7 +17,7 @@ export declare class EquipmentController {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
+        images: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     findAll(): Promise<{
         id: number;
@@ -26,7 +26,7 @@ export declare class EquipmentController {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
+        images: import("@prisma/client/runtime/library").JsonValue | null;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
@@ -35,7 +35,7 @@ export declare class EquipmentController {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
+        images: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     update(id: number, updateData: {
         name?: string;
@@ -49,7 +49,7 @@ export declare class EquipmentController {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
+        images: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     remove(id: number, req: any): Promise<{
         id: number;
@@ -58,6 +58,6 @@ export declare class EquipmentController {
         name: string;
         description: string | null;
         type: import("@prisma/client").$Enums.EquipmentType;
-        images: import("@prisma/client/runtime/client").JsonValue | null;
+        images: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
 }

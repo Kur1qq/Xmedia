@@ -7,8 +7,5 @@ exports.default = (0, config_1.defineConfig)({
     migrations: {
         path: "prisma/migrations",
     },
-    datasource: {
-        url: process.env["DATABASE_URL"],
-    },
 });
 //# sourceMappingURL=prisma.config.js.map

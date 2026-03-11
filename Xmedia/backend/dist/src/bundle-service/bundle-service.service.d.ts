@@ -11,7 +11,7 @@ export declare class BundleServiceService {
                 name: string;
                 description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
+                images: import("@prisma/client/runtime/library").JsonValue | null;
             };
         } & {
             id: number;
@@ -27,10 +27,10 @@ export declare class BundleServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         image: string | null;
-        includedServices: import("@prisma/client/runtime/client").JsonValue | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        includedServices: import("@prisma/client/runtime/library").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
     })[]>;
     findOne(id: number): Promise<{
@@ -42,7 +42,7 @@ export declare class BundleServiceService {
                 name: string;
                 description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
+                images: import("@prisma/client/runtime/library").JsonValue | null;
             };
         } & {
             id: number;
@@ -58,10 +58,10 @@ export declare class BundleServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         image: string | null;
-        includedServices: import("@prisma/client/runtime/client").JsonValue | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        includedServices: import("@prisma/client/runtime/library").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
     }>;
     create(data: any): Promise<{
@@ -79,10 +79,10 @@ export declare class BundleServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         image: string | null;
-        includedServices: import("@prisma/client/runtime/client").JsonValue | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        includedServices: import("@prisma/client/runtime/library").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
     }>;
     update(id: number, data: any): Promise<{
@@ -94,7 +94,7 @@ export declare class BundleServiceService {
                 name: string;
                 description: string | null;
                 type: import("@prisma/client").$Enums.EquipmentType;
-                images: import("@prisma/client/runtime/client").JsonValue | null;
+                images: import("@prisma/client/runtime/library").JsonValue | null;
             };
         } & {
             id: number;
@@ -110,10 +110,10 @@ export declare class BundleServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         image: string | null;
-        includedServices: import("@prisma/client/runtime/client").JsonValue | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        includedServices: import("@prisma/client/runtime/library").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
     }>;
     remove(id: number): Promise<{
@@ -122,10 +122,10 @@ export declare class BundleServiceService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        price: import("@prisma/client-runtime-utils").Decimal;
+        price: import("@prisma/client/runtime/library").Decimal;
         image: string | null;
-        includedServices: import("@prisma/client/runtime/client").JsonValue | null;
-        amenities: import("@prisma/client/runtime/client").JsonValue | null;
+        includedServices: import("@prisma/client/runtime/library").JsonValue | null;
+        amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
     }>;
 }

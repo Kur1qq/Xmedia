@@ -144,7 +144,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 }
             });
         }
-        const bookingDate = new Date(dto.date);
+        const bookingDate = dto.date.slice(0, 10);
         const [h, m] = dto.time.split(':').map(Number);
         const startDate = new Date(`1970-01-01T${dto.time}:00`);
         const endDate = new Date(startDate.getTime() + dto.duration * 3600000);
@@ -235,7 +235,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         }
         let totalAmount = 0;
         const prismaItems = dto.items.map(item => {
-            const bookingDate = new Date(item.date);
+            const bookingDate = item.date.slice(0, 10);
             const startDate2 = new Date(`1970-01-01T${item.time}:00`);
             const endDate2 = new Date(startDate2.getTime() + item.duration * 3600000);
             const toTimeStr2 = (d) => d.toTimeString().slice(0, 8);
@@ -295,7 +295,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { ...booking, checkoutUrl: null };
         }
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+            const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: totalAmount,
@@ -397,7 +397,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 }
             });
         }
-        const bookingDate = new Date(dto.date);
+        const bookingDate = dto.date.slice(0, 10);
         const start = new Date(`1970-01-01T${dto.startTime}:00`);
         const end = new Date(`1970-01-01T${dto.endTime}:00`);
         const durationHours = (end.getTime() - start.getTime()) / 3600000;
@@ -489,7 +489,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         };
     }
     async getBookedSlots(serviceType, serviceId, date) {
-        const bookingDate = new Date(date);
+        const bookingDate = new Date(date).toISOString().slice(0, 10);
         const serviceWhere = { itemType: serviceType, bookingDate };
         if (serviceType === 'STUDIO')
             serviceWhere.studioId = serviceId;

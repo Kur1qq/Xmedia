@@ -12,17 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
-const adapter_mariadb_1 = require("@prisma/adapter-mariadb");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     constructor() {
-        const connectionString = process.env.DATABASE_URL;
-        if (!connectionString)
-            throw new Error('DATABASE_URL environment variable is not set!');
-        const url = connectionString.includes('allowPublicKeyRetrieval')
-            ? connectionString
-            : connectionString + (connectionString.includes('?') ? '&allowPublicKeyRetrieval=true' : '?allowPublicKeyRetrieval=true');
-        const adapter = new adapter_mariadb_1.PrismaMariaDb(url);
-        super({ adapter });
+        super();
     }
     async onModuleInit() {
         try {

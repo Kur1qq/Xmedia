@@ -20,7 +20,7 @@ export declare class AdminController {
             customRole: {
                 id: number;
                 name: string;
-                permissions: import("@prisma/client/runtime/client").JsonValue;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
             } | null;
         };
     }>;
@@ -69,7 +69,7 @@ export declare class AdminController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        permissions: import("@prisma/client/runtime/client").JsonValue;
+        permissions: import("@prisma/client/runtime/library").JsonValue;
     })[]>;
     createRole(body: {
         name: string;
@@ -79,7 +79,7 @@ export declare class AdminController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        permissions: import("@prisma/client/runtime/client").JsonValue;
+        permissions: import("@prisma/client/runtime/library").JsonValue;
     }>;
     updateRole(id: string, body: {
         name?: string;
@@ -89,14 +89,14 @@ export declare class AdminController {
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        permissions: import("@prisma/client/runtime/client").JsonValue;
+        permissions: import("@prisma/client/runtime/library").JsonValue;
     }>;
     removeRole(id: string, req: any): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
         name: string;
-        permissions: import("@prisma/client/runtime/client").JsonValue;
+        permissions: import("@prisma/client/runtime/library").JsonValue;
     }>;
     findAll(): Promise<{
         id: number;
@@ -109,7 +109,7 @@ export declare class AdminController {
         customRole: {
             id: number;
             name: string;
-            permissions: import("@prisma/client/runtime/client").JsonValue;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
         } | null;
     }[]>;
     findOne(id: string): Promise<{
@@ -123,7 +123,7 @@ export declare class AdminController {
         customRole: {
             id: number;
             name: string;
-            permissions: import("@prisma/client/runtime/client").JsonValue;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
         } | null;
     }>;
     create(body: any, req: any): Promise<{
@@ -137,7 +137,7 @@ export declare class AdminController {
         customRole: {
             id: number;
             name: string;
-            permissions: import("@prisma/client/runtime/client").JsonValue;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
         } | null;
     }>;
     update(id: string, body: any, req: any): Promise<{
@@ -151,7 +151,7 @@ export declare class AdminController {
         customRole: {
             id: number;
             name: string;
-            permissions: import("@prisma/client/runtime/client").JsonValue;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
         } | null;
     }>;
     remove(id: string, req: any): Promise<{

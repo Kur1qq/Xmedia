@@ -5,7 +5,7 @@ export declare class DashboardController {
     getSummary(): Promise<{
         totalUsers: number;
         totalBookings: number;
-        totalRevenue: number | import("@prisma/client-runtime-utils").Decimal;
+        totalRevenue: number | import("@prisma/client/runtime/library").Decimal;
         activeStudios: number;
         activeEquipment: number;
         revenueChart: {
