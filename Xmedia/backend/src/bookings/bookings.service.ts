@@ -179,7 +179,7 @@ export class BookingsService {
             });
         }
 
-        const bookingDate = new Date(dto.date);
+        const bookingDate = dto.date.slice(0, 10);
         const [h, m] = dto.time.split(':').map(Number);
         const startDate = new Date(`1970-01-01T${dto.time}:00`);
         const endDate = new Date(startDate.getTime() + dto.duration * 3600000);
@@ -307,7 +307,7 @@ export class BookingsService {
 
         let totalAmount = 0;
         const prismaItems = dto.items.map(item => {
-            const bookingDate = new Date(item.date);
+            const bookingDate = item.date.slice(0, 10);
             const startDate2 = new Date(`1970-01-01T${item.time}:00`);
             const endDate2 = new Date(startDate2.getTime() + item.duration * 3600000);
             const toTimeStr2 = (d: Date) => d.toTimeString().slice(0, 8);
@@ -520,7 +520,7 @@ export class BookingsService {
             });
         }
 
-        const bookingDate = new Date(dto.date);
+        const bookingDate = dto.date.slice(0, 10);
         const start = new Date(`1970-01-01T${dto.startTime}:00`);
         const end = new Date(`1970-01-01T${dto.endTime}:00`);
 
@@ -660,7 +660,7 @@ export class BookingsService {
         serviceId: number,
         date: string, // 'YYYY-MM-DD'
     ): Promise<string[]> {
-        const bookingDate = new Date(date);
+        const bookingDate = new Date(date).toISOString().slice(0, 10);
 
         // Build where clause for the specific service
         const serviceWhere: any = { itemType: serviceType, bookingDate };

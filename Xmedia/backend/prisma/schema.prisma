@@ -411,7 +411,7 @@ model BookingItem {
   totalPrice Decimal @map("total_price") @db.Decimal(12, 2)
 
   // Бүх үйлчилгээ болон студид өдөр сонгох шаардлагатай
-  bookingDate DateTime @map("booking_date") @db.Date
+  bookingDate String   @map("booking_date") @db.VarChar(10)
 
   // Цаг: Студи, Шууд дамжуулалт, Зураглаачид шаардлагатай; Эдитэд биш.
   startTime String?   @map("start_time") @db.VarChar(8)
