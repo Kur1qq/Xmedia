@@ -691,7 +691,7 @@ export class BookingsService {
         serviceId: number,
         date: string, // 'YYYY-MM-DD'
     ): Promise<string[]> {
-        const bookingDate = new Date(date).toISOString().slice(0, 10);
+        const bookingDate = date.slice(0, 10);
 
         // Build where clause for the specific service
         const serviceWhere: any = { itemType: serviceType, bookingDate };
