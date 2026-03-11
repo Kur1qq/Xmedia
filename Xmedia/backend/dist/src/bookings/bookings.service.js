@@ -146,11 +146,10 @@ let BookingsService = BookingsService_1 = class BookingsService {
         }
         const bookingDate = dto.date.slice(0, 10);
         const [h, m] = dto.time.split(':').map(Number);
-        const startDate = new Date(`1970-01-01T${dto.time}:00`);
-        const endDate = new Date(startDate.getTime() + dto.duration * 3600000);
-        const toTimeStr = (d) => d.toTimeString().slice(0, 8);
-        const startTime = toTimeStr(startDate);
-        const endTime = toTimeStr(endDate);
+        const startHour = h;
+        const endHour = h + dto.duration;
+        const startTime = `${String(startHour).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
         const total = dto.unitPrice * dto.duration;
         const itemData = {
             itemType: dto.serviceType,
@@ -233,16 +232,14 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 }
             });
         }
-        let totalAmount = 0;
-        const prismaItems = dto.items.map(item => {
+        const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+        const createdBookings = [];
+        for (const item of dto.items) {
             const bookingDate = item.date.slice(0, 10);
-            const startDate2 = new Date(`1970-01-01T${item.time}:00`);
-            const endDate2 = new Date(startDate2.getTime() + item.duration * 3600000);
-            const toTimeStr2 = (d) => d.toTimeString().slice(0, 8);
-            const startTime = toTimeStr2(startDate2);
-            const endTime = toTimeStr2(endDate2);
+            const [ih, im] = item.time.split(':').map(Number);
+            const startTime = `${String(ih).padStart(2, '0')}:${String(im).padStart(2, '0')}:00`;
+            const endTime = `${String(ih + item.duration).padStart(2, '0')}:${String(im).padStart(2, '0')}:00`;
             const total = item.unitPrice * item.duration;
-            totalAmount += total;
             const bookingItemData = {
                 itemType: item.serviceType,
                 quantity: item.duration,
@@ -269,66 +266,69 @@ let BookingsService = BookingsService_1 = class BookingsService {
                     bookingItemData.bundleServiceId = item.serviceId;
                     break;
             }
-            return bookingItemData;
-        });
-        const booking = await this.prisma.booking.create({
-            data: {
-                userId: user.id,
-                totalAmount,
-                notes: dto.notes,
-                items: { create: prismaItems },
-            },
-            include: { items: true }
-        });
+            const booking = await this.prisma.booking.create({
+                data: {
+                    userId: user.id,
+                    totalAmount: total,
+                    notes: dto.notes,
+                    items: { create: [bookingItemData] },
+                },
+                include: { items: true }
+            });
+            createdBookings.push({ booking, item, total });
+        }
+        const totalAmount = createdBookings.reduce((sum, b) => sum + b.total, 0);
+        const firstBooking = createdBookings[0].booking;
         if (dto.paymentType === 'invoice') {
-            const invoiceItems = dto.items.map(i => ({
-                description: i.serviceName || i.serviceType,
-                quantity: i.duration,
-                unitPrice: i.unitPrice,
-                totalPrice: i.unitPrice * i.duration,
+            const invoiceItems = createdBookings.map(b => ({
+                description: b.item.serviceName || b.item.serviceType,
+                quantity: b.item.duration,
+                unitPrice: b.item.unitPrice,
+                totalPrice: b.total,
             }));
-            this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, invoiceItems, new Date().toISOString().slice(0, 10)).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
+            this.sendInvoiceForBooking(firstBooking.id, dto.name, dto.email, dto.phone, invoiceItems, new Date().toISOString().slice(0, 10)).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             if (dto.email) {
-                this.mailService.sendOrderConfirmationEmail(dto.email, booking.id, dto.name, totalAmount, dto.items.length)
+                this.mailService.sendOrderConfirmationEmail(dto.email, firstBooking.id, dto.name, totalAmount, createdBookings.length)
                     .catch(err => this.logger.error(`Failed to send confirmation email async: ${err.message}`));
             }
-            return { ...booking, checkoutUrl: null };
+            return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
         try {
-            const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
             const checkout = await this.bylPayment.createCheckout({
-                bookingId: booking.id,
+                bookingId: firstBooking.id,
                 amount: totalAmount,
-                serviceName: `Xmedia багц (${dto.items.length} үйлчилгээ)`,
-                items: dto.items.map(i => ({
-                    name: i.serviceName || i.serviceType,
-                    amount: i.unitPrice,
-                    quantity: i.duration,
+                serviceName: `Xmedia багц (${createdBookings.length} үйлчилгээ)`,
+                items: createdBookings.map(b => ({
+                    name: b.item.serviceName || b.item.serviceType,
+                    amount: b.item.unitPrice,
+                    quantity: b.item.duration,
                 })),
                 quantity: 1,
                 customerEmail: dto.email,
-                successUrl: `${clientBaseUrl}/booking/success?bookingId=${booking.id}`,
+                successUrl: `${clientBaseUrl}/booking/success?bookingId=${firstBooking.id}`,
                 cancelUrl: `${clientBaseUrl}/booking/cancel`,
             });
+            const otherBookingIds = createdBookings.slice(1).map(b => b.booking.id);
             await this.prisma.payment.create({
                 data: {
-                    bookingId: booking.id,
+                    bookingId: firstBooking.id,
                     invoiceId: String(checkout.checkoutId),
                     amount: totalAmount,
                     status: 'UNPAID',
+                    linkedBookingIds: otherBookingIds.length > 0 ? JSON.stringify(otherBookingIds) : null,
                 }
             });
-            return { ...booking, checkoutUrl: checkout.checkoutUrl };
+            return { ...firstBooking, checkoutUrl: checkout.checkoutUrl, bookingIds: createdBookings.map(b => b.booking.id) };
         }
         catch (error) {
-            const invoiceItems = dto.items.map(i => ({
-                description: i.serviceName || i.serviceType,
-                quantity: i.duration,
-                unitPrice: i.unitPrice,
-                totalPrice: i.unitPrice * i.duration,
+            const invoiceItems = createdBookings.map(b => ({
+                description: b.item.serviceName || b.item.serviceType,
+                quantity: b.item.duration,
+                unitPrice: b.item.unitPrice,
+                totalPrice: b.total,
             }));
-            this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, invoiceItems, dto.items[0]?.date || new Date().toISOString().slice(0, 10)).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
-            return { ...booking, checkoutUrl: null };
+            this.sendInvoiceForBooking(firstBooking.id, dto.name, dto.email, dto.phone, invoiceItems, createdBookings[0]?.item.date || new Date().toISOString().slice(0, 10)).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
+            return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
     }
     async sendInvoiceForBooking(bookingId, buyerName, buyerEmail, buyerPhone, items, invoiceDate, buyerOrgInfo) {
@@ -461,6 +461,24 @@ let BookingsService = BookingsService_1 = class BookingsService {
             },
             include: { user: true, items: true }
         });
+        if (payment.linkedBookingIds) {
+            try {
+                const linkedIds = JSON.parse(payment.linkedBookingIds);
+                if (linkedIds.length > 0) {
+                    await this.prisma.booking.updateMany({
+                        where: { id: { in: linkedIds } },
+                        data: {
+                            paymentStatus: 'PAID',
+                            status: 'CONFIRMED',
+                        },
+                    });
+                    this.logger.log(`Confirmed linked bookings: ${linkedIds.join(', ')} along with booking #${payment.bookingId}`);
+                }
+            }
+            catch (e) {
+                this.logger.error(`Failed to parse/confirm linkedBookingIds for payment #${payment.id}: ${e.message}`);
+            }
+        }
         if (!wasAlreadyPaid && updatedBooking.user?.email) {
             this.mailService.sendOrderConfirmationEmail(updatedBooking.user.email, updatedBooking.id, updatedBooking.user.username, Number(updatedBooking.totalAmount), updatedBooking.items.length).catch(err => this.logger.error(`Async email failed: ${err.message}`));
         }
@@ -494,7 +512,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         };
     }
     async getBookedSlots(serviceType, serviceId, date) {
-        const bookingDate = new Date(date).toISOString().slice(0, 10);
+        const bookingDate = date.slice(0, 10);
         const serviceWhere = { itemType: serviceType, bookingDate };
         if (serviceType === 'STUDIO')
             serviceWhere.studioId = serviceId;
@@ -526,10 +544,10 @@ let BookingsService = BookingsService_1 = class BookingsService {
             const overlaps = items.some(item => {
                 if (!item.startTime || !item.endTime)
                     return false;
-                const s = new Date(`1970-01-01T${item.startTime}`);
-                const e = new Date(`1970-01-01T${item.endTime}`);
-                const bookedStart = s.getHours() * 60 + s.getMinutes();
-                const bookedEnd = e.getHours() * 60 + e.getMinutes();
+                const [sh, sm] = item.startTime.split(':').map(Number);
+                const [eh, em] = item.endTime.split(':').map(Number);
+                const bookedStart = sh * 60 + sm;
+                const bookedEnd = eh * 60 + em;
                 return slotStart < bookedEnd && slotEnd > bookedStart;
             });
             if (overlaps)

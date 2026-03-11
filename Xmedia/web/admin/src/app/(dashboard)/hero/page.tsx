@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Plus, X, Pencil, Trash2, Image as ImageIcon, UploadCloud } from "lucide-react";
+import { Plus, X, Pencil, Trash2, Image as ImageIcon, UploadCloud, Snowflake } from "lucide-react";
 import { toast } from "sonner";
 import { getToken } from "@/lib/auth";
 
@@ -11,6 +11,8 @@ export default function HeroPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editingSlide, setEditingSlide] = useState<any | null>(null);
+    const [snowEffect, setSnowEffect] = useState(false);
+    const [isTogglingSnow, setIsTogglingSnow] = useState(false);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -41,6 +43,11 @@ export default function HeroPage() {
 
     useEffect(() => {
         fetchData();
+        // Fetch snow effect setting
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/settings`)
+            .then(r => r.ok ? r.json() : null)
+            .then(d => { if (d) setSnowEffect(!!d.snowEffect); })
+            .catch(console.error);
     }, []);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,11 +169,61 @@ export default function HeroPage() {
         }
     };
 
+    const handleToggleSnow = async () => {
+        setIsTogglingSnow(true);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/settings`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
+                },
+                body: JSON.stringify({ snowEffect: !snowEffect }),
+            });
+            if (res.ok) {
+                setSnowEffect(prev => !prev);
+                toast.success(!snowEffect ? "Цасны эффект асаагдлаа ❄️" : "Цасны эффект унтраагдлаа");
+            } else {
+                toast.error("Тохиргоо хадгалахад алдаа гарлаа.");
+            }
+        } catch {
+            toast.error("Сервертэй холбогдоход алдаа гарлаа.");
+        } finally {
+            setIsTogglingSnow(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold tracking-tight">Нүүр хуудасны слайд</h1>
                 <p className="text-muted-foreground mt-1">Хэрэглэгчийн нүүр хуудас дээр харагдах зургууд болон текстүүдийг удирдах хэсэг.</p>
+            </div>
+
+            {/* Snow Effect Toggle Card */}
+            <div className="flex items-center justify-between rounded-xl border border-border/50 bg-card px-5 py-4">
+                <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${snowEffect ? 'bg-blue-500/20' : 'bg-muted/50'}`}>
+                        <Snowflake className={`w-5 h-5 transition-colors duration-300 ${snowEffect ? 'text-blue-400' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div>
+                        <p className="text-sm font-semibold">Цасны эффект</p>
+                        <p className="text-xs text-muted-foreground">Хэрэглэгчийн нүүр хуудас дээр цас бурхах харагдуулах</p>
+                    </div>
+                </div>
+                <button
+                    onClick={handleToggleSnow}
+                    disabled={isTogglingSnow}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none disabled:opacity-50 ${
+                        snowEffect ? 'bg-blue-500' : 'bg-muted'
+                    }`}
+                >
+                    <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                            snowEffect ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                    />
+                </button>
             </div>
 
             <div className="flex justify-between items-center mb-4">

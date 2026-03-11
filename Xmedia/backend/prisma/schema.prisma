@@ -706,3 +706,15 @@ model HeroSlide {
 
   @@map("hero_slides")
 }
+
+// --------------------------------------------------------------------------
+// САЙТЫН ТОХИРГОО (SITE SETTINGS)
+// --------------------------------------------------------------------------
+
+model SiteSettings {
+  id         Int      @id @default(autoincrement())
+  snowEffect Boolean  @default(false) @map("snow_effect")
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("site_settings")
+}

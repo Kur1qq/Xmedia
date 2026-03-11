@@ -22,6 +22,7 @@ import { LogModule } from './log/log.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { HeroModule } from './hero/hero.module';
 import { BundleServiceModule } from './bundle-service/bundle-service.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { BundleServiceModule } from './bundle-service/bundle-service.module';
     PortfolioModule,
     HeroModule,
     BundleServiceModule,
+    SettingsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

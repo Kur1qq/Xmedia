@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Radio, Image, Film, Package } from "lucide-react";
+import SnowEffect from "@/components/SnowEffect";
 
 // Slide Data
 interface Slide {
@@ -45,6 +46,7 @@ const DEFAULT_SLIDES: Slide[] = [
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
+  const [snowEffect, setSnowEffect] = useState(false);
 
   useEffect(() => {
     const fetchSlides = async () => {
@@ -61,6 +63,22 @@ export default function Home() {
       }
     };
     fetchSlides();
+  }, []);
+
+  // Fetch snow effect setting
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/settings`);
+        if (res.ok) {
+          const data = await res.json();
+          setSnowEffect(!!data.snowEffect);
+        }
+      } catch (error) {
+        console.error("Failed to fetch settings", error);
+      }
+    };
+    fetchSettings();
   }, []);
 
   // Use a separate side-effect to inject a preload link for the first background media
@@ -98,6 +116,7 @@ export default function Home() {
 
   return (
     <div className="flex-1 flex flex-col pt-36 sm:pt-0 pb-8">
+      <SnowEffect enabled={snowEffect} />
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
       <div className="hidden sm:flex flex-col flex-1 overflow-hidden relative">
         {/* Background Slider - Moved up to take full flex-1 container space */}
