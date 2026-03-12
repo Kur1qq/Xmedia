@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
-import { fetchBookedSlots, isTimeDisabled, ALL_TIMES } from "@/lib/booking-slots";
+import { fetchBookedSlots, ALL_TIMES, isTimeDisabled } from "@/lib/booking-slots";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 import { useAuthStore } from "@/lib/store/auth";
 import { useRouter } from "next/navigation";
@@ -47,7 +47,15 @@ export default function StudiosPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [selectedPackages, setSelectedPackages] = useState<Record<number, StudioPackage>>({});
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", name: "", phone: "", email: "" });
+    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", endTime: "", name: "", phone: "", email: "" });
+
+    const calcDuration = (start: string, end: string): number => {
+        if (!start || !end) return 1;
+        const [sh, sm] = start.split(":").map(Number);
+        const [eh, em] = end.split(":").map(Number);
+        const diff = (eh * 60 + em) - (sh * 60 + sm);
+        return diff > 0 ? Math.round(diff / 60 * 10) / 10 : 1;
+    };
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -389,31 +397,63 @@ export default function StudiosPage() {
                                                         </PopoverContent>
                                                     </Popover>
                                                     <div>
-                                                        <p className="text-sm text-gray-400 mb-2">
-                                                            Эхлэх цаг
-                                                            {loadingSlots && <span className="ml-2 text-xs text-gray-500">Шалгаж байна...</span>}
-                                                        </p>
-                                                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                                                            {ALL_TIMES.map(t => {
-                                                                const duration = selectedPackages[activeStudio.id]?.hours ?? 1;
-                                                                const disabled = isTimeDisabled(t, bookedTimes, duration);
-                                                                return (
-                                                                    <button
-                                                                        key={t}
-                                                                        type="button"
-                                                                        disabled={disabled}
-                                                                        onClick={() => !disabled && setForm({ ...form, time: t })}
-                                                                        title={disabled ? "Захиалагдсан" : undefined}
-                                                                        className={`py-2 text-xs rounded-lg border transition-all relative ${disabled
-                                                                            ? "bg-white/5 border-white/5 text-gray-600 cursor-not-allowed opacity-40 line-through"
-                                                                            : form.time === t
-                                                                                ? "bg-rose-600/10 border-rose-600 text-rose-600"
-                                                                                : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:text-white"
-                                                                            }`}
-                                                                    >{t}</button>
-                                                                );
-                                                            })}
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <p className="text-sm text-gray-400">Цаг сонгох</p>
+                                                            {loadingSlots && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-500" />}
                                                         </div>
+                                                        {!form.date ? (
+                                                            <p className="text-xs text-gray-600 italic">Эхлээд огноо сонгоно уу</p>
+                                                        ) : (
+                                                            <>
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    <div>
+                                                                        <p className="text-xs text-gray-500 mb-1">Эхлэх цаг</p>
+                                                                        <select
+                                                                            value={form.time}
+                                                                            onChange={e => {
+                                                                                const t = e.target.value;
+                                                                                setForm(prev => ({ ...prev, time: t, endTime: "" }));
+                                                                            }}
+                                                                            className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
+                                                                        >
+                                                                            <option value="">-- : --</option>
+                                                                            {ALL_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
+                                                                                <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-xs text-gray-500 mb-1">Дуусах цаг</p>
+                                                                        <select
+                                                                            value={form.endTime}
+                                                                            disabled={!form.time}
+                                                                            onChange={e => setForm(prev => ({ ...prev, endTime: e.target.value }))}
+                                                                            className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                        >
+                                                                            <option value="">-- : --</option>
+                                                                            {ALL_TIMES.filter(t => {
+                                                                                if (!form.time) return false;
+                                                                                const [sh] = form.time.split(":").map(Number);
+                                                                                const [th] = t.split(":").map(Number);
+                                                                                if (th <= sh) return false;
+                                                                                for (let h = sh; h < th; h++) {
+                                                                                    const hStr = `${String(h).padStart(2, "0")}:00`;
+                                                                                    if (bookedTimes.includes(hStr)) return false;
+                                                                                }
+                                                                                return true;
+                                                                            }).map(t => (
+                                                                                <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
+                                                                    <p className="text-xs text-gray-500 mt-1.5">
+                                                                        Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span>
+                                                                    </p>
+                                                                )}
+                                                            </>
+                                                        )}
                                                     </div>
 
                                                     <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">

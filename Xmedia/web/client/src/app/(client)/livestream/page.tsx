@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
 import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
-import { fetchBookedSlots, isTimeDisabled, ALL_TIMES } from "@/lib/booking-slots";
+import { fetchBookedSlots } from "@/lib/booking-slots";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 import { useAuthStore } from "@/lib/store/auth";
 import { useRouter } from "next/navigation";
@@ -49,7 +49,15 @@ export default function LivestreamPage() {
     const [activeServiceId, setActiveServiceId] = useState<number | null>(null);
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", duration: "1", tierId: "", name: "", phone: "", email: "" });
+    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", endTime: "", duration: "1", tierId: "", name: "", phone: "", email: "" });
+
+    const calcDuration = (start: string, end: string): number => {
+        if (!start || !end) return 1;
+        const [sh, sm] = start.split(":").map(Number);
+        const [eh, em] = end.split(":").map(Number);
+        const diff = (eh * 60 + em) - (sh * 60 + sm);
+        return diff > 0 ? Math.round(diff / 60 * 10) / 10 : 1;
+    };
     const [tierRange, setTierRange] = useState<"1-4" | "4-8">("1-4");
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
@@ -280,10 +288,47 @@ export default function LivestreamPage() {
                                                     </div>
                                                 )}
 
+                                                {activeService.priceTiers && activeService.priceTiers.length > 0 && (
+                                                    <div className="mb-4">
+                                                        <p className="text-sm text-gray-400 mb-2">Шууд дамжуулалтын цаг сонгох</p>
+                                                        <div className="flex gap-2 mb-3">
+                                                            {(["1-4", "4-8"] as const).map(range => (
+                                                                <button
+                                                                    key={range}
+                                                                    type="button"
+                                                                    onClick={() => { setTierRange(range); setForm(f => ({ ...f, tierId: "" })); }}
+                                                                    className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${tierRange === range
+                                                                        ? "bg-rose-600/10 border-rose-600 text-rose-600"
+                                                                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                                                                        }`}
+                                                                >
+                                                                    {range} цаг
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {activeService.priceTiers
+                                                                .filter(t => (t.label || "").includes(tierRange))
+                                                                .map(t => (
+                                                                    <button key={t.id} type="button" onClick={() => setForm({ ...form, tierId: t.id.toString() })}
+                                                                        className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
+                                                                        <div className="font-semibold">{t.label || `${t.cameraCount} камер`}</div>
+                                                                        <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
+                                                                    </button>
+                                                                ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
                                                 <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
                                                     <div className="flex flex-col items-start md:items-center">
                                                         <p className="text-gray-500 text-[10px] uppercase tracking-wider">Эхлэх үнэ</p>
-                                                        <p className="text-xl md:text-2xl font-bold text-white">{getStartingPrice(activeService).toLocaleString()}₮</p>
+                                                        <p className="text-xl md:text-2xl font-bold text-white">
+                                                            {form.tierId
+                                                                ? Number(activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price ?? 0).toLocaleString() + "₮/цаг"
+                                                                : getStartingPrice(activeService).toLocaleString() + "₮"
+                                                            }
+                                                        </p>
                                                     </div>
                                                     <Button onClick={() => {
                                                         setIsBooking(true);
@@ -316,64 +361,44 @@ export default function LivestreamPage() {
                                                             <Calendar mode="single" selected={form.date} onSelect={d => setForm({ ...form, date: d })} className="bg-[#111] text-white" />
                                                         </PopoverContent>
                                                     </Popover>
-                                                    {activeService.priceTiers && activeService.priceTiers.length > 0 && (
-                                                        <div>
-                                                            <p className="text-sm text-gray-400 mb-2">Шууд дамжуулалтын цаг сонгох</p>
-                                                            {/* Range filter buttons */}
-                                                            <div className="flex gap-2 mb-3">
-                                                                {(["1-4", "4-8"] as const).map(range => (
-                                                                    <button
-                                                                        key={range}
-                                                                        type="button"
-                                                                        onClick={() => { setTierRange(range); setForm(f => ({ ...f, tierId: "" })); }}
-                                                                        className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${tierRange === range
-                                                                                ? "bg-rose-600/10 border-rose-600 text-rose-600"
-                                                                                : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-                                                                            }`}
-                                                                    >
-                                                                        {range} цаг
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                {activeService.priceTiers
-                                                                    .filter(t => (t.label || "").includes(tierRange))
-                                                                    .map(t => (
-                                                                        <button key={t.id} type="button" onClick={() => setForm({ ...form, tierId: t.id.toString() })}
-                                                                            className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
-                                                                            <div className="font-semibold">{t.label || `${t.cameraCount} камер`}</div>
-                                                                            <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
-                                                                        </button>
-                                                                    ))}
-                                                            </div>
+                                                    {form.tierId && activeService.priceTiers && activeService.priceTiers.length > 0 && (
+                                                        <div className="px-3 py-2 rounded-lg bg-rose-600/10 border border-rose-600/30 text-xs text-rose-400">
+                                                            Сонгогдсон: <span className="font-semibold">{activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.label}</span> — {Number(activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.price ?? 0).toLocaleString()}₮/цаг
                                                         </div>
                                                     )}
                                                     <div>
-                                                        <p className="text-sm text-gray-400 mb-2">
-                                                            Эхлэх цаг
-                                                            {loadingSlots && <span className="ml-2 text-xs text-gray-500">Шалгаж байна...</span>}
-                                                        </p>
-                                                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                                                            {ALL_TIMES.map(t => {
-                                                                const disabled = isTimeDisabled(t, bookedTimes, parseInt(form.duration || "1"));
-                                                                return (
-                                                                    <button key={t} type="button"
-                                                                        disabled={disabled}
-                                                                        onClick={() => !disabled && setForm({ ...form, time: t })}
-                                                                        title={disabled ? "Захиалагдсан" : undefined}
-                                                                        className={`py-2 text-xs rounded-lg border transition-all ${disabled
-                                                                            ? "bg-white/5 border-white/5 text-gray-600 cursor-not-allowed opacity-40 line-through"
-                                                                            : form.time === t
-                                                                                ? "bg-rose-600/10 border-rose-600 text-rose-600"
-                                                                                : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-                                                                            }`}>{t}</button>
-                                                                );
-                                                            })}
+                                                        <p className="text-sm text-gray-400 mb-2">Цаг сонгох</p>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <p className="text-xs text-gray-500 mb-1">Эхлэх цаг</p>
+                                                                <input
+                                                                    type="time"
+                                                                    value={form.time}
+                                                                    onChange={e => {
+                                                                        const t = e.target.value;
+                                                                        const dur = calcDuration(t, form.endTime);
+                                                                        setForm({ ...form, time: t, duration: dur.toString() });
+                                                                    }}
+                                                                    className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-xs text-gray-500 mb-1">Дуусах цаг</p>
+                                                                <input
+                                                                    type="time"
+                                                                    value={form.endTime}
+                                                                    onChange={e => {
+                                                                        const et = e.target.value;
+                                                                        const dur = calcDuration(form.time, et);
+                                                                        setForm({ ...form, endTime: et, duration: dur.toString() });
+                                                                    }}
+                                                                    className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600"
+                                                                />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-400 mb-2">Хугацаа (цаг)</p>
-                                                        <Input required type="number" min="1" max="24" className="bg-[#1a1a1a] border-white/10 text-white" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} />
+                                                        {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
+                                                            <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
+                                                        )}
                                                     </div>
 
                                                     <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">

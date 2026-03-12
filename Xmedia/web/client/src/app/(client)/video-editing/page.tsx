@@ -258,7 +258,6 @@ export default function VideoEditingPage() {
                                                                     >
                                                                         {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-rose-600" /></div>}
                                                                         <p className="text-sm font-medium pr-6">{pkg.subType?.name || pkg.priceLabel || "Үндсэн багц"}</p>
-                                                                        {pkg.priceLabel && pkg.subType && <p className="text-xs text-gray-400 mt-1">{pkg.priceLabel}</p>}
                                                                         <p className="text-rose-600 font-bold mt-3 text-lg">{Number(pkg.price).toLocaleString()}₮</p>
                                                                     </div>
                                                                 );

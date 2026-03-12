@@ -53,7 +53,7 @@ const WEEKDAYS_FULL = ['Даваа', 'Мягмар', 'Лхагва', 'Пүрэв
 const MONTHS_MN = ['1-р сар', '2-р сар', '3-р сар', '4-р сар', '5-р сар', '6-р сар', '7-р сар', '8-р сар', '9-р сар', '10-р сар', '11-р сар', '12-р сар'];
 
 // Hours displayed in day view
-const DAY_HOURS = Array.from({ length: 15 }, (_, i) => i + 8); // 08:00 – 22:00
+const DAY_HOURS = Array.from({ length: 24 }, (_, i) => i); // 00:00 – 23:00
 
 /** Get Monday of the week containing `date` */
 function getMonday(date: Date): Date {

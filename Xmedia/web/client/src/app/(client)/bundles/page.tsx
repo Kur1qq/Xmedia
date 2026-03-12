@@ -239,11 +239,11 @@ export default function BundlesPage() {
                                                         <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
                                                             <Check className="w-4 h-4 text-rose-600" />Багцад багтсан үйлчилгээ
                                                         </h4>
-                                                        <div className="grid grid-cols-1 gap-2">
+                                                        <div className="flex flex-col gap-1.5">
                                                             {activeBundle.includedServices.map((svc, i) => (
-                                                                <div key={i} className="flex items-center gap-3 text-sm text-gray-200 bg-[#141414] px-4 py-3 rounded-xl border border-white/5">
+                                                                <div key={i} className="flex items-center gap-2.5 text-sm text-gray-300">
                                                                     <div className="w-1.5 h-1.5 rounded-full bg-rose-600 shrink-0" />
-                                                                    <span className="font-medium">{svc}</span>
+                                                                    <span>{svc}</span>
                                                                 </div>
                                                             ))}
                                                         </div>

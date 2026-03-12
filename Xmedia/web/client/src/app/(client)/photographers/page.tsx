@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
 import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
-import { fetchBookedSlots, isTimeDisabled, ALL_TIMES } from "@/lib/booking-slots";
+import { fetchBookedSlots } from "@/lib/booking-slots";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 import { useAuthStore } from "@/lib/store/auth";
 import { useRouter } from "next/navigation";
@@ -51,7 +51,15 @@ export default function PhotographersPage() {
     const [selectedSubTypes, setSelectedSubTypes] = useState<Record<number, number>>({});
     const [selectedPackages, setSelectedPackages] = useState<Record<number, PhotographerServicePackage>>({});
     const [submitting, setSubmitting] = useState(false);
-    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", duration: "1", name: "", phone: "", email: "" });
+    const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", endTime: "", duration: "1", name: "", phone: "", email: "" });
+
+    const calcDuration = (start: string, end: string): number => {
+        if (!start || !end) return 1;
+        const [sh, sm] = start.split(":").map(Number);
+        const [eh, em] = end.split(":").map(Number);
+        const diff = (eh * 60 + em) - (sh * 60 + sm);
+        return diff > 0 ? Math.round(diff / 60 * 10) / 10 : 1;
+    };
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -392,27 +400,38 @@ export default function PhotographersPage() {
                                                         </PopoverContent>
                                                     </Popover>
                                                     <div>
-                                                        <p className="text-sm text-gray-400 mb-2">
-                                                            Эхлэх цаг
-                                                            {loadingSlots && <span className="ml-2 text-xs text-gray-500">Шалгаж байна...</span>}
-                                                        </p>
-                                                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                                                            {ALL_TIMES.map(t => {
-                                                                const disabled = isTimeDisabled(t, bookedTimes, parseInt(currentPackage?.duration?.toString() || "1"));
-                                                                return (
-                                                                    <button key={t} type="button"
-                                                                        disabled={disabled}
-                                                                        onClick={() => !disabled && setForm({ ...form, time: t })}
-                                                                        title={disabled ? "Захиалагдсан" : undefined}
-                                                                        className={`py-2 text-xs rounded-lg border transition-all ${disabled
-                                                                            ? "bg-white/5 border-white/5 text-gray-600 cursor-not-allowed opacity-40 line-through"
-                                                                            : form.time === t
-                                                                                ? "bg-rose-600 border-rose-600 text-white"
-                                                                                : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30"
-                                                                            }`}>{t}</button>
-                                                                );
-                                                            })}
+                                                        <p className="text-sm text-gray-400 mb-2">Цаг сонгох</p>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <p className="text-xs text-gray-500 mb-1">Эхлэх цаг</p>
+                                                                <input
+                                                                    type="time"
+                                                                    value={form.time}
+                                                                    onChange={e => {
+                                                                        const t = e.target.value;
+                                                                        const dur = calcDuration(t, form.endTime);
+                                                                        setForm({ ...form, time: t, duration: dur.toString() });
+                                                                    }}
+                                                                    className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-xs text-gray-500 mb-1">Дуусах цаг</p>
+                                                                <input
+                                                                    type="time"
+                                                                    value={form.endTime}
+                                                                    onChange={e => {
+                                                                        const et = e.target.value;
+                                                                        const dur = calcDuration(form.time, et);
+                                                                        setForm({ ...form, endTime: et, duration: dur.toString() });
+                                                                    }}
+                                                                    className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600"
+                                                                />
+                                                            </div>
                                                         </div>
+                                                        {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
+                                                            <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
+                                                        )}
                                                     </div>
                                                     <p className="text-sm text-gray-400 mb-2 mt-4">Үргэлжлэх хугацаа: <span className="text-white font-medium">{currentPackage?.duration || 1} цаг</span></p>
                                                     <div className="flex items-center justify-between py-3 border-t border-white/10 mt-6">
