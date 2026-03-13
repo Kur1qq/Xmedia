@@ -23,12 +23,8 @@ export async function fetchBookedSlots(
     }
 }
 
-// All standard booking time slots
-export const ALL_TIMES = [
-    "09:00", "10:00", "11:00", "12:00", "13:00",
-    "14:00", "15:00", "16:00", "17:00", "18:00",
-    "19:00", "20:00", "21:00",
-];
+// All standard booking time slots (full 24-hour range)
+export const ALL_TIMES = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
 
 /**
  * Check if a start time is disabled given:

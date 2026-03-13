@@ -56,7 +56,8 @@ export default function LivestreamPage() {
         const [sh, sm] = start.split(":").map(Number);
         const [eh, em] = end.split(":").map(Number);
         const diff = (eh * 60 + em) - (sh * 60 + sm);
-        return diff > 0 ? Math.round(diff / 60 * 10) / 10 : 1;
+        const adjustedDiff = diff > 0 ? diff : diff + 24 * 60;
+        return adjustedDiff > 0 ? Math.round(adjustedDiff / 60 * 10) / 10 : 1;
     };
     const [tierRange, setTierRange] = useState<"1-4" | "4-8">("1-4");
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
@@ -323,7 +324,7 @@ export default function LivestreamPage() {
                                                                 .map(t => (
                                                                     <button key={t.id} type="button" onClick={() => setForm({ ...form, tierId: t.id.toString() })}
                                                                         className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
-                                                                        <div className="font-semibold">{t.label || `${t.cameraCount} камер`}</div>
+                                                                        <div className="font-semibold">{t.cameraCount} камер</div>
                                                                         <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
                                                                     </button>
                                                                 ))}
@@ -416,7 +417,7 @@ export default function LivestreamPage() {
                                                         <span className="text-gray-400 text-sm">Нийт үнэ:</span>
                                                         <span className="text-xl font-bold text-white">
                                                             {form.tierId
-                                                                ? ((activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price as number ?? 0) * parseInt(form.duration || "0")).toLocaleString() + "₮"
+                                                                ? ((activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price as number ?? 0)).toLocaleString() + "₮"
                                                                 : "Сонгох"
                                                             }
                                                         </span>
@@ -426,7 +427,24 @@ export default function LivestreamPage() {
                                                             Сагсанд нэмэх
                                                         </Button>
                                                         <Button type="button"
-                                                            onClick={() => { if (validateForm(true)) setShowPaymentModal(true); }}
+                                                            onClick={() => {
+                                                                if (validateForm(true)) {
+                                                                    const selectedTier = activeService.priceTiers?.find(t => t.id.toString() === form.tierId);
+                                                                    if (selectedTier) {
+                                                                        const durationHrs = calcDuration(form.time, form.endTime);
+                                                                        const tierLabel = selectedTier.label || "";
+                                                                        if (tierLabel.includes("1-4") && durationHrs > 4) {
+                                                                            toast.error("1-4 цагийн багц сонгосон тул 4 цагаас илүү хугацаа сонгох боломжгүй.");
+                                                                            return;
+                                                                        }
+                                                                        if (tierLabel.includes("4-8") && durationHrs > 8) {
+                                                                            toast.error("4-8 цагийн багц сонгосон тул 8 цагаас илүү хугацаа сонгох боломжгүй.");
+                                                                            return;
+                                                                        }
+                                                                    }
+                                                                    setShowPaymentModal(true);
+                                                                }
+                                                            }}
                                                             disabled={submitting}
                                                             className="flex-1 h-11 bg-rose-600 hover:bg-rose-600/90 font-semibold text-white">
                                                             {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Уншиж байна...</> : "Шууд авах"}

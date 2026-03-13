@@ -54,7 +54,8 @@ export default function StudiosPage() {
         const [sh, sm] = start.split(":").map(Number);
         const [eh, em] = end.split(":").map(Number);
         const diff = (eh * 60 + em) - (sh * 60 + sm);
-        return diff > 0 ? Math.round(diff / 60 * 10) / 10 : 1;
+        const adjustedDiff = diff > 0 ? diff : diff + 24 * 60;
+        return adjustedDiff > 0 ? Math.round(adjustedDiff / 60 * 10) / 10 : 1;
     };
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
@@ -476,7 +477,19 @@ export default function StudiosPage() {
                                                             Сагсанд нэмэх
                                                         </Button>
                                                         <Button type="button"
-                                                            onClick={() => { if (validateForm(true)) setShowPaymentModal(true); }}
+                                                            onClick={() => {
+                                                                if (validateForm(true)) {
+                                                                    if (currentPackage && form.time && form.endTime) {
+                                                                        const durationHrs = calcDuration(form.time, form.endTime);
+                                                                        const maxHrs = Number(currentPackage.hours);
+                                                                        if (maxHrs > 0 && durationHrs > maxHrs) {
+                                                                            toast.error(`Сонгосон багц ${maxHrs} цагийн хязгаартай. ${durationHrs} цаг сонгох боломжгүй.`);
+                                                                            return;
+                                                                        }
+                                                                    }
+                                                                    setShowPaymentModal(true);
+                                                                }
+                                                            }}
                                                             disabled={submitting}
                                                             className="flex-1 h-11 bg-rose-600 hover:bg-rose-600/90 font-semibold text-white">
                                                             {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Уншиж байна...</> : "Шууд авах"}
