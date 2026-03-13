@@ -85,6 +85,18 @@ export default function BundlesPage() {
                 toast.error("Мэдээллээ бүрэн оруулна уу (Нэр, Утас, Имэйл).");
                 return false;
             }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(form.email.trim())) {
+                toast.error("Имэйл хаягаа зөв оруулна уу.");
+                return false;
+            }
+            
+            const phoneRegex = /^[0-9]{8}$/;
+            if (!phoneRegex.test(form.phone.trim())) {
+                toast.error("Утасны дугаар 8 оронтой тоо байх ёстой.");
+                return false;
+            }
         }
         if (!form.date) {
             toast.error("Огноогоо сонгоно уу.");
@@ -110,7 +122,7 @@ export default function BundlesPage() {
         closeBooking();
     };
 
-    const handleBuyNow = async (paymentType: "qpay" | "invoice", orgInfo?: { orgName: string; orgReg: string; orgAddress: string; orgPhone: string }) => {
+    const handleBuyNow = async (paymentType: "qpay" | "invoice") => {
         if (!validateForm(true) || !activeBundle) return;
 
         if (!user) {
@@ -131,7 +143,6 @@ export default function BundlesPage() {
                 unitPrice: Number(activeBundle.price),
                 serviceName: activeBundle.name,
                 paymentType,
-                ...(orgInfo ? { buyerOrg: orgInfo.orgName, buyerOrgReg: orgInfo.orgReg, buyerOrgAddress: orgInfo.orgAddress, buyerOrgPhone: orgInfo.orgPhone } : {}),
                 ...(user && user.id ? { userId: parseInt(user.id, 10) } : {})
             };
 
@@ -371,8 +382,8 @@ export default function BundlesPage() {
             <PaymentMethodModal
                 open={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
-                onSelectQpay={() => handleBuyNow("qpay")}
-                onSelectInvoice={(orgInfo) => handleBuyNow("invoice", orgInfo)}
+                onSelectQpay={() => { handleBuyNow("qpay"); }}
+                onSelectInvoice={() => { handleBuyNow("invoice"); }}
                 loading={submitting}
             />
         </div>

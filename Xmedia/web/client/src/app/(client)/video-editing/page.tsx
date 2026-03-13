@@ -93,6 +93,18 @@ export default function VideoEditingPage() {
     const validateForm = (isBuyNow: boolean = false) => {
         if (isBuyNow) {
             if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) { toast.error("Мэдээллээ бүрэн оруулна уу (Нэр, Утас, Имэйл)."); return false; }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(form.email.trim())) {
+                toast.error("Имэйл хаягаа зөв оруулна уу.");
+                return false;
+            }
+            
+            const phoneRegex = /^[0-9]{8}$/;
+            if (!phoneRegex.test(form.phone.trim())) {
+                toast.error("Утасны дугаар 8 оронтой тоо байх ёстой.");
+                return false;
+            }
         }
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return false; }
         if (activeService?.packages && activeService.packages.length > 0 && !currentPackage) { toast.error("Багц сонгоно уу."); return false; }
@@ -116,7 +128,7 @@ export default function VideoEditingPage() {
         closeBooking();
     };
 
-    const handleBuyNow = async (paymentType: "qpay" | "invoice", orgInfo?: { orgName: string; orgReg: string; orgAddress: string; orgPhone: string }) => {
+    const handleBuyNow = async (paymentType: "qpay" | "invoice") => {
         if (!validateForm(true) || !activeService) return;
 
         if (!user) {
@@ -136,7 +148,6 @@ export default function VideoEditingPage() {
                 serviceName: activeService.name,
                 paymentType,
                 notes: form.notes,
-                ...(orgInfo ? { buyerOrg: orgInfo.orgName, buyerOrgReg: orgInfo.orgReg, buyerOrgAddress: orgInfo.orgAddress, buyerOrgPhone: orgInfo.orgPhone } : {}),
             };
             if (user && user.id) payload.userId = parseInt(user.id, 10);
 
@@ -342,8 +353,8 @@ export default function VideoEditingPage() {
             <PaymentMethodModal
                 open={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
-                onSelectQpay={() => handleBuyNow("qpay")}
-                onSelectInvoice={(orgInfo) => handleBuyNow("invoice", orgInfo)}
+                onSelectQpay={() => { handleBuyNow("qpay"); }}
+                onSelectInvoice={() => { handleBuyNow("invoice"); }}
                 loading={submitting}
                 amount={currentPackage ? Number(currentPackage.price) : undefined}
             />

@@ -55,6 +55,16 @@ export function CartDrawer() {
                 toast.error("Мэдээллээ бүрэн оруулна уу (Нэр, Утас, Имэйл).");
                 return;
             }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(customer.email.trim())) {
+                toast.error("Имэйл хаягаа зөв оруулна уу.");
+                return;
+            }
+            const phoneRegex = /^[0-9]{8}$/;
+            if (!phoneRegex.test(customer.phone.trim())) {
+                toast.error("Утасны дугаар 8 оронтой тоо байх ёстой.");
+                return;
+            }
         }
         if (items.length === 0) return toast.error("Сагс хоосон байна");
 
@@ -224,6 +234,16 @@ export function CartDrawer() {
                                 if (!user) {
                                     if (!customer.name || !customer.phone || !customer.email) {
                                         return toast.error("Та холбоо барих мэдээллээ бүрэн оруулна уу.");
+                                    }
+                                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                    if (!emailRegex.test(customer.email.trim())) {
+                                        toast.error("Имэйл хаягаа зөв оруулна уу.");
+                                        return;
+                                    }
+                                    const phoneRegex = /^[0-9]{8}$/;
+                                    if (!phoneRegex.test(customer.phone.trim())) {
+                                        toast.error("Утасны дугаар 8 оронтой тоо байх ёстой.");
+                                        return;
                                     }
                                 }
                                 setShowPaymentModal(true);

@@ -149,9 +149,11 @@ export default function Home() {
                   style={{ transform: "scale(1)" }}
                 />
               ) : (
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-105"
-                  style={{ backgroundImage: `url('${slides[currentSlide].image}')`, transform: "scale(1)" }}
+                <img
+                  src={slides[currentSlide].image}
+                  alt={slides[currentSlide].title || "slide"}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear"
+                  style={{ transform: "scale(1.01)" }}
                 />
               )}
               {/* Added a smoother gradient fade into the background color at the bottom */}
