@@ -5,7 +5,7 @@ import { Plus, Pencil, Trash2, X, ImageIcon, Eye, EyeOff, Youtube, Facebook } fr
 import { toast } from "sonner";
 import { fetchWithAuth } from "@/lib/auth";
 
-type ServiceType = "STUDIO" | "LIVE" | "PHOTOGRAPHER" | "PHOTO_EDIT" | "VIDEO_EDIT";
+type ServiceType = "STUDIO" | "LIVE" | "PHOTOGRAPHER" | "PHOTO_EDIT" | "VIDEO_EDIT" | "BUNDLE_SERVICE";
 
 interface PortfolioItem {
     id: number;
@@ -30,6 +30,7 @@ const TABS: { key: ServiceType; label: string }[] = [
     { key: "PHOTOGRAPHER", label: "Зураглаач" },
     { key: "PHOTO_EDIT", label: "Зураг эдит" },
     { key: "VIDEO_EDIT", label: "Видео эдит" },
+    { key: "BUNDLE_SERVICE", label: "Багц үйлчилгээ" },
 ];
 
 const EMPTY_GENERIC = { title: "", description: "", images: [] as string[], tags: [] as string[], isPublished: true, sortOrder: 0, youtubeUrl: "", facebookUrl: "" };

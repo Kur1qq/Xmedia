@@ -8,14 +8,14 @@ export class SettingsService {
     private async getOrCreate() {
         const existing = await this.prisma.siteSettings.findFirst();
         if (existing) return existing;
-        return this.prisma.siteSettings.create({ data: { snowEffect: false } });
+        return this.prisma.siteSettings.create({ data: { snowEffect: false, headerNav: [], homeCards: [] } });
     }
 
     async findSettings() {
         return this.getOrCreate();
     }
 
-    async updateSettings(data: { snowEffect?: boolean }) {
+    async updateSettings(data: { snowEffect?: boolean; headerNav?: any; homeCards?: any }) {
         const settings = await this.getOrCreate();
         return this.prisma.siteSettings.update({
             where: { id: settings.id },

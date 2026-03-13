@@ -25,7 +25,6 @@ const ALL_NAV = [
     { name: "Админ удирдлага", href: "/admins", icon: ShieldCheck },
     { name: "Эрх удирдлага", href: "/roles", icon: KeyRound },
     { name: "Системийн лог", href: "/logs", icon: ScrollText },
-    { name: "Тохиргоо", href: "/settings", icon: Sliders },
 ];
 
 const EDITOR_ALLOWED = ['/', '/hero', '/edit', '/settings'];

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PackageCheck, ArrowLeft, Calendar as CalendarIcon, Loader2, Info, Check } from "lucide-react";
+import { PackageCheck, ArrowLeft, Calendar as CalendarIcon, Loader2, Info, Check, GalleryVerticalEnd } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -222,9 +223,17 @@ export default function BundlesPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
-                                                    <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-rose-600 border border-rose-600/20 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
-                                                        <PackageCheck className="w-3.5 h-3.5" /> Багц Үйлчилгээ
+                                                <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-rose-600 border border-rose-600/20 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
+                                                            <PackageCheck className="w-3.5 h-3.5" /> Багц Үйлчилгээ
+                                                        </div>
+                                                        <Link href="/portfolio/bundle">
+                                                            <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
+                                                                <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
+                                                                Өмнөх ажлууд харах
+                                                            </Button>
+                                                        </Link>
                                                     </div>
                                                 </div>
 

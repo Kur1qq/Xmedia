@@ -662,6 +662,7 @@ enum PortfolioServiceType {
   PHOTOGRAPHER
   PHOTO_EDIT
   VIDEO_EDIT
+  BUNDLE_SERVICE
 }
 
 model PortfolioItem {
@@ -714,6 +715,8 @@ model HeroSlide {
 model SiteSettings {
   id         Int      @id @default(autoincrement())
   snowEffect Boolean  @default(false) @map("snow_effect")
+  headerNav  Json?    @map("header_nav")
+  homeCards  Json?    @map("home_cards")
   updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
   @@map("site_settings")

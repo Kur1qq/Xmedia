@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Radio, Image, Film, Package } from "lucide-react";
+import { Camera, Radio, Image, Film, Package, Mic, MonitorPlay } from "lucide-react";
+
+const IconMap: Record<string, any> = {
+  Camera, Radio, Image, Film, Package, Mic, MonitorPlay
+};
 import SnowEffect from "@/components/SnowEffect";
 
 // Slide Data
@@ -47,6 +51,7 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
   const [snowEffect, setSnowEffect] = useState(false);
+  const [homeCards, setHomeCards] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchSlides = async () => {
@@ -73,6 +78,9 @@ export default function Home() {
         if (res.ok) {
           const data = await res.json();
           setSnowEffect(!!data.snowEffect);
+          if (data.homeCards && data.homeCards.length > 0) {
+            setHomeCards(data.homeCards);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch settings", error);
@@ -166,13 +174,22 @@ export default function Home() {
                 transition={{ duration: 0.7, ease: "easeInOut" }}
                 className="max-w-4xl mx-auto"
               >
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 font-sans leading-tight">
-                  {slides[currentSlide].title} <span className="text-rose-600">{slides[currentSlide].highlight}</span> <br />
-                  {slides[currentSlide].subTitle}
-                </h1>
-                <p className="mt-3 max-w-xl mx-auto text-base sm:text-lg text-gray-300 mb-10 leading-relaxed">
-                  {slides[currentSlide].description}
-                </p>
+                {(slides[currentSlide].title || slides[currentSlide].highlight || slides[currentSlide].subTitle) && (
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 font-sans leading-tight">
+                    {slides[currentSlide].title} {slides[currentSlide].highlight && <span className="text-rose-600">{slides[currentSlide].highlight}</span>}
+                    {slides[currentSlide].subTitle && (
+                      <>
+                        <br />
+                        {slides[currentSlide].subTitle}
+                      </>
+                    )}
+                  </h1>
+                )}
+                {slides[currentSlide].description && (
+                  <p className="mt-3 max-w-xl mx-auto text-base sm:text-lg text-gray-300 mb-10 leading-relaxed">
+                    {slides[currentSlide].description}
+                  </p>
+                )}
               </motion.div>
             </AnimatePresence>
 
@@ -214,25 +231,28 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="w-full max-w-5xl mx-auto flex flex-wrap justify-center gap-3 mt-0 sm:gap-4"
           >
-            {[
-              { icon: Camera, label: "Студио", desc: "Мэргэжлийн зураг авалт", href: "/studios" },
-              { icon: Radio, label: "Шууд дамжуулалт", desc: "Онлайн live streaming", href: "/livestream" },
-              { icon: Image, label: "Зураглаач", desc: "Гэрэл зурагчны үйлчилгээ", href: "/photographers" },
-              { icon: Film, label: "Эдит", desc: "Видео эдит & монтаж", href: "/video-editing" },
-              { icon: Package, label: "Багц", desc: "Хамгийн сайн саналууд", href: "/bundles" },
-            ].map(({ icon: Icon, label, desc, href }) => (
-              <Link
-                key={label}
-                href={href}
-                className="w-[calc(50%-0.375rem)] md:w-auto md:flex-1 min-h-[110px] group flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-4 sm:p-4 rounded-2xl bg-muted/30 border border-border hover:bg-muted/50 hover:border-rose-600/40 transition-all duration-300 transform translate-y-4"
-              >
-                <div className="w-10 h-10 flex items-center justify-center rounded-full bg-rose-600/10 group-hover:bg-rose-600/20 transition-colors duration-300 mb-0.5">
-                  <Icon className="w-5 h-5 text-rose-600" />
-                </div>
-                <p className="text-foreground text-sm font-semibold text-center">{label}</p>
-                <p className="text-muted-foreground text-xs text-center leading-snug">{desc}</p>
-              </Link>
-            ))}
+            {(homeCards.length > 0 ? homeCards : [
+              { icon: 'Camera', label: "Студио", desc: "Мэргэжлийн зураг авалт", href: "/studios" },
+              { icon: 'Radio', label: "Шууд дамжуулалт", desc: "Онлайн live streaming", href: "/livestream" },
+              { icon: 'Image', label: "Зураглаач", desc: "Гэрэл зурагчны үйлчилгээ", href: "/photographers" },
+              { icon: 'Film', label: "Эдит", desc: "Видео эдит & монтаж", href: "/video-editing" },
+              { icon: 'Package', label: "Багц", desc: "Хамгийн сайн саналууд", href: "/bundles" },
+            ]).map((card, idx) => {
+              const Icon = IconMap[card.icon || 'Camera'] || Camera;
+              return (
+                <Link
+                  key={idx}
+                  href={card.href || "#"}
+                  className="w-[calc(50%-0.375rem)] md:w-auto md:flex-1 min-h-[110px] group flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-4 sm:p-4 rounded-2xl bg-muted/30 border border-border hover:bg-muted/50 hover:border-rose-600/40 transition-all duration-300 transform translate-y-4"
+                >
+                  <div className="w-10 h-10 flex items-center justify-center rounded-full bg-rose-600/10 group-hover:bg-rose-600/20 transition-colors duration-300 mb-0.5">
+                    <Icon className="w-5 h-5 text-rose-600" />
+                  </div>
+                  <p className="text-foreground text-sm font-semibold text-center">{card.label}</p>
+                  <p className="text-muted-foreground text-xs text-center leading-snug">{card.desc}</p>
+                </Link>
+              );
+            })}
           </motion.div>
         </div>
       </section>

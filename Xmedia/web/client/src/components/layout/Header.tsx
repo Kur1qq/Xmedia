@@ -20,10 +20,22 @@ export function Header() {
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isOrderHistoryOpen, setIsOrderHistoryOpen] = React.useState(false);
     const { user, logout } = useAuthStore();
+    const [navItems, setNavItems] = React.useState(siteConfig.nav);
 
     React.useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
+
+        // Fetch dynamic nav
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/settings`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.headerNav && data.headerNav.length > 0) {
+                    setNavItems(data.headerNav);
+                }
+            })
+            .catch(console.error);
+
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
@@ -50,7 +62,7 @@ export function Header() {
                     {/* Desktop: Navigation links */}
                     <div className="hidden lg:flex justify-center items-center">
                         <div className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-black/70 border border-white/10 backdrop-blur-md shadow-sm shadow-red-500/10">
-                            {siteConfig.nav.map((item) => (
+                            {navItems.map((item) => (
                                 item.href === "/contact" ? (
                                     <ContactModal
                                         key={item.href}
@@ -124,7 +136,7 @@ export function Header() {
                                     <SheetDescription className="sr-only">Access site navigation links</SheetDescription>
                                 </SheetHeader>
                                 <nav className="flex flex-col gap-4 text-base font-medium text-center mt-6 px-4 overflow-y-auto pb-4 max-h-[85vh]">
-                                    {siteConfig.nav.map((item) => (
+                                    {navItems.map((item) => (
                                         <Link key={item.href} href={item.href} className="hover:text-foreground text-center text-[15px]" onClick={() => setIsOpen(false)}>
                                             {item.label}
                                         </Link>

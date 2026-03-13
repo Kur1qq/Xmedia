@@ -21,7 +21,7 @@ let SettingsService = class SettingsService {
         const existing = await this.prisma.siteSettings.findFirst();
         if (existing)
             return existing;
-        return this.prisma.siteSettings.create({ data: { snowEffect: false } });
+        return this.prisma.siteSettings.create({ data: { snowEffect: false, headerNav: [], homeCards: [] } });
     }
     async findSettings() {
         return this.getOrCreate();

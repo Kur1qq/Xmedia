@@ -12,7 +12,9 @@ export default function HeroPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [editingSlide, setEditingSlide] = useState<any | null>(null);
     const [snowEffect, setSnowEffect] = useState(false);
-    const [isTogglingSnow, setIsTogglingSnow] = useState(false);
+    const [headerNav, setHeaderNav] = useState<any[]>([]);
+    const [homeCards, setHomeCards] = useState<any[]>([]);
+    const [isSavingSettings, setIsSavingSettings] = useState(false);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -43,10 +45,16 @@ export default function HeroPage() {
 
     useEffect(() => {
         fetchData();
-        // Fetch snow effect setting
+        // Fetch settings
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/settings`)
             .then(r => r.ok ? r.json() : null)
-            .then(d => { if (d) setSnowEffect(!!d.snowEffect); })
+            .then(d => {
+                if (d) {
+                    setSnowEffect(!!d.snowEffect);
+                    setHeaderNav(d.headerNav || []);
+                    setHomeCards(d.homeCards || []);
+                }
+            })
             .catch(console.error);
     }, []);
 
@@ -169,8 +177,8 @@ export default function HeroPage() {
         }
     };
 
-    const handleToggleSnow = async () => {
-        setIsTogglingSnow(true);
+    const handleSaveSettings = async () => {
+        setIsSavingSettings(true);
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/settings`, {
                 method: 'PATCH',
@@ -178,18 +186,17 @@ export default function HeroPage() {
                     'Content-Type': 'application/json',
                     ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
                 },
-                body: JSON.stringify({ snowEffect: !snowEffect }),
+                body: JSON.stringify({ snowEffect, headerNav, homeCards }),
             });
             if (res.ok) {
-                setSnowEffect(prev => !prev);
-                toast.success(!snowEffect ? "Цасны эффект асаагдлаа ❄️" : "Цасны эффект унтраагдлаа");
+                toast.success("Сайтын тохиргоо хадгалагдлаа!");
             } else {
                 toast.error("Тохиргоо хадгалахад алдаа гарлаа.");
             }
         } catch {
             toast.error("Сервертэй холбогдоход алдаа гарлаа.");
         } finally {
-            setIsTogglingSnow(false);
+            setIsSavingSettings(false);
         }
     };
 
@@ -200,33 +207,192 @@ export default function HeroPage() {
                 <p className="text-muted-foreground mt-1">Хэрэглэгчийн нүүр хуудас дээр харагдах зургууд болон текстүүдийг удирдах хэсэг.</p>
             </div>
 
-            {/* Snow Effect Toggle Card */}
-            <div className="flex items-center justify-between rounded-xl border border-border/50 bg-card px-5 py-4">
-                <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${snowEffect ? 'bg-blue-500/20' : 'bg-muted/50'}`}>
-                        <Snowflake className={`w-5 h-5 transition-colors duration-300 ${snowEffect ? 'text-blue-400' : 'text-muted-foreground'}`} />
-                    </div>
+            {/* Site Settings Section */}
+            <div className="rounded-md border border-border/50 bg-card p-6 space-y-8">
+                <div className="flex justify-between items-center bg-muted/20 p-4 rounded-lg border border-border/50">
                     <div>
-                        <p className="text-sm font-semibold">Цасны эффект</p>
-                        <p className="text-xs text-muted-foreground">Хэрэглэгчийн нүүр хуудас дээр цас бурхах харагдуулах</p>
+                        <h2 className="text-lg font-semibold">Сайтын Ерөнхий Тохиргоо</h2>
+                        <p className="text-sm text-muted-foreground mb-4">Цасны эффект, дээд цэс болон доод картуудыг тохируулах.</p>
+                    </div>
+                    <button
+                        onClick={handleSaveSettings}
+                        disabled={isSavingSettings}
+                        className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                    >
+                        {isSavingSettings ? "Хадгалж байна..." : "Өөрчлөлтүүдийг хадгалах"}
+                    </button>
+                </div>
+
+                {/* Snow Effect Toggle Card */}
+                <div className="flex items-center justify-between rounded-xl border border-border/50 bg-muted/10 px-5 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${snowEffect ? 'bg-blue-500/20' : 'bg-muted/50'}`}>
+                            <Snowflake className={`w-5 h-5 transition-colors duration-300 ${snowEffect ? 'text-blue-400' : 'text-muted-foreground'}`} />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">Цасны эффект</p>
+                            <p className="text-xs text-muted-foreground">Хэрэглэгчийн нүүр хуудас дээр цас бурхах харагдуулах</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setSnowEffect(!snowEffect)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${snowEffect ? 'bg-blue-500' : 'bg-muted'
+                            }`}
+                    >
+                        <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-300 ${snowEffect ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                        />
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Header Nav Setup */}
+                    <div className="space-y-4 border border-border/50 p-4 rounded-lg bg-muted/10">
+                        <div className="flex justify-between items-center">
+                            <h3 className="font-semibold">Дээд цэс (Nav)</h3>
+                            <button
+                                onClick={() => setHeaderNav([...headerNav, { label: "", href: "" }])}
+                                className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-md hover:bg-primary/20"
+                            >
+                                + Цэс нэмэх
+                            </button>
+                        </div>
+                        {headerNav.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Цэс алга байна.</p>}
+                        <div className="space-y-3">
+                            {headerNav.map((nav, i) => (
+                                <div key={i} className="flex gap-2 items-start bg-background p-3 rounded border border-border/50 shadow-sm relative group">
+                                    <div className="flex-1 space-y-2">
+                                        <div>
+                                            <label className="text-[10px] uppercase text-muted-foreground mb-1 block">Нэр</label>
+                                            <input
+                                                value={nav.label}
+                                                onChange={(e) => {
+                                                    const newNav = [...headerNav];
+                                                    newNav[i].label = e.target.value;
+                                                    setHeaderNav(newNav);
+                                                }}
+                                                placeholder="Цэсний нэр (Жнь: Студио)"
+                                                className="w-full text-sm bg-transparent border-b border-border/50 pb-1 focus:outline-none focus:border-primary"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase text-muted-foreground mb-1 block">Линк</label>
+                                            <input
+                                                value={nav.href}
+                                                onChange={(e) => {
+                                                    const newNav = [...headerNav];
+                                                    newNav[i].href = e.target.value;
+                                                    setHeaderNav(newNav);
+                                                }}
+                                                placeholder="Холбоос (Жнь: /studios)"
+                                                className="w-full text-sm bg-transparent border-b border-border/50 pb-1 focus:outline-none focus:border-primary text-blue-400"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setHeaderNav(headerNav.filter((_, index) => index !== i))}
+                                        className="text-red-500 hover:bg-red-500/10 p-1 rounded transition-colors h-8 w-8 flex items-center justify-center shrink-0"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Home Cards Setup */}
+                    <div className="space-y-4 border border-border/50 p-4 rounded-lg bg-muted/10">
+                        <div className="flex justify-between items-center">
+                            <h3 className="font-semibold">Доод Картууд</h3>
+                            <button
+                                onClick={() => setHomeCards([...homeCards, { label: "", desc: "", href: "", icon: "Camera" }])}
+                                className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-md hover:bg-primary/20"
+                            >
+                                + Карт нэмэх
+                            </button>
+                        </div>
+                        {homeCards.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Карт алга байна.</p>}
+                        <div className="space-y-3">
+                            {homeCards.map((card, i) => (
+                                <div key={i} className="flex gap-2 items-start bg-background p-3 rounded border border-border/50 shadow-sm">
+                                    <div className="flex-1 space-y-3">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[10px] uppercase text-muted-foreground mb-1 block">Нэр</label>
+                                                <input
+                                                    value={card.label}
+                                                    onChange={(e) => {
+                                                        const newCards = [...homeCards];
+                                                        newCards[i].label = e.target.value;
+                                                        setHomeCards(newCards);
+                                                    }}
+                                                    placeholder="Студио"
+                                                    className="w-full text-sm bg-transparent border-b border-border/50 pb-1 focus:outline-none focus:border-primary"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] uppercase text-muted-foreground mb-1 block">Айкон нэр</label>
+                                                <select
+                                                    value={card.icon}
+                                                    onChange={(e) => {
+                                                        const newCards = [...homeCards];
+                                                        newCards[i].icon = e.target.value;
+                                                        setHomeCards(newCards);
+                                                    }}
+                                                    className="w-full text-sm bg-background border-b border-border/50 pb-1 focus:outline-none focus:border-primary text-gray-300"
+                                                >
+                                                    <option value="Camera">Camera</option>
+                                                    <option value="Radio">Radio (Шууд дамжуулалт)</option>
+                                                    <option value="Image">Image (Гэрэл зураг)</option>
+                                                    <option value="Film">Film (Видео)</option>
+                                                    <option value="Package">Package (Багц)</option>
+                                                    <option value="Mic">Mic (Дуу)</option>
+                                                    <option value="MonitorPlay">MonitorPlay</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase text-muted-foreground mb-1 block">Тайлбар</label>
+                                            <input
+                                                value={card.desc}
+                                                onChange={(e) => {
+                                                    const newCards = [...homeCards];
+                                                    newCards[i].desc = e.target.value;
+                                                    setHomeCards(newCards);
+                                                }}
+                                                placeholder="Мэргэжлийн зураг авалт"
+                                                className="w-full text-sm bg-transparent border-b border-border/50 pb-1 focus:outline-none focus:border-primary text-gray-400"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase text-muted-foreground mb-1 block">Линк</label>
+                                            <input
+                                                value={card.href}
+                                                onChange={(e) => {
+                                                    const newCards = [...homeCards];
+                                                    newCards[i].href = e.target.value;
+                                                    setHomeCards(newCards);
+                                                }}
+                                                placeholder="/studios"
+                                                className="w-full text-sm bg-transparent border-b border-border/50 pb-1 focus:outline-none focus:border-primary text-blue-400"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setHomeCards(homeCards.filter((_, index) => index !== i))}
+                                        className="text-red-500 hover:bg-red-500/10 p-1 rounded transition-colors h-8 w-8 flex items-center justify-center shrink-0 mt-4"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-                <button
-                    onClick={handleToggleSnow}
-                    disabled={isTogglingSnow}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none disabled:opacity-50 ${
-                        snowEffect ? 'bg-blue-500' : 'bg-muted'
-                    }`}
-                >
-                    <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
-                            snowEffect ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                    />
-                </button>
             </div>
 
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-4 mt-8">
                 <h2 className="text-lg font-semibold">Слайдууд</h2>
                 <button onClick={() => handleOpenModal()} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
                     <Plus className="h-4 w-4" /> Нэмэх
@@ -328,8 +494,8 @@ export default function HeroPage() {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div className="space-y-1">
-                                        <label className="text-xs text-gray-400 block">Гарчиг (Эхний хэсэг) <span className="text-red-500">*</span></label>
-                                        <input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Мэргэжлийн студио" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                        <label className="text-xs text-gray-400 block">Гарчиг (Эхний хэсэг)</label>
+                                        <input value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Мэргэжлийн студио" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs text-gray-400 block">Тодруулах үг (Улаан өнгөөр)</label>
