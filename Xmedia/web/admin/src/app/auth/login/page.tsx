@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { saveLoginResult } from "@/lib/auth";
 
@@ -45,9 +46,7 @@ export default function LoginPage() {
 
             <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
                 <div className="flex justify-center mb-6">
-                    <div className="w-16 h-16 bg-primary/20 flex items-center justify-center rounded-2xl border border-primary/30 shadow-lg shadow-primary/20">
-                        <span className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-primary to-primary/50">X</span>
-                    </div>
+                    <Image src="/x logo.png" alt="Xtudio Admin" width={120} height={40} className="object-contain w-auto h-auto" priority />
                 </div>
                 <h2 className="mt-2 text-center text-3xl font-bold tracking-tight text-white">Админ нэвтрэх</h2>
                 <p className="mt-2 text-center text-sm text-muted-foreground">Xtudio удирдлагын систем</p>
