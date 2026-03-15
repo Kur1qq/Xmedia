@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "Premium Studio & Production Services",
   icons: {
     icon: [
-      { url: "/Xtudio_Logo_X (1)-1.png", sizes: "48x48", type: "image/png" },
+      { url: "/x_favico-1.svg", type: "image/svg+xml" },
     ],
   },
 };

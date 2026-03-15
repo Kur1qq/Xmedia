@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Admin Dashboard",
   description: "Minimal modern admin dashboard",
+  icons: {
+    icon: [
+      { url: "/x_favico-1.svg", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({
