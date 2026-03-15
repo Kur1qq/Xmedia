@@ -447,9 +447,17 @@ export default function StudiosPage() {
                                                                                 if (!form.time) return false;
                                                                                 const [sh] = form.time.split(":").map(Number);
                                                                                 const [th] = t.split(":").map(Number);
-                                                                                if (th <= sh) return false;
-                                                                                for (let h = sh; h < th; h++) {
-                                                                                    const hStr = `${String(h).padStart(2, "0")}:00`;
+                                                                                if (th === sh) return false;
+                                                                                // If a package is selected, only show the exact end time = start + package.hours
+                                                                                if (currentPackage) {
+                                                                                    const exactEndH = (sh + currentPackage.hours) % 24;
+                                                                                    return th === exactEndH;
+                                                                                }
+                                                                                // No package: show all times after start, filtering booked slots
+                                                                                const overnight = th < sh;
+                                                                                const endH = overnight ? th + 24 : th;
+                                                                                for (let h = sh; h < endH; h++) {
+                                                                                    const hStr = `${String(h % 24).padStart(2, "0")}:00`;
                                                                                     if (bookedTimes.includes(hStr)) return false;
                                                                                 }
                                                                                 return true;
