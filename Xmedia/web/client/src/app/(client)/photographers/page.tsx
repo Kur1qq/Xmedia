@@ -321,26 +321,28 @@ export default function PhotographersPage() {
 
                                                     return (
                                                         <div className="mb-6 w-full mt-auto pt-4 space-y-6">
-                                                            <div>
-                                                                <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                                    Контентийн төрөл сонгох
-                                                                </h4>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {contentTypes.map((ct: { id: number; name: string }) => {
-                                                                        const isSelected = ct.id === currentSubTypeId;
-                                                                        return (
-                                                                            <button
-                                                                                key={ct.id}
-                                                                                type="button"
-                                                                                onClick={() => handleSubTypeSelect(activeService.id, ct.id)}
-                                                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isSelected ? 'bg-rose-600 text-white shadow-md' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'}`}
-                                                                            >
-                                                                                {ct.name}
-                                                                            </button>
-                                                                        )
-                                                                    })}
+                                                            {contentTypes.length > 0 && activeService.name !== 'Зурагчин' && (
+                                                                <div>
+                                                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                                        Контентийн төрөл сонгох
+                                                                    </h4>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {contentTypes.map((ct: { id: number; name: string }) => {
+                                                                            const isSelected = ct.id === currentSubTypeId;
+                                                                            return (
+                                                                                <button
+                                                                                    key={ct.id}
+                                                                                    type="button"
+                                                                                    onClick={() => handleSubTypeSelect(activeService.id, ct.id)}
+                                                                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isSelected ? 'bg-rose-600 text-white shadow-md' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'}`}
+                                                                                >
+                                                                                    {ct.name}
+                                                                                </button>
+                                                                            )
+                                                                        })}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
+                                                            )}
 
                                                             {availablePackages.length > 0 && (
                                                                 <div>
