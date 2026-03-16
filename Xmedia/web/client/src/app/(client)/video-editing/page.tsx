@@ -269,7 +269,7 @@ export default function VideoEditingPage() {
                                                                     >
                                                                         {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-rose-600" /></div>}
                                                                         {(() => {
-                                                                            const title = pkg.subType?.name || pkg.priceLabel || "Үндсэн багц";
+                                                                            const title = pkg.priceLabel || pkg.subType?.name || "Үндсэн багц";
                                                                             const isEdit = title.trim().toLowerCase() === "эдит";
                                                                             return (
                                                                                 <>
