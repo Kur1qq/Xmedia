@@ -268,8 +268,18 @@ export default function VideoEditingPage() {
                                                                         className={`cursor-pointer p-4 rounded-xl border relative transition-all ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
                                                                     >
                                                                         {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-rose-600" /></div>}
-                                                                        <p className="text-sm font-medium pr-6">{pkg.subType?.name || pkg.priceLabel || "Үндсэн багц"}</p>
-                                                                        <p className="text-rose-600 font-bold mt-3 text-lg">{Number(pkg.price).toLocaleString()}₮</p>
+                                                                        {(() => {
+                                                                            const title = pkg.subType?.name || pkg.priceLabel || "Үндсэн багц";
+                                                                            const isEdit = title.trim().toLowerCase() === "эдит";
+                                                                            return (
+                                                                                <>
+                                                                                    {!isEdit && <p className="text-sm font-medium pr-6">{title}</p>}
+                                                                                    <p className={`text-rose-600 font-bold text-lg ${isEdit ? "" : "mt-3"}`}>
+                                                                                        {Number(pkg.price).toLocaleString()}₮
+                                                                                    </p>
+                                                                                </>
+                                                                            );
+                                                                        })()}
                                                                     </div>
                                                                 );
                                                             })}
