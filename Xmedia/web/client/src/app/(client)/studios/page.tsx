@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
-import { fetchBookedSlots, ALL_TIMES, isTimeDisabled } from "@/lib/booking-slots";
+import { fetchBookedSlots, HALF_HOURLY_TIMES, isTimeDisabled } from "@/lib/booking-slots";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 import { useAuthStore } from "@/lib/store/auth";
 import { useRouter } from "next/navigation";
@@ -217,7 +217,7 @@ export default function StudiosPage() {
         <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-rose-600/20 hover:bg-rose-600/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
 
-            <div className="pt-24 md:pt-36 pb-12 md:pb-24 relative z-10">
+            <div className="pt-20 md:pt-24 pb-8 md:pb-16 relative z-10">
                 <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
 
                     {loading ? (
@@ -231,7 +231,7 @@ export default function StudiosPage() {
                             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
                                 className="w-full flex flex-col lg:flex-row gap-8 lg:gap-16">
 
-                                <div className={`relative h-[300px] lg:h-[600px] lg:w-1/2 flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
+                                <div className={`relative h-[250px] lg:h-[500px] lg:w-[45%] flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
                                     {getImage(activeStudio)
                                         ? <motion.div key={getImage(activeStudio)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${getImage(activeStudio)}')` }} />
                                         : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><Camera className="w-16 h-16 text-zinc-600" /></div>
@@ -241,7 +241,7 @@ export default function StudiosPage() {
                                 <div className="flex-1 flex flex-col justify-center">
                                     <AnimatePresence mode="wait">
                                         {!isBooking ? (
-                                            <motion.div key={`detail-${activeStudio.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4">
+                                            <motion.div key={`detail-${activeStudio.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4 pt-0">
 
                                                 {studios.length > 1 && (
                                                     <div className="flex flex-wrap gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-[16px]">
@@ -334,18 +334,18 @@ export default function StudiosPage() {
                                                 )}
 
                                                 {activeStudio.packages && activeStudio.packages.length > 0 && (
-                                                    <div className="mb-6 w-full mt-auto pt-4">
-                                                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                    <div className="mb-4 w-full mt-auto pt-4">
+                                                        <h4 className="text-white font-semibold mb-2 flex items-center gap-2 text-sm">
                                                             Үнийн багцууд
                                                         </h4>
-                                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                                             {activeStudio.packages.map((pkg) => {
                                                                 const isSelected = selectedPackages[activeStudio.id]?.id === pkg.id;
                                                                 return (
                                                                     <div
                                                                         key={pkg.id}
                                                                         onClick={() => handlePackageSelect(activeStudio.id, pkg)}
-                                                                        className={`cursor-pointer p-4 rounded-xl border relative transition-all flex flex-col items-center justify-center ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
+                                                                        className={`cursor-pointer p-3 rounded-xl border relative transition-all flex flex-col items-center justify-center ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
                                                                     >
                                                                         {isSelected && <div className="absolute top-2 right-2"><Check className="w-3 h-3 text-rose-600" /></div>}
                                                                         <p className="text-lg font-bold text-white mb-1">{pkg.hours} цаг</p>
@@ -357,7 +357,7 @@ export default function StudiosPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
+                                                <div className="pt-4 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
                                                     <div className="flex flex-col items-start md:items-center">
                                                         <p className="text-gray-500 text-[10px] uppercase tracking-wider">Нийт</p>
                                                         <p className="text-2xl font-bold">
@@ -370,12 +370,12 @@ export default function StudiosPage() {
                                                 </div>
                                             </motion.div>
                                         ) : (
-                                            <motion.div key={`booking-${activeStudio.id}`} initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} className="flex flex-col h-full py-4">
-                                                <div className="flex items-center gap-3 mb-6">
+                                            <motion.div key={`booking-${activeStudio.id}`} initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} className="flex flex-col h-full py-4 pt-0">
+                                                <div className="flex items-center gap-3 mb-4">
                                                     <Button variant="ghost" size="icon" onClick={() => closeBooking()} className="text-gray-400 hover:text-white hover:bg-white/10 shrink-0"><ArrowLeft className="w-5 h-5" /></Button>
                                                     <h2 className="text-xl font-bold text-white line-clamp-1">Захиалга өгөх — <span className="text-rose-600">{activeStudio.name}</span></h2>
                                                 </div>
-                                                <div className="space-y-4 flex-1">
+                                                <div className="space-y-3 flex-1">
                                                     <div className="space-y-3 rounded-lg bg-white/5 border border-white/10 p-4">
                                                         <p className="text-sm text-white font-medium">Захиалагчийн мэдээлэл</p>
                                                         <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Таны нэр *" />
@@ -384,7 +384,7 @@ export default function StudiosPage() {
                                                     </div>
                                                     {activeStudio.packages && activeStudio.packages.length > 0 && (
                                                         <div>
-                                                            <p className="text-sm text-gray-400 mb-2">Сонгосон багц</p>
+                                                            <p className="text-sm text-gray-400 mb-1.5">Сонгосон багц</p>
                                                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                                                                 {activeStudio.packages.map(pkg => (
                                                                     <button key={pkg.id} type="button" onClick={() => handlePackageSelect(activeStudio.id, pkg)}
@@ -424,12 +424,25 @@ export default function StudiosPage() {
                                                                             value={form.time}
                                                                             onChange={e => {
                                                                                 const t = e.target.value;
-                                                                                setForm(prev => ({ ...prev, time: t, endTime: "" }));
+                                                                                let et = form.endTime;
+                                                                                
+                                                                                if (currentPackage && currentPackage.hours && t) {
+                                                                                    const autoDur = Number(currentPackage.hours);
+                                                                                    const [sh, sm] = t.split(":").map(Number);
+                                                                                    const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
+                                                                                    const endH = Math.floor(exactEndMins / 60);
+                                                                                    const endM = exactEndMins % 60;
+                                                                                    et = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+                                                                                } else if (!t) {
+                                                                                    et = "";
+                                                                                }
+                                                                                
+                                                                                setForm(prev => ({ ...prev, time: t, endTime: et }));
                                                                             }}
                                                                             className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
                                                                         >
                                                                             <option value="">-- : --</option>
-                                                                            {ALL_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
+                                                                            {HALF_HOURLY_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
                                                                                 <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
                                                                             ))}
                                                                         </select>
@@ -443,22 +456,27 @@ export default function StudiosPage() {
                                                                             className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                                                                         >
                                                                             <option value="">-- : --</option>
-                                                                            {ALL_TIMES.filter(t => {
+                                                                            {HALF_HOURLY_TIMES.filter(t => {
                                                                                 if (!form.time) return false;
-                                                                                const [sh] = form.time.split(":").map(Number);
-                                                                                const [th] = t.split(":").map(Number);
-                                                                                if (th === sh) return false;
+                                                                                const [sh, sm] = form.time.split(":").map(Number);
+                                                                                const [th, tm] = t.split(":").map(Number);
+                                                                                if (th === sh && tm === sm) return false;
                                                                                 // If a package is selected, only show the exact end time = start + package.hours
                                                                                 if (currentPackage) {
-                                                                                    const exactEndH = (sh + currentPackage.hours) % 24;
-                                                                                    return th === exactEndH;
+                                                                                    const exactEndMins = (sh * 60 + sm + currentPackage.hours * 60) % (24 * 60);
+                                                                                    const thMins = th * 60 + tm;
+                                                                                    return thMins === exactEndMins;
                                                                                 }
                                                                                 // No package: show all times after start, filtering booked slots
-                                                                                const overnight = th < sh;
-                                                                                const endH = overnight ? th + 24 : th;
-                                                                                for (let h = sh; h < endH; h++) {
-                                                                                    const hStr = `${String(h % 24).padStart(2, "0")}:00`;
-                                                                                    if (bookedTimes.includes(hStr)) return false;
+                                                                                const startMins = sh * 60 + sm;
+                                                                                let endMins = th * 60 + tm;
+                                                                                if (endMins < startMins) endMins += 24 * 60; // Overnight
+                                                                                
+                                                                                for (let m = startMins; m < endMins; m += 30) {
+                                                                                    const checkH = Math.floor(m / 60) % 24;
+                                                                                    const checkM = m % 60;
+                                                                                    const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                    if (bookedTimes.includes(checkStr)) return false;
                                                                                 }
                                                                                 return true;
                                                                             }).map(t => (

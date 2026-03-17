@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardController = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
+const client_1 = require("@prisma/client");
 let DashboardController = class DashboardController {
     prisma;
     constructor(prisma) {
@@ -22,7 +23,7 @@ let DashboardController = class DashboardController {
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
         sixMonthsAgo.setDate(1);
         sixMonthsAgo.setHours(0, 0, 0, 0);
-        const [totalUsers, totalBookings, totalRevenue, activeStudios, activeEquipment, recentPaidBookings] = await Promise.all([
+        const [totalUsers, totalBookings, totalRevenue, activeStudios, activeEquipment, recentPaidBookings, pendingInvoiceUsers, recentWeeklyBookings] = await Promise.all([
             this.prisma.user.count(),
             this.prisma.booking.count(),
             this.prisma.booking.aggregate({
@@ -40,8 +41,43 @@ let DashboardController = class DashboardController {
                     totalAmount: true,
                     createdAt: true
                 }
+            }),
+            this.prisma.booking.count({
+                where: {
+                    paymentStatus: client_1.PaymentStatus.UNPAID
+                }
+            }),
+            this.prisma.booking.findMany({
+                where: {
+                    paymentStatus: 'PAID',
+                    createdAt: { gte: new Date(Date.now() - 8 * 7 * 24 * 60 * 60 * 1000) }
+                },
+                select: {
+                    totalAmount: true,
+                    createdAt: true
+                }
             })
         ]);
+        const getWeekNum = (d) => {
+            const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+            return Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
+        };
+        const weeklyMap = new Map();
+        for (let i = 7; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i * 7);
+            const label = `${getWeekNum(d)}-р 7 хоног`;
+            weeklyMap.set(label, 0);
+        }
+        recentWeeklyBookings.forEach(b => {
+            const label = `${getWeekNum(b.createdAt)}-р 7 хоног`;
+            if (weeklyMap.has(label)) {
+                weeklyMap.set(label, weeklyMap.get(label) + Number(b.totalAmount));
+            }
+        });
+        const weeklyRevenueChart = Array.from(weeklyMap.entries()).map(([label, amount]) => ({ label, amount }));
         const months = ['1-р сар', '2-р сар', '3-р сар', '4-р сар', '5-р сар', '6-р сар', '7-р сар', '8-р сар', '9-р сар', '10-р сар', '11-р сар', '12-р сар'];
         const revenueByMonth = new Map();
         for (let i = 5; i >= 0; i--) {
@@ -62,7 +98,9 @@ let DashboardController = class DashboardController {
             totalRevenue: totalRevenue._sum.totalAmount || 0,
             activeStudios,
             activeEquipment,
-            revenueChart
+            revenueChart,
+            weeklyRevenueChart,
+            pendingInvoiceUsers
         };
     }
 };

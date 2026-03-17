@@ -249,13 +249,31 @@ let InvoiceService = InvoiceService_1 = class InvoiceService {
             };
             dLineTotalUnder(y);
             y += 40;
+            const stampPath = path.join(process.cwd(), 'assets', 'tamga-removebg-preview.png');
+            const signaturePath = path.join(process.cwd(), 'assets', 'гарын_үсэг-removebg-preview.png');
+            doc.font(regular).fontSize(11).text('Дарга:', LEFT, y, { continued: false });
+            const nameX = LEFT + 50;
+            doc.font(bold).fontSize(11).text('Г. Сайнбуян', nameX, y);
+            if (fs.existsSync(signaturePath)) {
+                try {
+                    doc.image(signaturePath, nameX + 60, y - 15, { width: 60 });
+                }
+                catch (e) {
+                    this.logger.error('Failed to draw signature image: ' + e.message);
+                }
+            }
+            if (fs.existsSync(stampPath)) {
+                try {
+                    doc.image(stampPath, nameX + 40, y - 30, { width: 85 });
+                }
+                catch (e) {
+                    this.logger.error('Failed to draw stamp image: ' + e.message);
+                }
+            }
+            y += 40;
             doc.font(regular).fontSize(11)
-                .text('Дарга', LEFT, y)
-                .text('................................................................/................................................................/', LEFT + 100, y);
-            y += 30;
-            doc.font(regular).fontSize(11)
-                .text('Хүлээн авсан', LEFT, y)
-                .text('................................................................/................................................................/', LEFT + 100, y);
+                .text('Хүлээн авсан:', LEFT, y, { continued: false });
+            doc.text('................................................................/................................................................/', LEFT + 100, y);
             doc.end();
         });
     }

@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
 import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
-import { fetchBookedSlots } from "@/lib/booking-slots";
+import { fetchBookedSlots, HALF_HOURLY_TIMES } from "@/lib/booking-slots";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 import { useAuthStore } from "@/lib/store/auth";
 import { useRouter } from "next/navigation";
@@ -50,6 +50,7 @@ export default function PhotographersPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [selectedSubTypes, setSelectedSubTypes] = useState<Record<number, number>>({});
     const [selectedPackages, setSelectedPackages] = useState<Record<number, PhotographerServicePackage>>({});
+    const [batteryCount, setBatteryCount] = useState<number>(1);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", endTime: "", duration: "1", name: "", phone: "", email: "" });
 
@@ -98,6 +99,17 @@ export default function PhotographersPage() {
     const activeService = services.find(s => s.id === activeServiceId);
     const currentPackage = activeService ? selectedPackages[activeService.id] : null;
 
+    let activeSubTypeId = activeService ? selectedSubTypes[activeService.id] : null;
+    if (activeService?.packages && !activeSubTypeId) {
+        const cTypes = Array.from(
+            new Map(activeService.packages.filter(p => p.subType && p.subType.name !== 'Сурталчилгаа').map(p => [p.subType!.id, p.subType!])).values()
+        ).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        if (cTypes.length > 0) activeSubTypeId = cTypes[0].id;
+    }
+
+    const isDroneBattery = activeService?.name === 'Дрон' && 
+        activeService?.packages?.find(p => p.subTypeId === activeSubTypeId)?.subType?.name === 'Батерэй';
+
     useEffect(() => {
         if (!form.date || !activeService || !isBooking) { setBookedTimes([]); return; }
         setLoadingSlots(true);
@@ -144,22 +156,38 @@ export default function PhotographersPage() {
         }
         if (!form.time) { toast.error("Цагаа сонгоно уу."); return false; }
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return false; }
-        if (activeService?.packages && activeService.packages.length > 0 && !currentPackage) { toast.error("Багц сонгоно уу."); return false; }
+        
+        // Use the globally defined isDroneBattery
+        if (activeService?.packages && activeService.packages.length > 0 && !currentPackage && !isDroneBattery) { 
+            toast.error("Багц сонгоно уу."); 
+            return false; 
+        }
         return true;
     };
 
     const handleAddToCart = () => {
         if (!validateForm() || !activeService) return;
 
-        const duration = parseInt(currentPackage?.duration?.toString() || "1", 10);
-        const totalAmount = Number(currentPackage?.price || 0);
+        let duration = parseInt(currentPackage?.duration?.toString() || "1", 10);
+        let totalAmount = Number(currentPackage?.price || 0);
+        let serviceName = activeService.name;
+
+        let timePayload = form.time;
+
+        // Special case for Drone Battery
+        if (isDroneBattery) {
+            duration = 1; // logical duration per battery or fixed
+            totalAmount = 150000 * batteryCount;
+            serviceName = `Дрон (Батерэй ${batteryCount}ш)`;
+            timePayload = form.time; 
+        }
 
         addItem({
             serviceType: "PHOTOGRAPHER_SERVICE",
             serviceId: activeService.id,
-            serviceName: activeService.name,
+            serviceName: serviceName,
             date: format(form.date!, "yyyy-MM-dd"),
-            time: form.time,
+            time: timePayload,
             duration: duration,
             unitPrice: totalAmount / duration,
         });
@@ -177,18 +205,29 @@ export default function PhotographersPage() {
 
         setSubmitting(true);
         try {
-            const duration = parseInt(currentPackage?.duration?.toString() || "1", 10);
-            const totalAmount = Number(currentPackage?.price || 0);
+            let duration = parseInt(currentPackage?.duration?.toString() || "1", 10);
+            let totalAmount = Number(currentPackage?.price || 0);
+            let serviceName = activeService.name;
+
+            let timePayload = form.time;
+
+            // Special case for Drone Battery
+            if (isDroneBattery) {
+                duration = 1; 
+                totalAmount = 150000 * batteryCount;
+                serviceName = `Дрон (Батерэй ${batteryCount}ш)`;
+                timePayload = form.time; 
+            }
 
             const payload: Record<string, unknown> = {
                 name: form.name,
                 phone: form.phone,
                 email: form.email,
-                date: format(form.date!, "yyyy-MM-dd"), time: form.time,
+                date: format(form.date!, "yyyy-MM-dd"), time: timePayload,
                 duration,
                 serviceType: "PHOTOGRAPHER_SERVICE", serviceId: activeService.id,
                 unitPrice: totalAmount / duration, // Backend expects unitPrice * duration = totalAmount
-                serviceName: activeService.name,
+                serviceName: serviceName,
                 paymentType,
             };
             if (user && user.id) payload.userId = parseInt(user.id, 10);
@@ -222,7 +261,7 @@ export default function PhotographersPage() {
     return (
         <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-rose-600/20 hover:bg-rose-600/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
-            <div className="pt-28 md:pt-36 pb-24 relative z-10">
+            <div className="pt-20 md:pt-24 pb-8 md:pb-16 relative z-10">
                 <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
 
                     {loading ? (
@@ -234,7 +273,7 @@ export default function PhotographersPage() {
                             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
                                 className="w-full flex flex-col lg:flex-row gap-8 lg:gap-16">
 
-                                <div className={`relative h-[300px] lg:h-[600px] lg:w-1/2 flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
+                                <div className={`relative h-[250px] lg:h-[500px] lg:w-[45%] flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
                                     {activeService.image
                                         ? <motion.div key={activeService.image} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${activeService.image}')` }} />
                                         : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><ImageIcon className="w-16 h-16 text-zinc-600" /></div>
@@ -244,7 +283,7 @@ export default function PhotographersPage() {
                                 <div className="flex-1 flex flex-col justify-center">
                                     <AnimatePresence mode="wait">
                                         {!isBooking ? (
-                                            <motion.div key={`detail-${activeService.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4">
+                                            <motion.div key={`detail-${activeService.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4 pt-0">
 
                                                 {services.length > 1 && (
                                                     <div className="flex flex-wrap gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-[16px]">
@@ -314,7 +353,7 @@ export default function PhotographersPage() {
                                                         new Map(activeService.packages.filter(p => p.subType && p.subType.name !== 'Сурталчилгаа').map(p => [p.subType!.id, p.subType!])).values()
                                                     ).sort((a: { sortOrder?: number }, b: { sortOrder?: number }) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
-                                                    const currentSubTypeId = selectedSubTypes[activeService.id] || (contentTypes.length > 0 ? contentTypes[0].id : null);
+                                                    const currentSubTypeId = activeSubTypeId;
                                                     const availablePackages = activeService.packages
                                                         .filter(p => (!currentSubTypeId || p.subTypeId === currentSubTypeId) && p.subType?.name !== 'Сурталчилгаа')
                                                         .sort((a, b) => a.duration - b.duration || Number(a.price) - Number(b.price));
@@ -323,28 +362,45 @@ export default function PhotographersPage() {
                                                         <div className="mb-6 w-full mt-auto pt-4 space-y-6">
                                                             {contentTypes.length > 0 && activeService.name !== 'Зурагчин' && (
                                                                 <div>
-                                                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                                        Контентийн төрөл сонгох
+                                                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm max-w-[80%] leading-relaxed">
+                                                                        {activeService.name === 'Дрон' 
+                                                                            ? "1 ширхэг батерэй 20 минут ажиллана та өөрийн хэрэгцээнд тааруулан батерэйний тоогоо сонгоно уу"
+                                                                            : "Контентийн төрөл сонгох"}
                                                                     </h4>
                                                                     <div className="flex flex-wrap gap-2">
                                                                         {contentTypes.map((ct: { id: number; name: string }) => {
                                                                             const isSelected = ct.id === currentSubTypeId;
                                                                             return (
-                                                                                <button
-                                                                                    key={ct.id}
-                                                                                    type="button"
-                                                                                    onClick={() => handleSubTypeSelect(activeService.id, ct.id)}
-                                                                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isSelected ? 'bg-rose-600 text-white shadow-md' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'}`}
-                                                                                >
-                                                                                    {ct.name}
-                                                                                </button>
+                                                                                <div key={ct.id} className="flex items-center gap-4">
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => handleSubTypeSelect(activeService.id, ct.id)}
+                                                                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isSelected ? 'bg-rose-600 text-white shadow-md' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'}`}
+                                                                                    >
+                                                                                        {ct.name}
+                                                                                    </button>
+                                                                                    
+                                                                                    {activeService.name === 'Дрон' && ct.name === 'Батерэй' && isSelected && (
+                                                                                        <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-2 py-1">
+                                                                                            <button 
+                                                                                                onClick={() => setBatteryCount(Math.max(1, batteryCount - 1))}
+                                                                                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-all text-xl font-medium"
+                                                                                            >-</button>
+                                                                                            <span className="w-8 text-center font-bold text-lg">{batteryCount}ш</span>
+                                                                                            <button 
+                                                                                                onClick={() => setBatteryCount(batteryCount + 1)}
+                                                                                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-all text-xl font-medium"
+                                                                                            >+</button>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
                                                                             )
                                                                         })}
                                                                     </div>
                                                                 </div>
                                                             )}
 
-                                                            {availablePackages.length > 0 && (
+                                                            {availablePackages.length > 0 && !isDroneBattery && (
                                                                 <div>
                                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                                         {availablePackages.map(pkg => {
@@ -375,6 +431,10 @@ export default function PhotographersPage() {
                                                         <p className="text-gray-500 text-[10px] uppercase tracking-wider">Нийт үнэ</p>
                                                         <p className="text-2xl font-bold">
                                                             {(() => {
+                                                                if (isDroneBattery) {
+                                                                    return `${(150000 * batteryCount).toLocaleString()}₮`;
+                                                                }
+                                                                
                                                                 const thePkg = currentPackage || (activeService.packages && activeService.packages[0]);
                                                                 if (!thePkg) return "Сонгоно уу";
                                                                 return `${Number(thePkg.price || 0).toLocaleString()}₮`;
@@ -414,44 +474,106 @@ export default function PhotographersPage() {
                                                         </PopoverContent>
                                                     </Popover>
                                                     <div>
-                                                        <p className="text-sm text-gray-400 mb-2">Цаг сонгох</p>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <div>
-                                                                <p className="text-xs text-gray-500 mb-1">Эхлэх цаг</p>
-                                                                <input
-                                                                    type="time"
-                                                                    value={form.time}
-                                                                    onChange={e => {
-                                                                        const t = e.target.value;
-                                                                        const dur = calcDuration(t, form.endTime);
-                                                                        setForm({ ...form, time: t, duration: dur.toString() });
-                                                                    }}
-                                                                    className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-xs text-gray-500 mb-1">Дуусах цаг</p>
-                                                                <input
-                                                                    type="time"
-                                                                    value={form.endTime}
-                                                                    onChange={e => {
-                                                                        const et = e.target.value;
-                                                                        const dur = calcDuration(form.time, et);
-                                                                        setForm({ ...form, endTime: et, duration: dur.toString() });
-                                                                    }}
-                                                                    className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600"
-                                                                />
-                                                            </div>
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <p className="text-sm text-gray-400">Цаг сонгох</p>
+                                                            {loadingSlots && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-500" />}
                                                         </div>
-                                                        {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
-                                                            <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
+                                                        {!form.date ? (
+                                                            <p className="text-xs text-gray-600 italic">Эхлээд огноо сонгоно уу</p>
+                                                        ) : (
+                                                            <>
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    <div>
+                                                                        <p className="text-xs text-gray-500 mb-1">Эхлэх цаг</p>
+                                                                        <select
+                                                                            value={form.time}
+                                                                            onChange={e => {
+                                                                                const t = e.target.value;
+                                                                                let et = form.endTime;
+                                                                                let dur = calcDuration(t, et);
+                                                                                
+                                                                                if (currentPackage && currentPackage.duration && t) {
+                                                                                    const autoDur = Number(currentPackage.duration);
+                                                                                    const [sh, sm] = t.split(":").map(Number);
+                                                                                    const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
+                                                                                    const endH = Math.floor(exactEndMins / 60);
+                                                                                    const endM = exactEndMins % 60;
+                                                                                    et = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+                                                                                    dur = autoDur;
+                                                                                }
+                                                                                
+                                                                                setForm({ ...form, time: t, endTime: et, duration: dur.toString() });
+                                                                            }}
+                                                                            className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
+                                                                        >
+                                                                            <option value="">-- : --</option>
+                                                                            {HALF_HOURLY_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
+                                                                                <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                    {!isDroneBattery && (
+                                                                    <div>
+                                                                        <p className="text-xs text-gray-500 mb-1">Дуусах цаг</p>
+                                                                        <select
+                                                                            value={form.endTime}
+                                                                            disabled={!form.time}
+                                                                            onChange={e => {
+                                                                                const et = e.target.value;
+                                                                                const dur = calcDuration(form.time, et);
+                                                                                setForm({ ...form, endTime: et, duration: dur.toString() });
+                                                                            }}
+                                                                            className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                        >
+                                                                            <option value="">-- : --</option>
+                                                                            {HALF_HOURLY_TIMES.filter(t => {
+                                                                                if (!form.time) return false;
+                                                                                const [sh, sm] = form.time.split(":").map(Number);
+                                                                                const [th, tm] = t.split(":").map(Number);
+                                                                                if (th === sh && tm === sm) return false;
+                                                                                
+                                                                                if (currentPackage && currentPackage.duration) {
+                                                                                    const autoDur = Number(currentPackage.duration);
+                                                                                    const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
+                                                                                    const thMins = th * 60 + tm;
+                                                                                    return thMins === exactEndMins;
+                                                                                }
+                                                                                
+                                                                                const startMins = sh * 60 + sm;
+                                                                                let endMins = th * 60 + tm;
+                                                                                if (endMins < startMins) endMins += 24 * 60; // Overnight
+                                                                                
+                                                                                // Check if any booked slot falls between start and end
+                                                                                for (let m = startMins; m < endMins; m += 30) {
+                                                                                    const checkH = Math.floor(m / 60) % 24;
+                                                                                    const checkM = m % 60;
+                                                                                    const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                    if (bookedTimes.includes(checkStr)) return false;
+                                                                                }
+                                                                                return true;
+                                                                            }).map(t => (
+                                                                                <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                    )}
+                                                                </div>
+                                                                {!isDroneBattery && form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
+                                                                    <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-gray-400 mb-2 mt-4">Үргэлжлэх хугацаа: <span className="text-white font-medium">{currentPackage?.duration || 1} цаг</span></p>
+                                                    {!isDroneBattery && (
+                                                        <p className="text-sm text-gray-400 mb-2 mt-4">Үргэлжлэх хугацаа: <span className="text-white font-medium">{currentPackage?.duration || 1} цаг</span></p>
+                                                    )}
                                                     <div className="flex items-center justify-between py-3 border-t border-white/10 mt-6">
                                                         <span className="text-sm text-gray-400 uppercase tracking-wider">Нийт төлөх дүн</span>
                                                         <span className="text-xl font-bold text-rose-600">
                                                             {(() => {
+                                                                if (isDroneBattery) {
+                                                                    return `${(150000 * batteryCount).toLocaleString()}₮`;
+                                                                }
                                                                 const thePkg = currentPackage;
                                                                 if (!thePkg) return "0₮";
                                                                 return `${Number(thePkg.price || 0).toLocaleString()}₮`;
@@ -499,6 +621,9 @@ export default function PhotographersPage() {
                 onSelectInvoice={() => { handleBuyNow("invoice"); }}
                 loading={submitting}
                 amount={(() => {
+                    if (isDroneBattery) {
+                        return 150000 * batteryCount;
+                    }
                     const thePkg = currentPackage;
                     if (!thePkg) return undefined;
                     return Number(thePkg.price || 0);

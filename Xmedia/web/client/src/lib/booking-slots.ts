@@ -26,6 +26,13 @@ export async function fetchBookedSlots(
 // All standard booking time slots (full 24-hour range)
 export const ALL_TIMES = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
 
+// 30-minute intervals for 24-hour range
+export const HALF_HOURLY_TIMES = Array.from({ length: 48 }, (_, i) => {
+    const h = Math.floor(i / 2);
+    const m = i % 2 === 0 ? "00" : "30";
+    return `${String(h).padStart(2, "0")}:${m}`;
+});
+
 /**
  * Check if a start time is disabled given:
  * - bookedTimes: list of busy time strings

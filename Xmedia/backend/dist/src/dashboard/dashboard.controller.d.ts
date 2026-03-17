@@ -12,5 +12,10 @@ export declare class DashboardController {
             label: string;
             amount: number;
         }[];
+        weeklyRevenueChart: {
+            label: string;
+            amount: number;
+        }[];
+        pendingInvoiceUsers: number;
     }>;
 }

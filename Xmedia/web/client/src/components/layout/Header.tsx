@@ -91,7 +91,11 @@ export function Header() {
                     {/* Desktop: right buttons */}
                     <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
                         <CartDrawer />
-                        {/* The /contact link is already handled in the loop above, but if it exists separately as a right button, wrap it */}
+                        <a href="/taniltsuulga.pdf" download="XTUDIO_Танилцуулга.pdf" target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="text-white border-white/20 bg-white/5 text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10 hover:border-rose-600/30">
+                                Танилцуулга
+                            </Button>
+                        </a>
                         <ContactModal
                             trigger={
                                 <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
@@ -103,7 +107,7 @@ export function Header() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button className="font-semibold text-sm px-4 bg-white/5 border border-white/20 backdrop-blur-sm text-white hover:bg-white/10 flex items-center gap-2">
-                                        <Image src="/xtudio_logo_favico.ico" alt="user" width={16} height={16} className="w-4 h-4 object-contain rounded-sm" />
+                                        <Image src="/xtudio_logo_favico.ico" alt="user" width={10} height={10} className="w-4 h-4 object-contain rounded-sm" />
                                         {user.name}
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -141,6 +145,12 @@ export function Header() {
                                             {item.label}
                                         </Link>
                                     ))}
+                                    <hr className="my-1 border-white/10" />
+                                    <a href="/taniltsuulga.pdf" download="XTUDIO_Танилцуулга.pdf" target="_blank" rel="noopener noreferrer" className="w-full">
+                                        <Button variant="outline" className="w-full text-white border-white/20 bg-white/5 text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
+                                            Танилцуулга татах
+                                        </Button>
+                                    </a>
                                     <hr className="my-1 border-white/10" />
                                     <div className="flex flex-col gap-2 text-[12px] text-left text-gray-300 bg-white/5 p-3 rounded-xl border border-white/10 mx-auto w-full">
                                         <p className="font-bold text-white mb-1 text-center text-[14px]">Холбоо барих</p>

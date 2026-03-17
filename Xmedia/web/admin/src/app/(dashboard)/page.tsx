@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, CalendarDays, Camera, CreditCard } from "lucide-react";
+import { Users, CalendarDays, Camera, CreditCard, FileText } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function DashboardPage() {
@@ -11,7 +11,9 @@ export default function DashboardPage() {
     totalRevenue: 0,
     activeStudios: 0,
     activeEquipment: 0,
-    revenueChart: [] as { label: string, amount: number }[]
+    pendingInvoiceUsers: 0,
+    revenueChart: [] as { label: string, amount: number }[],
+    weeklyRevenueChart: [] as { label: string, amount: number }[]
   });
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +64,16 @@ export default function DashboardPage() {
       color: "text-orange-500",
       bg: "bg-orange-500/10",
     },
+    {
+      title: "Нэхэмжлэл хүлээж буй захиалгууд",
+      value: loading ? "..." : stats.pendingInvoiceUsers.toString(),
+      icon: FileText,
+      color: "text-yellow-500",
+      bg: "bg-yellow-500/10",
+    },
   ];
+
+
 
   return (
     <div className="space-y-6">
@@ -90,7 +101,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Chart Area */}
+        {/* Monthly Chart */}
         <div className="bg-background border-border p-6 rounded-xl border shadow-sm min-h-[300px] flex flex-col">
           <h2 className="text-lg font-semibold mb-4 text-accent-foreground">Орлогын мэдээлэл (Сүүлийн 6 сар)</h2>
           <div className="flex-1 min-h-[250px] w-full mt-2">
@@ -120,26 +131,35 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Mock Recent Activity Area */}
-        <div className="bg-background border-border p-6 rounded-xl border shadow-sm min-h-[300px]">
-          <h2 className="text-lg font-semibold mb-6 text-accent-foreground">Сүүлийн үйл ажиллагаа</h2>
-          <div className="space-y-6">
-            {[
-              { title: "Шинэ хэрэглэгч бүртгүүллээ", time: "2 минутын өмнө", initial: "Ш", bg: "bg-blue-500/10 text-blue-500" },
-              { title: "Төхөөрөмж нэмэгдсэн", time: "1 цагийн өмнө", initial: "Т", bg: "bg-purple-500/10 text-purple-500" },
-              { title: "Захиалга баталгаажсан", time: "3 цагийн өмнө", initial: "З", bg: "bg-emerald-500/10 text-emerald-500" },
-              { title: "Захиалга цуцлагдсан", time: "5 цагийн өмнө", initial: "З", bg: "bg-rose-500/10 text-rose-500" }
-            ].map((activity, i) => (
-              <div key={i} className="flex gap-4">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-xs flex-shrink-0 ${activity.bg}`}>
-                  {activity.initial}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">{activity.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{activity.time}</p>
-                </div>
+        {/* Weekly Chart */}
+        <div className="bg-background border-border p-6 rounded-xl border shadow-sm min-h-[300px] flex flex-col">
+          <h2 className="text-lg font-semibold text-accent-foreground mb-4">Сүүлийн 8 долоо хоногийн орлого</h2>
+          <div className="flex-1 min-h-[250px] w-full">
+            {!loading && stats.weeklyRevenueChart && stats.weeklyRevenueChart.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.weeklyRevenueChart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorRevenue2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#888888', fontSize: 11 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#888888', fontSize: 12 }} dx={-10} tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : `${value}`} width={50} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1e1e1e', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+                    itemStyle={{ color: '#fff' }}
+                    formatter={(value: any) => [`${Number(value || 0).toLocaleString()} ₮`, 'Орлого']}
+                  />
+                  <Area type="monotone" dataKey="amount" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue2)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground animate-pulse">
+                {loading ? "Уншиж байна..." : "Мэдээлэл байхгүй"}
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

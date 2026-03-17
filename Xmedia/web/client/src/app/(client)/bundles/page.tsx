@@ -189,7 +189,7 @@ export default function BundlesPage() {
     return (
         <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-rose-600/20 hover:bg-rose-600/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
-            <div className="pt-28 md:pt-36 pb-24 relative z-10">
+            <div className="pt-20 md:pt-24 pb-8 md:pb-16 relative z-10">
                 <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
 
                     {loading ? (
@@ -204,7 +204,7 @@ export default function BundlesPage() {
                             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full flex flex-col lg:flex-row gap-8 lg:gap-16">
 
                                 {/* Image Side */}
-                                <div className={`relative h-[300px] lg:h-[600px] lg:w-1/2 flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
+                                <div className={`relative h-[250px] lg:h-[500px] lg:w-[45%] flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
                                     {activeBundle.image ? (
                                         <motion.div key={activeBundle.image} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-cover bg-center transition-all duration-500" style={{ backgroundImage: `url('${activeBundle.image}')` }} />
                                     ) : (
@@ -218,7 +218,7 @@ export default function BundlesPage() {
                                 <div className="flex-1 flex flex-col justify-center">
                                     <AnimatePresence mode="wait">
                                         {!isBooking ? (
-                                            <motion.div key={`detail-${activeBundle.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4">
+                                            <motion.div key={`detail-${activeBundle.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4 pt-0">
 
                                                 {bundles.length > 1 && (
                                                     <div className="flex flex-wrap gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-[16px]">

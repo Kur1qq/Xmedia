@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Radio, X, Check, Info, ArrowLeft, Calendar as CalendarIcon, Phone, User, Loader2, GalleryVerticalEnd, Mail } from "lucide-react";
+import { Radio, X, Check, Info, ArrowLeft, Calendar as CalendarIcon, Phone, User, Loader2, GalleryVerticalEnd, Mail, Camera, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
 import { saveCustomerInfo, loadCustomerInfo } from "@/lib/customer";
-import { fetchBookedSlots } from "@/lib/booking-slots";
+import { fetchBookedSlots, HALF_HOURLY_TIMES } from "@/lib/booking-slots";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 import { useAuthStore } from "@/lib/store/auth";
 import { useRouter } from "next/navigation";
@@ -60,6 +60,7 @@ export default function LivestreamPage() {
         return adjustedDiff > 0 ? Math.round(adjustedDiff / 60 * 10) / 10 : 1;
     };
     const [tierRange, setTierRange] = useState<"1-4" | "4-8">("1-4");
+    const [showCameras, setShowCameras] = useState(false);
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -133,7 +134,9 @@ export default function LivestreamPage() {
     const handleAddToCart = () => {
         if (!validateForm() || !activeService) return;
 
-        const unitPrice = activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0;
+        const tierPrice = activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0;
+        const durationHrs = parseInt(form.duration) || 1;
+        const unitPrice = durationHrs > 0 ? Number(tierPrice) / durationHrs : Number(tierPrice);
 
         addItem({
             serviceType: "LIVE_SERVICE",
@@ -141,8 +144,8 @@ export default function LivestreamPage() {
             serviceName: activeService.name,
             date: format(form.date!, "yyyy-MM-dd"),
             time: form.time,
-            duration: parseInt(form.duration),
-            unitPrice: Number(unitPrice),
+            duration: durationHrs,
+            unitPrice: unitPrice,
         });
 
         toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү." });
@@ -158,16 +161,18 @@ export default function LivestreamPage() {
 
         setSubmitting(true);
         try {
-            const unitPrice = activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0;
+            const tierPrice = activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price || 0;
+            const durationHrs = parseInt(form.duration) || 1;
+            const unitPrice = durationHrs > 0 ? Number(tierPrice) / durationHrs : Number(tierPrice);
 
             const payload: Record<string, unknown> = {
                 name: form.name,
                 phone: form.phone,
                 email: form.email,
                 date: format(form.date!, "yyyy-MM-dd"), time: form.time,
-                duration: parseInt(form.duration),
+                duration: durationHrs,
                 serviceType: "LIVE_SERVICE", serviceId: activeService.id,
-                unitPrice: Number(unitPrice),
+                unitPrice,
                 serviceName: activeService.name,
                 paymentType,
             };
@@ -197,12 +202,13 @@ export default function LivestreamPage() {
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "", name: "", phone: "", email: "" })); };
+    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "", name: "", phone: "", email: "" })); setShowCameras(false); };
 
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
         setIsBooking(false);
         setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "", name: "", phone: "", email: "" }));
+        setShowCameras(false);
     }
 
     const getStartingPrice = (svc: LiveService) => {
@@ -213,7 +219,7 @@ export default function LivestreamPage() {
     return (
         <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-rose-600/20 hover:bg-rose-600/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
-            <div className="pt-28 md:pt-36 pb-24 relative z-10">
+            <div className="pt-20 md:pt-24 pb-8 md:pb-16 relative z-10">
                 <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
 
                     {loading ? (
@@ -225,7 +231,7 @@ export default function LivestreamPage() {
                             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
                                 className="w-full flex flex-col lg:flex-row gap-8 lg:gap-16">
 
-                                <div className={`relative h-[300px] lg:h-[600px] lg:w-1/2 flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
+                                <div className={`relative h-[250px] lg:h-[500px] lg:w-[45%] flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
                                     {activeService.image
                                         ? <motion.div key={activeService.image} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-cover bg-center transition-all duration-500" style={{ backgroundImage: `url('${activeService.image}')` }} />
                                         : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><Radio className="w-16 h-16 text-zinc-600" /></div>
@@ -235,7 +241,7 @@ export default function LivestreamPage() {
                                 <div className="flex-1 flex flex-col justify-center">
                                     <AnimatePresence mode="wait">
                                         {!isBooking ? (
-                                            <motion.div key={`detail-${activeService.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4">
+                                            <motion.div key={`detail-${activeService.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4 pt-0">
 
                                                 {services.length > 1 && (
                                                     <div className="flex flex-wrap gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-[16px]">
@@ -303,32 +309,50 @@ export default function LivestreamPage() {
                                                 {activeService.priceTiers && activeService.priceTiers.length > 0 && (
                                                     <div className="mb-4">
                                                         <p className="text-sm text-gray-400 mb-2">Шууд дамжуулалтын цаг сонгох</p>
-                                                        <div className="flex gap-2 mb-3">
-                                                            {(["1-4", "4-8"] as const).map(range => (
-                                                                <button
-                                                                    key={range}
-                                                                    type="button"
-                                                                    onClick={() => { setTierRange(range); setForm(f => ({ ...f, tierId: "" })); }}
-                                                                    className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${tierRange === range
-                                                                        ? "bg-rose-600/10 border-rose-600 text-rose-600"
-                                                                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-                                                                        }`}
-                                                                >
-                                                                    {range} цаг
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            {activeService.priceTiers
-                                                                .filter(t => (t.label || "").includes(tierRange))
-                                                                .map(t => (
-                                                                    <button key={t.id} type="button" onClick={() => setForm({ ...form, tierId: t.id.toString() })}
-                                                                        className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
-                                                                        <div className="font-semibold">{t.cameraCount} камер</div>
-                                                                        <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
+                                                        <div className="flex flex-wrap gap-2 mb-3">
+                                                            <div className="flex flex-1 sm:flex-none w-full sm:w-auto gap-1 p-1 bg-white/5 rounded-[12px] border border-white/10">
+                                                                {(["1-4", "4-8"] as const).map(range => (
+                                                                    <button
+                                                                        key={range}
+                                                                        type="button"
+                                                                        onClick={() => { setTierRange(range); setForm(f => ({ ...f, tierId: "" })); setShowCameras(false); }}
+                                                                        className={`flex-1 sm:w-24 py-1.5 text-xs font-semibold rounded-[8px] transition-all ${tierRange === range
+                                                                            ? "bg-[#1a1a1a] border border-white/10 text-white shadow-md"
+                                                                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                                                                            }`}
+                                                                    >
+                                                                        {range} цаг
                                                                     </button>
                                                                 ))}
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowCameras(!showCameras)}
+                                                                className={`flex-1 flex items-center justify-between sm:justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-[12px] border transition-all ${showCameras
+                                                                    ? "bg-rose-600/10 border-rose-600 text-rose-600"
+                                                                    : "bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10"
+                                                                    }`}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <Camera className="w-4 h-4" />
+                                                                    Камер сонгох
+                                                                </div>
+                                                                <ChevronDown className={`w-4 h-4 transition-transform ${showCameras ? "rotate-180" : ""}`} />
+                                                            </button>
                                                         </div>
+                                                        {showCameras && (
+                                                            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-2">
+                                                                {activeService.priceTiers
+                                                                    .filter(t => (t.label || "").includes(tierRange))
+                                                                    .map(t => (
+                                                                        <button key={t.id} type="button" onClick={() => { setForm({ ...form, tierId: t.id.toString() }); setShowCameras(false); }}
+                                                                            className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
+                                                                            <div className="font-semibold">{t.cameraCount} камер</div>
+                                                                            <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
+                                                                        </button>
+                                                                    ))}
+                                                            </motion.div>
+                                                        )}
                                                     </div>
                                                 )}
 
@@ -379,37 +403,92 @@ export default function LivestreamPage() {
                                                         </div>
                                                     )}
                                                     <div>
-                                                        <p className="text-sm text-gray-400 mb-2">Цаг сонгох</p>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <div>
-                                                                <p className="text-xs text-gray-500 mb-1">Эхлэх цаг</p>
-                                                                <input
-                                                                    type="time"
-                                                                    value={form.time}
-                                                                    onChange={e => {
-                                                                        const t = e.target.value;
-                                                                        const dur = calcDuration(t, form.endTime);
-                                                                        setForm({ ...form, time: t, duration: dur.toString() });
-                                                                    }}
-                                                                    className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-xs text-gray-500 mb-1">Дуусах цаг</p>
-                                                                <input
-                                                                    type="time"
-                                                                    value={form.endTime}
-                                                                    onChange={e => {
-                                                                        const et = e.target.value;
-                                                                        const dur = calcDuration(form.time, et);
-                                                                        setForm({ ...form, endTime: et, duration: dur.toString() });
-                                                                    }}
-                                                                    className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600"
-                                                                />
-                                                            </div>
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <p className="text-sm text-gray-400">Цаг сонгох</p>
+                                                            {loadingSlots && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-500" />}
                                                         </div>
-                                                        {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
-                                                            <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
+                                                        {!form.date ? (
+                                                            <p className="text-xs text-gray-600 italic">Эхлээд огноо сонгоно уу</p>
+                                                        ) : (
+                                                            <>
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    <div>
+                                                                        <p className="text-xs text-gray-500 mb-1">Эхлэх цаг</p>
+                                                                        <select
+                                                                            value={form.time}
+                                                                            onChange={e => {
+                                                                                const t = e.target.value;
+                                                                                let et = form.endTime;
+                                                                                let dur = calcDuration(t, et);
+                                                                                
+                                                                                const autoDur = tierRange === "1-4" ? 4 : (tierRange === "4-8" ? 8 : 0);
+                                                                                if (autoDur > 0 && t) {
+                                                                                    const [sh, sm] = t.split(":").map(Number);
+                                                                                    const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
+                                                                                    const endH = Math.floor(exactEndMins / 60);
+                                                                                    const endM = exactEndMins % 60;
+                                                                                    et = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+                                                                                    dur = autoDur;
+                                                                                }
+                                                                                
+                                                                                setForm({ ...form, time: t, endTime: et, duration: dur.toString() });
+                                                                            }}
+                                                                            className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
+                                                                        >
+                                                                            <option value="">-- : --</option>
+                                                                            {HALF_HOURLY_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
+                                                                                <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-xs text-gray-500 mb-1">Дуусах цаг</p>
+                                                                        <select
+                                                                            value={form.endTime}
+                                                                            disabled={!form.time}
+                                                                            onChange={e => {
+                                                                                const et = e.target.value;
+                                                                                const dur = calcDuration(form.time, et);
+                                                                                setForm({ ...form, endTime: et, duration: dur.toString() });
+                                                                            }}
+                                                                            className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                        >
+                                                                            <option value="">-- : --</option>
+                                                                            {HALF_HOURLY_TIMES.filter(t => {
+                                                                                if (!form.time) return false;
+                                                                                const [sh, sm] = form.time.split(":").map(Number);
+                                                                                const [th, tm] = t.split(":").map(Number);
+                                                                                if (th === sh && tm === sm) return false;
+                                                                                
+                                                                                const autoDur = tierRange === "1-4" ? 4 : (tierRange === "4-8" ? 8 : 0);
+                                                                                if (autoDur > 0) {
+                                                                                    const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
+                                                                                    const thMins = th * 60 + tm;
+                                                                                    return thMins === exactEndMins;
+                                                                                }
+
+                                                                                const startMins = sh * 60 + sm;
+                                                                                let endMins = th * 60 + tm;
+                                                                                if (endMins < startMins) endMins += 24 * 60; // Overnight
+                                                                                
+                                                                                // Check if any booked slot falls between start and end
+                                                                                for (let m = startMins; m < endMins; m += 30) {
+                                                                                    const checkH = Math.floor(m / 60) % 24;
+                                                                                    const checkM = m % 60;
+                                                                                    const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                    if (bookedTimes.includes(checkStr)) return false;
+                                                                                }
+                                                                                return true;
+                                                                            }).map(t => (
+                                                                                <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
+                                                                    <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </div>
 
