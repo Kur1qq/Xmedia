@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Radio, X, Check, Info, ArrowLeft, Calendar as CalendarIcon, Phone, User, Loader2, GalleryVerticalEnd, Mail, Camera, ChevronDown } from "lucide-react";
+import { Radio, X, Check, Info, ArrowLeft, Calendar as CalendarIcon, Phone, User, Loader2, GalleryVerticalEnd, Mail, Camera, ChevronDown, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -59,7 +59,7 @@ export default function LivestreamPage() {
         const adjustedDiff = diff > 0 ? diff : diff + 24 * 60;
         return adjustedDiff > 0 ? Math.round(adjustedDiff / 60 * 10) / 10 : 1;
     };
-    const [tierRange, setTierRange] = useState<"1-4" | "4-8">("1-4");
+    const [tierRange, setTierRange] = useState<string>("");
     const [showCameras, setShowCameras] = useState(false);
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
@@ -216,6 +216,33 @@ export default function LivestreamPage() {
         return Math.min(...svc.priceTiers.map(t => Number(t.price)));
     };
 
+    const uniqueLabels = activeService?.priceTiers 
+        ? Array.from(new Set(activeService.priceTiers.map(t => t.label).filter(Boolean))) as string[]
+        : [];
+
+    useEffect(() => {
+        if (uniqueLabels.length > 0 && !tierRange) {
+            const firstRange = uniqueLabels[0];
+            setTierRange(firstRange);
+            const firstTier = activeService?.priceTiers?.find(t => (t.label || "") === firstRange);
+            if (firstTier) {
+                setForm(f => ({ ...f, tierId: firstTier.id.toString() }));
+            }
+        }
+    }, [uniqueLabels, tierRange, activeService]);
+
+    const parseDuration = (label: string): number => {
+        const match = label.match(/-(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+    };
+
+    const matchingTiers = activeService?.priceTiers
+        ?.filter(t => (t.label || "") === tierRange)
+        .sort((a, b) => a.cameraCount - b.cameraCount) || [];
+
+    const currentTierIndex = matchingTiers.findIndex(t => t.id.toString() === form.tierId);
+    const currentTier = matchingTiers[currentTierIndex];
+
     return (
         <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-rose-600/20 hover:bg-rose-600/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
@@ -311,12 +338,19 @@ export default function LivestreamPage() {
                                                         <p className="text-sm text-gray-400 mb-2">Шууд дамжуулалтын цаг сонгох</p>
                                                         <div className="flex flex-wrap gap-2 mb-3">
                                                             <div className="flex flex-1 sm:flex-none w-full sm:w-auto gap-1 p-1 bg-white/5 rounded-[12px] border border-white/10">
-                                                                {(["1-4", "4-8"] as const).map(range => (
+                                                                {uniqueLabels.map(range => (
                                                                     <button
                                                                         key={range}
                                                                         type="button"
-                                                                        onClick={() => { setTierRange(range); setForm(f => ({ ...f, tierId: "" })); setShowCameras(false); }}
-                                                                        className={`flex-1 sm:w-24 py-1.5 text-xs font-semibold rounded-[8px] transition-all ${tierRange === range
+                                                                        onClick={() => { 
+                                                                            setTierRange(range); 
+                                                                            const firstTier = activeService.priceTiers?.find(t => (t.label || "") === range);
+                                                                            if (firstTier) {
+                                                                                setForm(f => ({ ...f, tierId: firstTier.id.toString() }));
+                                                                            }
+                                                                            setShowCameras(false); 
+                                                                        }}
+                                                                        className={`flex-1 sm:min-w-[100px] px-4 py-1.5 text-xs font-semibold rounded-[8px] whitespace-nowrap transition-all ${tierRange === range
                                                                             ? "bg-[#1a1a1a] border border-white/10 text-white shadow-md"
                                                                             : "text-gray-400 hover:text-white hover:bg-white/5"
                                                                             }`}
@@ -325,34 +359,36 @@ export default function LivestreamPage() {
                                                                     </button>
                                                                 ))}
                                                             </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setShowCameras(!showCameras)}
-                                                                className={`flex-1 flex items-center justify-between sm:justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-[12px] border transition-all ${showCameras
-                                                                    ? "bg-rose-600/10 border-rose-600 text-rose-600"
-                                                                    : "bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10"
-                                                                    }`}
-                                                            >
-                                                                <div className="flex items-center gap-2">
-                                                                    <Camera className="w-4 h-4" />
-                                                                    Камер сонгох
+                                                            <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-[12px] px-3 py-1.5 h-auto w-full sm:w-auto min-w-[140px] justify-between">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        if (currentTierIndex > 0) {
+                                                                            setForm({ ...form, tierId: matchingTiers[currentTierIndex - 1].id.toString() });
+                                                                        }
+                                                                    }}
+                                                                    disabled={currentTierIndex <= 0}
+                                                                    className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white disabled:opacity-20 transition-all"
+                                                                >
+                                                                    <Minus className="w-4 h-4" />
+                                                                </button>
+                                                                <div className="flex flex-col items-center">
+                                                                    <span className="text-base font-bold text-white tracking-widest">{currentTier?.cameraCount || 0}ш</span>
                                                                 </div>
-                                                                <ChevronDown className={`w-4 h-4 transition-transform ${showCameras ? "rotate-180" : ""}`} />
-                                                            </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        if (currentTierIndex < matchingTiers.length - 1) {
+                                                                            setForm({ ...form, tierId: matchingTiers[currentTierIndex + 1].id.toString() });
+                                                                        }
+                                                                    }}
+                                                                    disabled={currentTierIndex >= matchingTiers.length - 1}
+                                                                    className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white disabled:opacity-20 transition-all"
+                                                                >
+                                                                    <Plus className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                        {showCameras && (
-                                                            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-2">
-                                                                {activeService.priceTiers
-                                                                    .filter(t => (t.label || "").includes(tierRange))
-                                                                    .map(t => (
-                                                                        <button key={t.id} type="button" onClick={() => { setForm({ ...form, tierId: t.id.toString() }); setShowCameras(false); }}
-                                                                            className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
-                                                                            <div className="font-semibold">{t.cameraCount} камер</div>
-                                                                            {/* Price removed per user request */}
-                                                                        </button>
-                                                                    ))}
-                                                            </motion.div>
-                                                        )}
                                                     </div>
                                                 )}
 
@@ -421,7 +457,7 @@ export default function LivestreamPage() {
                                                                                 let et = form.endTime;
                                                                                 let dur = calcDuration(t, et);
                                                                                 
-                                                                                const autoDur = tierRange === "1-4" ? 4 : (tierRange === "4-8" ? 8 : 0);
+                                                                                const autoDur = parseDuration(tierRange);
                                                                                 if (autoDur > 0 && t) {
                                                                                     const [sh, sm] = t.split(":").map(Number);
                                                                                     const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
@@ -460,7 +496,7 @@ export default function LivestreamPage() {
                                                                                 const [th, tm] = t.split(":").map(Number);
                                                                                 if (th === sh && tm === sm) return false;
                                                                                 
-                                                                                const autoDur = tierRange === "1-4" ? 4 : (tierRange === "4-8" ? 8 : 0);
+                                                                                const autoDur = parseDuration(tierRange);
                                                                                 if (autoDur > 0) {
                                                                                     const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
                                                                                     const thMins = th * 60 + tm;
@@ -512,12 +548,8 @@ export default function LivestreamPage() {
                                                                     if (selectedTier) {
                                                                         const durationHrs = calcDuration(form.time, form.endTime);
                                                                         const tierLabel = selectedTier.label || "";
-                                                                        if (tierLabel.includes("1-4") && durationHrs > 4) {
-                                                                            toast.error("1-4 цагийн багц сонгосон тул 4 цагаас илүү хугацаа сонгох боломжгүй.");
-                                                                            return;
-                                                                        }
-                                                                        if (tierLabel.includes("4-8") && durationHrs > 8) {
-                                                                            toast.error("4-8 цагийн багц сонгосон тул 8 цагаас илүү хугацаа сонгох боломжгүй.");
+                                                                        if (durationHrs > parseDuration(tierLabel)) {
+                                                                            toast.error(`${tierLabel} багц сонгосон тул ${parseDuration(tierLabel)} цагаас илүү хугацаа сонгох боломжгүй.`);
                                                                             return;
                                                                         }
                                                                     }
