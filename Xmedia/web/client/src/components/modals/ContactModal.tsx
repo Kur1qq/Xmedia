@@ -1,11 +1,42 @@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Phone, Mail } from "lucide-react";
+import { Phone, Mail, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+
+interface ContactSection {
+    title: string;
+    phone: string;
+    email: string;
+    color: string;
+}
 
 interface ContactModalProps {
     trigger: React.ReactNode;
 }
 
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+
 export function ContactModal({ trigger }: ContactModalProps) {
+    const [sections, setSections] = useState<ContactSection[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(`${API}/settings`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.contactInfo && Array.isArray(data.contactInfo) && data.contactInfo.length > 0) {
+                    setSections(data.contactInfo);
+                } else {
+                    // Fallback
+                    setSections([
+                        { title: "Жижиг дунд бизнесийн үйлчилгээ", phone: "95905686", email: "Contact@xtudio.mn", color: "rose" },
+                        { title: "Групп компани", phone: "91915686", email: "Contact@orgilmedia.mn", color: "blue" }
+                    ]);
+                }
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, []);
+
     return (
         <Popover>
             <PopoverTrigger asChild>{trigger}</PopoverTrigger>
@@ -15,49 +46,38 @@ export function ContactModal({ trigger }: ContactModalProps) {
                 </div>
 
                 <div className="space-y-6">
-                    {/* SMB Division */}
-                    <div>
-                        <h3 className="text-[15px] font-bold text-rose-500 mb-4">Жижиг дунд бизнесийн үйлчилгээ</h3>
-                        <div className="space-y-3">
-                            <div className="flex items-start">
-                                <div className="flex items-center gap-2 w-24">
-                                    <Phone className="w-[18px] h-[18px] text-gray-400" strokeWidth={1.5} />
-                                    <span className="text-sm text-gray-400">Утас:</span>
+                    {loading ? (
+                        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-rose-500" /></div>
+                    ) : (
+                        sections.map((section, idx) => (
+                            <div key={idx}>
+                                {idx > 0 && <div className="h-px w-full bg-white/5 my-6" />}
+                                <h3 className={`text-[15px] font-bold ${section.color === 'blue' ? 'text-blue-500' : 'text-rose-500'} mb-4`}>
+                                    {section.title}
+                                </h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-start">
+                                        <div className="flex items-center gap-2 w-24">
+                                            <Phone className="w-[18px] h-[18px] text-gray-400" strokeWidth={1.5} />
+                                            <span className="text-sm text-gray-400">Утас:</span>
+                                        </div>
+                                        <a href={`tel:${section.phone.replace(/\s+/g, '')}`} className={`text-sm font-medium ${section.color === 'blue' ? 'hover:text-blue-400' : 'hover:text-rose-400'} transition-colors`}>
+                                            {section.phone}
+                                        </a>
+                                    </div>
+                                    <div className="flex items-start">
+                                        <div className="flex items-center gap-2 w-24 mt-0.5">
+                                            <Mail className="w-[18px] h-[18px] text-gray-400" strokeWidth={1.5} />
+                                            <span className="text-sm text-gray-400">И-мэйл:</span>
+                                        </div>
+                                        <a href={`mailto:${section.email}`} className={`text-sm font-medium ${section.color === 'blue' ? 'hover:text-blue-400' : 'hover:text-rose-400'} transition-colors whitespace-nowrap`}>
+                                            {section.email}
+                                        </a>
+                                    </div>
                                 </div>
-                                <a href="tel:95905686" className="text-sm font-medium hover:text-rose-400 transition-colors">9590 5686</a>
                             </div>
-                            <div className="flex items-start">
-                                <div className="flex items-center gap-2 w-24 mt-0.5">
-                                    <Mail className="w-[18px] h-[18px] text-gray-400" strokeWidth={1.5} />
-                                    <span className="text-sm text-gray-400">И-мэйл:</span>
-                                </div>
-                                <a href="mailto:Contact@xtudio.mn" className="text-sm font-medium hover:text-rose-400 transition-colors whitespace-nowrap">Contact@xtudio.mn</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="h-px w-full bg-white/5 my-6" />
-
-                    {/* Corporate Division */}
-                    <div>
-                        <h3 className="text-[15px] font-bold text-blue-500 mb-4">Групп компани</h3>
-                        <div className="space-y-3">
-                            <div className="flex items-start">
-                                <div className="flex items-center gap-2 w-24">
-                                    <Phone className="w-[18px] h-[18px] text-gray-400" strokeWidth={1.5} />
-                                    <span className="text-sm text-gray-400">Утас:</span>
-                                </div>
-                                <a href="tel:91915686" className="text-sm font-medium hover:text-blue-400 transition-colors">9191 5686</a>
-                            </div>
-                            <div className="flex items-start">
-                                <div className="flex items-center gap-2 w-24 mt-0.5">
-                                    <Mail className="w-[18px] h-[18px] text-gray-400" strokeWidth={1.5} />
-                                    <span className="text-sm text-gray-400">И-мэйл:</span>
-                                </div>
-                                <a href="mailto:Contact@orgilmedia.mn" className="text-sm font-medium hover:text-blue-400 transition-colors whitespace-nowrap">Contact@orgilmedia.mn</a>
-                            </div>
-                        </div>
-                    </div>
+                        ))
+                    )}
                 </div>
             </PopoverContent>
         </Popover>

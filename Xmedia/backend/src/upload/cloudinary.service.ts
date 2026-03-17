@@ -20,7 +20,7 @@ export class CloudinaryService {
                 {
                     folder: 'xmedia',
                     resource_type: 'auto',
-                    chunk_size: 6000000, // 6MB chunks to avoid Cloudinary timeouts
+                    chunk_size: 6048576, // ~6MB
                 },
                 (error, result) => {
                     if (error || !result) {

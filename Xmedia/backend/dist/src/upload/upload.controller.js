@@ -39,8 +39,8 @@ __decorate([
         storage: (0, multer_1.memoryStorage)(),
         limits: { fileSize: 50 * 1024 * 1024 },
         fileFilter: (req, file, cb) => {
-            if (!file.mimetype.match(/^(image|video)\//)) {
-                return cb(new common_1.BadRequestException('Зөвхөн зураг эсвэл бичлэг (image/*, video/*) upload хийнэ!'), false);
+            if (!file.mimetype.match(/^(image|video|application\/pdf)\//) && file.mimetype !== 'application/pdf') {
+                return cb(new common_1.BadRequestException('Зөвхөн зураг, бичлэг эсвэл PDF (image/*, video/*, .pdf) upload хийнэ!'), false);
             }
             cb(null, true);
         },

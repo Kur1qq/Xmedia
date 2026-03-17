@@ -321,7 +321,7 @@ export default function LivestreamPage() {
                                                                             : "text-gray-400 hover:text-white hover:bg-white/5"
                                                                             }`}
                                                                     >
-                                                                        {range} цаг
+                                                                        {range}
                                                                     </button>
                                                                 ))}
                                                             </div>
@@ -348,7 +348,7 @@ export default function LivestreamPage() {
                                                                         <button key={t.id} type="button" onClick={() => { setForm({ ...form, tierId: t.id.toString() }); setShowCameras(false); }}
                                                                             className={`py-2 px-3 text-xs text-left rounded-lg border transition-all ${form.tierId === t.id.toString() ? "bg-rose-600/10 border-rose-600 text-rose-600" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
                                                                             <div className="font-semibold">{t.cameraCount} камер</div>
-                                                                            <div className="mt-0.5">{Number(t.price).toLocaleString()}₮/цаг</div>
+                                                                            {/* Price removed per user request */}
                                                                         </button>
                                                                     ))}
                                                             </motion.div>

@@ -22,16 +22,23 @@ export function Header() {
     const { user, logout } = useAuthStore();
     const [navItems, setNavItems] = React.useState(siteConfig.nav);
 
+    const [presentationUrl, setPresentationUrl] = React.useState("/taniltsuulga.pdf");
+
     React.useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
 
-        // Fetch dynamic nav
+        // Fetch dynamic settings
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/settings`)
             .then(res => res.ok ? res.json() : null)
             .then(data => {
-                if (data && data.headerNav && data.headerNav.length > 0) {
-                    setNavItems(data.headerNav);
+                if (data) {
+                    if (data.headerNav && data.headerNav.length > 0) {
+                        setNavItems(data.headerNav);
+                    }
+                    if (data.presentationUrl) {
+                        setPresentationUrl(data.presentationUrl);
+                    }
                 }
             })
             .catch(console.error);
@@ -91,7 +98,7 @@ export function Header() {
                     {/* Desktop: right buttons */}
                     <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
                         <CartDrawer />
-                        <a href="/taniltsuulga.pdf" download="XTUDIO_Танилцуулга.pdf" target="_blank" rel="noopener noreferrer">
+                        <a href={presentationUrl} download="XTUDIO_Танилцуулга.pdf" target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" className="text-white border-white/20 bg-white/5 text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10 hover:border-rose-600/30">
                                 Танилцуулга
                             </Button>
@@ -146,7 +153,7 @@ export function Header() {
                                         </Link>
                                     ))}
                                     <hr className="my-1 border-white/10" />
-                                    <a href="/taniltsuulga.pdf" download="XTUDIO_Танилцуулга.pdf" target="_blank" rel="noopener noreferrer" className="w-full">
+                                    <a href={presentationUrl} download="XTUDIO_Танилцуулга.pdf" target="_blank" rel="noopener noreferrer" className="w-full">
                                         <Button variant="outline" className="w-full text-white border-white/20 bg-white/5 text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
                                             Танилцуулга татах
                                         </Button>

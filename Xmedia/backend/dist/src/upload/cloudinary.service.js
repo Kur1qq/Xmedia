@@ -28,7 +28,7 @@ let CloudinaryService = CloudinaryService_1 = class CloudinaryService {
             const uploadStream = cloudinary_1.v2.uploader.upload_chunked_stream({
                 folder: 'xmedia',
                 resource_type: 'auto',
-                chunk_size: 6000000,
+                chunk_size: 6048576,
             }, (error, result) => {
                 if (error || !result) {
                     this.logger.error(`Cloudinary upload failed: ${error?.message || 'Unknown error'}`);

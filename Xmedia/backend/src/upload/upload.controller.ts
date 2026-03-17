@@ -14,8 +14,8 @@ export class UploadController {
         storage: memoryStorage(),
         limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limits for videos
         fileFilter: (req, file, cb) => {
-            if (!file.mimetype.match(/^(image|video)\//)) {
-                return cb(new BadRequestException('Зөвхөн зураг эсвэл бичлэг (image/*, video/*) upload хийнэ!'), false);
+            if (!file.mimetype.match(/^(image|video|application\/pdf)\//) && file.mimetype !== 'application/pdf') {
+                return cb(new BadRequestException('Зөвхөн зураг, бичлэг эсвэл PDF (image/*, video/*, .pdf) upload хийнэ!'), false);
             }
             cb(null, true);
         },

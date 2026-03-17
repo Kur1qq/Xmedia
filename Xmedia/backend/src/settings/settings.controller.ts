@@ -13,7 +13,7 @@ export class SettingsController {
 
     @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'EDITOR'))
     @Patch()
-    update(@Body() body: { snowEffect?: boolean; headerNav?: any; homeCards?: any }) {
+    update(@Body() body: { snowEffect?: boolean; headerNav?: any; homeCards?: any; contactInfo?: any; presentationUrl?: string }) {
         return this.settingsService.updateSettings(body);
     }
 }
