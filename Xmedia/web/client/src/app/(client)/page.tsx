@@ -195,19 +195,8 @@ export default function Home() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Slider Progress Bar & Indicators */}
+            {/* Slider Indicators */}
             <div className="mt-8 w-full flex flex-col items-center gap-4">
-              {/* Progress Bar */}
-              <div className="w-full max-w-md h-1 bg-white/20 rounded-full overflow-hidden">
-                <motion.div
-                  key={currentSlide}
-                  initial={{ width: "0%" }}
-                  animate={{ width: "100%" }}
-                  transition={{ duration: 10, ease: "linear" }}
-                  className="h-full bg-rose-600"
-                />
-              </div>
-
               {/* Dot Indicators */}
               <div className="flex gap-3">
                 {slides.map((_, index) => (

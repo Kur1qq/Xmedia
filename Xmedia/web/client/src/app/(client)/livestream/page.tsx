@@ -217,14 +217,14 @@ export default function LivestreamPage() {
     };
 
     const uniqueLabels = activeService?.priceTiers 
-        ? Array.from(new Set(activeService.priceTiers.map(t => t.label).filter(Boolean))) as string[]
+        ? Array.from(new Set(activeService.priceTiers.map(t => t.label?.trim()).filter(Boolean))) as string[]
         : [];
 
     useEffect(() => {
         if (uniqueLabels.length > 0 && !tierRange) {
             const firstRange = uniqueLabels[0];
             setTierRange(firstRange);
-            const firstTier = activeService?.priceTiers?.find(t => (t.label || "") === firstRange);
+            const firstTier = activeService?.priceTiers?.find(t => (t.label?.trim() || "") === firstRange);
             if (firstTier) {
                 setForm(f => ({ ...f, tierId: firstTier.id.toString() }));
             }
@@ -237,7 +237,7 @@ export default function LivestreamPage() {
     };
 
     const matchingTiers = activeService?.priceTiers
-        ?.filter(t => (t.label || "") === tierRange)
+        ?.filter(t => (t.label?.trim() || "") === tierRange)
         .sort((a, b) => a.cameraCount - b.cameraCount) || [];
 
     const currentTierIndex = matchingTiers.findIndex(t => t.id.toString() === form.tierId);
@@ -334,24 +334,24 @@ export default function LivestreamPage() {
                                                 )}
 
                                                 {activeService.priceTiers && activeService.priceTiers.length > 0 && (
-                                                    <div className="mb-4">
-                                                        <p className="text-sm text-gray-400 mb-2">Шууд дамжуулалтын цаг сонгох</p>
-                                                        <div className="flex flex-wrap gap-2 mb-3">
-                                                            <div className="flex flex-1 sm:flex-none w-full sm:w-auto gap-1 p-1 bg-white/5 rounded-[12px] border border-white/10">
+                                                    <div className="mb-6">
+                                                        <p className="text-sm text-gray-400 mb-3 uppercase tracking-wider font-semibold">Шууд дамжуулалтын цаг & Камер сонгох</p>
+                                                        <div className="flex bg-white/5 border border-white/10 rounded-[12px] w-full max-w-sm">
+                                                            {/* Left: Duration selection */}
+                                                            <div className="w-1/2 p-1 flex flex-col gap-1 border-r border-white/10">
                                                                 {uniqueLabels.map(range => (
                                                                     <button
                                                                         key={range}
                                                                         type="button"
-                                                                        onClick={() => { 
-                                                                            setTierRange(range); 
-                                                                            const firstTier = activeService.priceTiers?.find(t => (t.label || "") === range);
+                                                                        onClick={() => {
+                                                                            setTierRange(range);
+                                                                            const firstTier = activeService.priceTiers?.find(t => (t.label?.trim() || "") === range);
                                                                             if (firstTier) {
                                                                                 setForm(f => ({ ...f, tierId: firstTier.id.toString() }));
                                                                             }
-                                                                            setShowCameras(false); 
                                                                         }}
-                                                                        className={`flex-1 sm:min-w-[100px] px-4 py-1.5 text-xs font-semibold rounded-[8px] whitespace-nowrap transition-all ${tierRange === range
-                                                                            ? "bg-[#1a1a1a] border border-white/10 text-white shadow-md"
+                                                                        className={`flex-1 px-3 py-2 text-xs font-bold rounded-[8px] transition-all flex items-center justify-center ${tierRange === range
+                                                                            ? "bg-rose-600 text-white shadow-[0_0_10px_rgba(225,29,72,0.3)]"
                                                                             : "text-gray-400 hover:text-white hover:bg-white/5"
                                                                             }`}
                                                                     >
@@ -359,34 +359,43 @@ export default function LivestreamPage() {
                                                                     </button>
                                                                 ))}
                                                             </div>
-                                                            <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-[12px] px-3 py-1.5 h-auto w-full sm:w-auto min-w-[140px] justify-between">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        if (currentTierIndex > 0) {
-                                                                            setForm({ ...form, tierId: matchingTiers[currentTierIndex - 1].id.toString() });
-                                                                        }
-                                                                    }}
-                                                                    disabled={currentTierIndex <= 0}
-                                                                    className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white disabled:opacity-20 transition-all"
-                                                                >
-                                                                    <Minus className="w-4 h-4" />
-                                                                </button>
-                                                                <div className="flex flex-col items-center">
-                                                                    <span className="text-base font-bold text-white tracking-widest">{currentTier?.cameraCount || 0}ш</span>
+
+                                                            {/* Right: Camera selection (Dropdown) */}
+                                                            <div className="w-1/2 p-1 flex flex-col justify-center gap-1">
+                                                                <div className="px-2 py-0.5 text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center">
+                                                                    Камер сонгох
                                                                 </div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        if (currentTierIndex < matchingTiers.length - 1) {
-                                                                            setForm({ ...form, tierId: matchingTiers[currentTierIndex + 1].id.toString() });
-                                                                        }
-                                                                    }}
-                                                                    disabled={currentTierIndex >= matchingTiers.length - 1}
-                                                                    className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white disabled:opacity-20 transition-all"
-                                                                >
-                                                                    <Plus className="w-4 h-4" />
-                                                                </button>
+                                                                <Popover>
+                                                                    <PopoverTrigger asChild>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="w-full px-3 py-2 text-xs font-bold rounded-[8px] bg-white/5 border border-white/10 text-white flex items-center justify-between hover:bg-white/10 transition-all"
+                                                                        >
+                                                                            <span>{currentTier?.cameraCount || 0}ш</span>
+                                                                            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                                                                        </button>
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent className="w-[160px] p-1 bg-[#111] border-white/10 shadow-2xl z-[200]" align="center">
+                                                                        <div className="flex flex-col gap-0.5">
+                                                                            {matchingTiers.map(tier => (
+                                                                                <button
+                                                                                    key={tier.id}
+                                                                                    type="button"
+                                                                                    onClick={() => setForm(f => ({ ...f, tierId: tier.id.toString() }))}
+                                                                                    className={cn(
+                                                                                        "w-full px-3 py-2 text-xs font-bold rounded-[6px] transition-all flex items-center justify-between",
+                                                                                        form.tierId === tier.id.toString()
+                                                                                            ? "bg-rose-600/10 text-rose-500"
+                                                                                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                                                                                    )}
+                                                                                >
+                                                                                    {tier.cameraCount}ш
+                                                                                    {form.tierId === tier.id.toString() && <Check className="w-3.5 h-3.5" />}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    </PopoverContent>
+                                                                </Popover>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -435,7 +444,7 @@ export default function LivestreamPage() {
                                                     </Popover>
                                                     {form.tierId && activeService.priceTiers && activeService.priceTiers.length > 0 && (
                                                         <div className="px-3 py-2 rounded-lg bg-rose-600/10 border border-rose-600/30 text-xs text-rose-400">
-                                                            Сонгогдсон: <span className="font-semibold">{activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.label}</span> — {Number(activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.price ?? 0).toLocaleString()}₮/цаг
+                                                            Сонгогдсон: <span className="font-semibold">{activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.label?.trim()}</span> — {Number(activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.price ?? 0).toLocaleString()}₮/цаг
                                                         </div>
                                                     )}
                                                     <div>
@@ -547,7 +556,7 @@ export default function LivestreamPage() {
                                                                     const selectedTier = activeService.priceTiers?.find(t => t.id.toString() === form.tierId);
                                                                     if (selectedTier) {
                                                                         const durationHrs = calcDuration(form.time, form.endTime);
-                                                                        const tierLabel = selectedTier.label || "";
+                                                                        const tierLabel = selectedTier.label?.trim() || "";
                                                                         if (durationHrs > parseDuration(tierLabel)) {
                                                                             toast.error(`${tierLabel} багц сонгосон тул ${parseDuration(tierLabel)} цагаас илүү хугацаа сонгох боломжгүй.`);
                                                                             return;

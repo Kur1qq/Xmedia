@@ -99,7 +99,7 @@ export function Header() {
                     <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
                         <CartDrawer />
                         <a href={presentationUrl} download="XTUDIO_Танилцуулга.pdf" target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="text-white border-white/20 bg-white/5 text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10 hover:border-rose-600/30">
+                            <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
                                 Танилцуулга
                             </Button>
                         </a>
@@ -154,7 +154,7 @@ export function Header() {
                                     ))}
                                     <hr className="my-1 border-white/10" />
                                     <a href={presentationUrl} download="XTUDIO_Танилцуулга.pdf" target="_blank" rel="noopener noreferrer" className="w-full">
-                                        <Button variant="outline" className="w-full text-white border-white/20 bg-white/5 text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
+                                        <Button variant="ghost" className="w-full text-white text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
                                             Танилцуулга татах
                                         </Button>
                                     </a>
