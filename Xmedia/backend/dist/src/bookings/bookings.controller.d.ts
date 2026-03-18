@@ -53,6 +53,7 @@ export declare class BookingsController {
                 amenities: import("@prisma/client/runtime/library").JsonValue | null;
                 isActive: boolean;
                 categoryId: number;
+                sortOrder: number;
             } | null;
             photographerService: {
                 id: number;
@@ -64,8 +65,8 @@ export declare class BookingsController {
                 amenities: import("@prisma/client/runtime/library").JsonValue | null;
                 isActive: boolean;
                 categoryId: number;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
@@ -169,6 +170,7 @@ export declare class BookingsController {
                 amenities: import("@prisma/client/runtime/library").JsonValue | null;
                 isActive: boolean;
                 categoryId: number;
+                sortOrder: number;
             } | null;
             photographerService: {
                 id: number;
@@ -180,8 +182,8 @@ export declare class BookingsController {
                 amenities: import("@prisma/client/runtime/library").JsonValue | null;
                 isActive: boolean;
                 categoryId: number;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
@@ -285,6 +287,7 @@ export declare class BookingsController {
                 amenities: import("@prisma/client/runtime/library").JsonValue | null;
                 isActive: boolean;
                 categoryId: number;
+                sortOrder: number;
             } | null;
             photographerService: {
                 id: number;
@@ -296,8 +299,8 @@ export declare class BookingsController {
                 amenities: import("@prisma/client/runtime/library").JsonValue | null;
                 isActive: boolean;
                 categoryId: number;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
                 photographerSubTypeId: number | null;
             } | null;
             editService: {
@@ -395,6 +398,7 @@ export declare class BookingsController {
                 amenities: import("@prisma/client/runtime/library").JsonValue | null;
                 isActive: boolean;
                 categoryId: number;
+                sortOrder: number;
             } | null;
             photographerService: {
                 id: number;
@@ -406,8 +410,8 @@ export declare class BookingsController {
                 amenities: import("@prisma/client/runtime/library").JsonValue | null;
                 isActive: boolean;
                 categoryId: number;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
                 photographerSubTypeId: number | null;
             } | null;
             editService: {

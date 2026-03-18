@@ -31,6 +31,7 @@ export default function LivePage() {
     const [editingService, setEditingService] = useState<any | null /* eslint-disable-line @typescript-eslint/no-explicit-any */>(null);
     const [serviceFormData, setServiceFormData] = useState({
         name: "", categoryId: "", description: "", image: "", isActive: true,
+        sortOrder: 0,
         equipmentIds: [] as number[],
         priceTiers: [] as CameraTier[],
         amenities: [] as string[],
@@ -112,6 +113,7 @@ export default function LivePage() {
     // ==========================================
     const blankService = () => ({
         name: "", categoryId: categories[0]?.id?.toString() || "", description: "", image: "", isActive: true,
+        sortOrder: 0,
         equipmentIds: [] as number[],
         priceTiers: [{ cameraCount: 1, label: "1 камер", price: "" }] as CameraTier[],
         amenities: [] as string[],
@@ -123,6 +125,7 @@ export default function LivePage() {
             setServiceFormData({
                 name: svc.name, categoryId: svc.categoryId?.toString() || "", description: svc.description || "",
                 image: svc.image || "", isActive: svc.isActive ?? true,
+                sortOrder: svc.sortOrder ?? 0,
                 amenities: svc.amenities || [],
                 equipmentIds: svc.equipments?.map((e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => e.equipmentId) || [],
                 priceTiers: svc.priceTiers?.length
@@ -179,6 +182,7 @@ export default function LivePage() {
                 description: serviceFormData.description || undefined,
                 image: serviceFormData.image || undefined,
                 isActive: serviceFormData.isActive,
+                sortOrder: Number(serviceFormData.sortOrder),
                 equipmentIds: serviceFormData.equipmentIds,
                 amenities: serviceFormData.amenities,
                 priceTiers: serviceFormData.priceTiers.map(t => ({
@@ -239,6 +243,7 @@ export default function LivePage() {
                                     <th className="px-6 py-4 font-medium border-b w-[80px]">Зураг</th>
                                     <th className="px-6 py-4 font-medium border-b">Нэр</th>
                                     <th className="px-6 py-4 font-medium border-b">Ангилал</th>
+                                    <th className="px-6 py-4 font-medium border-b w-[80px]">Дараалал</th>
                                     <th className="px-6 py-4 font-medium border-b">Камерийн үнэ</th>
                                     <th className="px-6 py-4 font-medium border-b w-[100px]">Төлөв</th>
                                     <th className="px-6 py-4 font-medium border-b text-right">Үйлдэл</th>
@@ -259,6 +264,7 @@ export default function LivePage() {
                                                 </td>
                                                 <td className="px-6 py-4 font-medium">{s.name}</td>
                                                 <td className="px-6 py-4">{s.category?.name || "—"}</td>
+                                                <td className="px-6 py-4 text-center">{s.sortOrder ?? 0}</td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-col gap-0.5">
                                                         {s.priceTiers?.map((t: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => (
@@ -392,9 +398,13 @@ export default function LivePage() {
                                             {categories.map(c => <option key={c.id} value={c.id} className="bg-[#1e1e1e]">{c.name}</option>)}
                                         </select>
                                     </div>
-                                    <div className="space-y-1 col-span-2">
+                                    <div className="space-y-1 col-span-2 sm:col-span-1">
                                         <label className="text-xs text-gray-400">Үйлчилгээний нэр <span className="text-red-500">*</span></label>
                                         <input required value={serviceFormData.name} onChange={e => setServiceFormData({ ...serviceFormData, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" placeholder="Шууд дамжуулалтын үйлчилгээ..." />
+                                    </div>
+                                    <div className="space-y-1 col-span-2 sm:col-span-1">
+                                        <label className="text-xs text-gray-400">Дараалал (Client дээр харагдах)</label>
+                                        <input type="number" value={serviceFormData.sortOrder} onChange={e => setServiceFormData({ ...serviceFormData, sortOrder: parseInt(e.target.value) || 0 })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" placeholder="0" />
                                     </div>
                                 </div>
 

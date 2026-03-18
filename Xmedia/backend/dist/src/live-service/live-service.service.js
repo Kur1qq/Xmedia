@@ -19,7 +19,7 @@ let LiveServiceService = class LiveServiceService {
     }
     async findAll() {
         return this.prisma.liveService.findMany({
-            orderBy: { createdAt: 'desc' },
+            orderBy: { sortOrder: 'asc' },
             include: {
                 category: true,
                 priceTiers: { orderBy: { cameraCount: 'asc' } },

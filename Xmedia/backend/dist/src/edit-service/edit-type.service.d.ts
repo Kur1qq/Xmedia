@@ -12,8 +12,8 @@ export declare class EditTypeService {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         }[];
     } & {
         id: number;
@@ -53,8 +53,8 @@ export declare class EditTypeService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
     updateSubType(id: number, data: any): Promise<{
         id: number;
@@ -62,8 +62,8 @@ export declare class EditTypeService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
     removeSubType(id: number): Promise<{
         id: number;
@@ -71,7 +71,7 @@ export declare class EditTypeService {
         updatedAt: Date;
         name: string;
         description: string | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
 }

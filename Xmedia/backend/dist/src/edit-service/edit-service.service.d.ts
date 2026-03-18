@@ -10,8 +10,8 @@ export declare class EditServiceService {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
             };
         } & {
             id: number;
@@ -44,8 +44,8 @@ export declare class EditServiceService {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         } | null;
     } & {
         id: number;
@@ -68,8 +68,8 @@ export declare class EditServiceService {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
             };
         } & {
             id: number;
@@ -102,8 +102,8 @@ export declare class EditServiceService {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         } | null;
     } & {
         id: number;
@@ -126,8 +126,8 @@ export declare class EditServiceService {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
             };
         } & {
             id: number;
@@ -160,8 +160,8 @@ export declare class EditServiceService {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         } | null;
     } & {
         id: number;
@@ -184,8 +184,8 @@ export declare class EditServiceService {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
             };
         } & {
             id: number;
@@ -218,8 +218,8 @@ export declare class EditServiceService {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         } | null;
     } & {
         id: number;

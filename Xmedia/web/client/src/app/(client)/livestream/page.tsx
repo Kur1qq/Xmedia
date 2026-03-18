@@ -39,6 +39,7 @@ interface LiveService {
     amenities?: string[];
     priceTiers?: CameraTier[];
     equipments?: LiveEquipment[];
+    sortOrder?: number;
 }
 
 export default function LivestreamPage() {

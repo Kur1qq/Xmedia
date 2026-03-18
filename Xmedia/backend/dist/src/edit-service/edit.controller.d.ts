@@ -15,8 +15,8 @@ export declare class EditTypeController {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         }[];
     } & {
         id: number;
@@ -56,8 +56,8 @@ export declare class EditTypeController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
     updateSub(id: string, body: any, req: any): Promise<{
         id: number;
@@ -65,8 +65,8 @@ export declare class EditTypeController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
     removeSub(id: string, req: any): Promise<{
         id: number;
@@ -74,8 +74,8 @@ export declare class EditTypeController {
         updatedAt: Date;
         name: string;
         description: string | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
 }
 export declare class EditServiceController {
@@ -90,8 +90,8 @@ export declare class EditServiceController {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
             };
         } & {
             id: number;
@@ -124,8 +124,8 @@ export declare class EditServiceController {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         } | null;
     } & {
         id: number;
@@ -148,8 +148,8 @@ export declare class EditServiceController {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
             };
         } & {
             id: number;
@@ -182,8 +182,8 @@ export declare class EditServiceController {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         } | null;
     } & {
         id: number;
@@ -206,8 +206,8 @@ export declare class EditServiceController {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
             };
         } & {
             id: number;
@@ -240,8 +240,8 @@ export declare class EditServiceController {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         } | null;
     } & {
         id: number;
@@ -264,8 +264,8 @@ export declare class EditServiceController {
                 updatedAt: Date;
                 name: string;
                 description: string | null;
-                mainTypeId: number;
                 sortOrder: number;
+                mainTypeId: number;
             };
         } & {
             id: number;
@@ -298,8 +298,8 @@ export declare class EditServiceController {
             updatedAt: Date;
             name: string;
             description: string | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         } | null;
     } & {
         id: number;

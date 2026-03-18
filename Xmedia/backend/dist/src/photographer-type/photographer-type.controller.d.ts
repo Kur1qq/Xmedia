@@ -15,8 +15,8 @@ export declare class PhotographerTypeController {
             name: string;
             description: string | null;
             price: import("@prisma/client/runtime/library").Decimal | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         }[];
     } & {
         id: number;
@@ -57,8 +57,8 @@ export declare class PhotographerTypeController {
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }[]>;
     createSub(body: any, req: any): Promise<{
         id: number;
@@ -67,8 +67,8 @@ export declare class PhotographerTypeController {
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
     updateSub(id: string, body: any, req: any): Promise<{
         id: number;
@@ -77,8 +77,8 @@ export declare class PhotographerTypeController {
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
     removeSub(id: string, req: any): Promise<{
         id: number;
@@ -87,7 +87,7 @@ export declare class PhotographerTypeController {
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
 }

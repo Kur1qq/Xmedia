@@ -13,8 +13,8 @@ export declare class PhotographerTypeService {
             name: string;
             description: string | null;
             price: import("@prisma/client/runtime/library").Decimal | null;
-            mainTypeId: number;
             sortOrder: number;
+            mainTypeId: number;
         }[];
     } & {
         id: number;
@@ -55,8 +55,8 @@ export declare class PhotographerTypeService {
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }[]>;
     createSubType(data: any): Promise<{
         id: number;
@@ -65,8 +65,8 @@ export declare class PhotographerTypeService {
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
     updateSubType(id: number, data: any): Promise<{
         id: number;
@@ -75,8 +75,8 @@ export declare class PhotographerTypeService {
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
     removeSubType(id: number): Promise<{
         id: number;
@@ -85,7 +85,7 @@ export declare class PhotographerTypeService {
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal | null;
-        mainTypeId: number;
         sortOrder: number;
+        mainTypeId: number;
     }>;
 }
