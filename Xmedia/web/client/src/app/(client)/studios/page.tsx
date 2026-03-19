@@ -214,11 +214,12 @@ export default function StudiosPage() {
     const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", name: "", phone: "", email: "" })); };
 
     return (
-        <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
+        <div className="h-screen bg-black text-white relative overflow-hidden flex flex-col">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-rose-600/20 hover:bg-rose-600/30 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-700" />
 
-            <div className="pt-20 md:pt-24 pb-8 md:pb-16 relative z-10">
-                <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
+            <div className="flex-1 overflow-y-auto pt-20 pb-6 relative z-10 scrollbar-hide">
+                <div className="min-h-full flex items-center justify-center py-8">
+                    <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
 
                     {loading ? (
                         <div className="flex items-center justify-center h-64">
@@ -227,11 +228,11 @@ export default function StudiosPage() {
                     ) : studios.length === 0 ? (
                         <p className="text-gray-500 text-center py-24">Одоогоор студи нэмэгдээгүй байна.</p>
                     ) : activeStudio && (
-                        <div className="space-y-12">
+                        <div className="space-y-6 w-full">
                             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
                                 className="w-full flex flex-col lg:flex-row gap-8 lg:gap-16">
 
-                                <div className={`relative h-[250px] lg:h-[500px] lg:w-[45%] flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
+                                <div className={`relative h-[250px] lg:h-[450px] max-h-[50vh] lg:w-[45%] flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
                                     {getImage(activeStudio)
                                         ? <motion.div key={getImage(activeStudio)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${getImage(activeStudio)}')` }} />
                                         : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><Camera className="w-16 h-16 text-zinc-600" /></div>
@@ -257,18 +258,15 @@ export default function StudiosPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
-                                                    <div className="flex items-center gap-4">
-                                                        <Link href="/portfolio/studio">
-                                                            <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
-                                                                <GalleryVerticalEnd className="w-3 h-3" />
-                                                                Өмнөх ажил
-                                                            </div>
-                                                        </Link>
-                                                    </div>
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <h2 className="text-2xl md:text-3xl font-bold text-white">{activeStudio.name}</h2>
+                                                    <Link href="/portfolio/studio">
+                                                        <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
+                                                            <GalleryVerticalEnd className="w-3 h-3" />
+                                                            Өмнөх ажил
+                                                        </div>
+                                                    </Link>
                                                 </div> 
-
-                                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{activeStudio.name}</h2>
                                                 <Link
                                                     href="https://www.google.com/maps/place/XTUDIO/@48.0082871,106.9214316,671m/data=!3m1!1e3!4m6!3m5!1s0x694d69c46d9c5945:0xc9e3c9408887d71f!8m2!3d48.0082871!4d106.9240065!16s%2Fg%2F11ww0jglbw!5m1!1e1?entry=ttu&g_ep=EgoyMDI2MDMwNC4xIKXMDSoASAFQAw%3D%3D"
                                                     target="_blank"
@@ -479,7 +477,7 @@ export default function StudiosPage() {
 
                                                     <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
                                                         <span className="text-gray-400 text-sm">Нийт үнэ:</span>
-                                                        <span className="text-xl font-bold text-white">{selectedPackages[activeStudio.id] ? Number(selectedPackages[activeStudio.id].price).toLocaleString() : 0}₮</span>
+                                                        <span className="text-xl font-bold text-white">{currentPackage ? Number(currentPackage.price).toLocaleString() : 0}₮</span>
                                                     </div>
                                                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                                         <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
@@ -514,7 +512,7 @@ export default function StudiosPage() {
                     )}
                 </div>
             </div>
-
+        </div>
 
             {/* Payment Method Modal */}
             <PaymentMethodModal
