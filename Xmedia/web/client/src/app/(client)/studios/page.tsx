@@ -259,30 +259,13 @@ export default function StudiosPage() {
 
                                                 <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-rose-600 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
-                                                            Photography Studio
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-3">
-                                                            {activeStudio.sizeSqm && (
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <Square className="w-3.5 h-3.5 text-gray-400" />
-                                                                    <span className="text-sm text-gray-300">{Number(activeStudio.sizeSqm)}m²</span>
-                                                                </div>
-                                                            )}
-                                                            {activeStudio.capacity && (
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <Users className="w-3.5 h-3.5 text-gray-400" />
-                                                                    <span className="text-sm text-gray-300">{activeStudio.capacity}-{Number(activeStudio.capacity) + 5} хүн</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                                        <Link href="/portfolio/studio">
+                                                            <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
+                                                                <GalleryVerticalEnd className="w-3 h-3" />
+                                                                Хийсэн ажил
+                                                            </div>
+                                                        </Link>
                                                     </div>
-                                                    <Link href="/portfolio/studio">
-                                                        <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
-                                                            <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
-                                                            Өмнөх ажлууд харах
-                                                        </Button>
-                                                    </Link>
                                                 </div>
 
                                                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{activeStudio.name}</h2>
@@ -292,10 +275,10 @@ export default function StudiosPage() {
                                                     rel="noopener noreferrer"
                                                     className="w-fit mb-4 block"
                                                 >
-                                                    <Button variant="outline" className="text-gray-300 hover:text-white hover:bg-white/10 border-white/20 bg-white/5 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm transition-all duration-300 tracking-wide text-left">
+                                                    <div className="flex items-center gap-2 text-gray-300 text-sm hover:text-rose-600 transition-colors">
                                                         <MapPin className="w-4 h-4 text-rose-600 shrink-0" />
-                                                        <span className="line-clamp-2">Байршил: 1, CHD - 24 khoroo, Shadivlan, Ulaanbaatar 15020</span>
-                                                    </Button>
+                                                        <span className="line-clamp-1">Байршил: Shadivlan, Ulaanbaatar</span>
+                                                    </div>
                                                 </Link>
                                                 <p className="text-gray-400 mb-5 leading-relaxed text-sm md:text-base">{activeStudio.description}</p>
 
@@ -306,7 +289,7 @@ export default function StudiosPage() {
                                                         </h4>
                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                             {activeStudio.amenities.map((amenity, i) => (
-                                                                <div key={i} className="flex items-center gap-2.5 text-xs text-gray-200 bg-[#141414] px-3 py-2 rounded-lg border border-white/5 truncate">
+                                                                <div key={i} className="flex items-center gap-2.5 text-xs text-gray-300 truncate py-1">
                                                                     <Check className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                                                                     <span className="truncate">{amenity}</span>
                                                                 </div>
