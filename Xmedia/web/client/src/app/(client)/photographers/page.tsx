@@ -309,10 +309,10 @@ export default function PhotographersPage() {
                                                         </span>
                                                     )}
                                                     <Link href="/portfolio/photographer">
-                                                        <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
-                                                            <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
-                                                            Өмнөх ажлууд харах
-                                                        </Button>
+                                                        <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
+                                                            <GalleryVerticalEnd className="w-3 h-3" />
+                                                            Өмнөх ажил
+                                                        </div>
                                                     </Link>
                                                 </div>
 
