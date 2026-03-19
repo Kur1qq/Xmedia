@@ -20,36 +20,9 @@ interface Slide {
   image: string;
 }
 
-const DEFAULT_SLIDES: Slide[] = [
-  {
-    id: 1,
-    title: "Мэргэжлийн студио",
-    highlight: "түрээсийн",
-    subTitle: "үйлчилгээ",
-    description: "Зураг авалт, дуу бичлэг, видео продакшн хийхэд зориулсан орчин үеийн тоног төхөөрөмжөөр тоноглогдсон студио.",
-    image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Шууд дамжуулалтийн",
-    highlight: "түрээсийн",
-    subTitle: "үйлчилгээ",
-    description: "Өндөр чанарын микрофон, дуу тусгаарлагчтай мэргэжлийн орчинд өөрийн бүтээлээ туурвиарай.",
-    image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Мэргэжлийн зурагчин",
-    highlight: "түрээсийн",
-    subTitle: "үйлчилгээ",
-    description: "Лекц, сургалт, жижиг хэмжээний тоглолт зохион байгуулахад тохиромжтой тайз, гэрэлтүүлэг бүхий танхим.",
-    image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop",
-  },
-];
-
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [snowEffect, setSnowEffect] = useState(false);
   const [homeCards, setHomeCards] = useState<any[]>([]);
 
@@ -91,7 +64,7 @@ export default function Home() {
 
   // Use a separate side-effect to inject a preload link for the first background media
   useEffect(() => {
-    if (slides.length > 0) {
+    if (slides.length > 0 && slides[0]?.image) {
       const firstSlideImage = slides[0].image;
       const isVideo = firstSlideImage.match(/\.(mp4|webm|ogg|mov)$/i);
 
@@ -109,12 +82,15 @@ export default function Home() {
 
       return () => {
         // Optional Cleanup (usually preload links stay)
-        document.head.removeChild(link);
+        if (document.head.contains(link)) {
+          document.head.removeChild(link);
+        }
       }
     }
   }, [slides]);
 
   useEffect(() => {
+    if (slides.length === 0) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 10000);
@@ -126,91 +102,93 @@ export default function Home() {
     <div className="flex-1 flex flex-col pt-36 sm:pt-0 pb-8">
       <SnowEffect enabled={snowEffect} />
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
-      <div className="hidden sm:flex flex-col flex-1 overflow-hidden relative">
-        {/* Background Slider - Moved up to take full flex-1 container space */}
-        <div className="absolute inset-0 z-0">
-          <AnimatePresence mode="popLayout">
-            <motion.div
-              key={slides[currentSlide].id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.5, ease: "easeInOut" }}
-              className="absolute inset-0"
-            >
-              {slides[currentSlide].image.match(/\.(mp4|webm|ogg|mov)$/i) ? (
-                <video
-                  src={slides[currentSlide].image}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear scale-100"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  style={{ transform: "scale(1)" }}
-                />
-              ) : (
-                <img
-                  src={slides[currentSlide].image}
-                  alt={slides[currentSlide].title || "slide"}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear"
-                  style={{ transform: "scale(1.01)" }}
-                />
-              )}
-              {/* Added a smoother gradient fade into the background color at the bottom */}
-              <div className="absolute top-2/3 bottom-0 left-0 right-0 bg-gradient-to-b from-transparent via-background/40 to-background" />
-              {/* Extra bottom gradient for absolute seamless transition */}
-              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent" />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        <section className="relative flex-1 flex flex-col items-center justify-end pb-12 md:pb-20 overflow-hidden z-10 w-full">
-
-          <div className="container relative z-10 flex flex-col items-center text-center px-4 mt-16 md:mt-24">
-            <AnimatePresence mode="wait">
+      {slides.length > 0 && (
+        <div className="hidden sm:flex flex-col flex-1 overflow-hidden relative">
+          {/* Background Slider - Moved up to take full flex-1 container space */}
+          <div className="absolute inset-0 z-0">
+            <AnimatePresence mode="popLayout">
               <motion.div
                 key={slides[currentSlide].id}
-                initial={{ opacity: 0, filter: "blur(10px)" }}
-                animate={{ opacity: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, filter: "blur(10px)" }}
-                transition={{ duration: 0.7, ease: "easeInOut" }}
-                className="max-w-4xl mx-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+                className="absolute inset-0"
               >
-                {(slides[currentSlide].title || slides[currentSlide].highlight || slides[currentSlide].subTitle) && (
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 font-sans leading-tight">
-                    {slides[currentSlide].title} {slides[currentSlide].highlight && <span className="text-rose-600">{slides[currentSlide].highlight}</span>}
-                    {slides[currentSlide].subTitle && (
-                      <>
-                        <br />
-                        {slides[currentSlide].subTitle}
-                      </>
-                    )}
-                  </h1>
+                {slides[currentSlide].image.match(/\.(mp4|webm|ogg|mov)$/i) ? (
+                  <video
+                    src={slides[currentSlide].image}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear scale-100"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    style={{ transform: "scale(1)" }}
+                  />
+                ) : (
+                  <img
+                    src={slides[currentSlide].image}
+                    alt={slides[currentSlide].title || "slide"}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear"
+                    style={{ transform: "scale(1.01)" }}
+                  />
                 )}
-                {slides[currentSlide].description && (
-                  <p className="mt-3 max-w-xl mx-auto text-base sm:text-lg text-gray-300 mb-10 leading-relaxed">
-                    {slides[currentSlide].description}
-                  </p>
-                )}
+                {/* Added a smoother gradient fade into the background color at the bottom */}
+                <div className="absolute top-2/3 bottom-0 left-0 right-0 bg-gradient-to-b from-transparent via-background/40 to-background" />
+                {/* Extra bottom gradient for absolute seamless transition */}
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent" />
               </motion.div>
             </AnimatePresence>
+          </div>
 
-            {/* Slider Indicators */}
-            <div className="mt-8 w-full flex flex-col items-center gap-4">
-              {/* Dot Indicators */}
-              <div className="flex gap-3">
-                {slides.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${index === currentSlide ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white"}`}
-                  />
-                ))}
+          <section className="relative flex-1 flex flex-col items-center justify-end pb-12 md:pb-20 overflow-hidden z-10 w-full">
+
+            <div className="container relative z-10 flex flex-col items-center text-center px-4 mt-16 md:mt-24">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={slides[currentSlide].id}
+                  initial={{ opacity: 0, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, filter: "blur(10px)" }}
+                  transition={{ duration: 0.7, ease: "easeInOut" }}
+                  className="max-w-4xl mx-auto"
+                >
+                  {(slides[currentSlide].title || slides[currentSlide].highlight || slides[currentSlide].subTitle) && (
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 font-sans leading-tight">
+                      {slides[currentSlide].title} {slides[currentSlide].highlight && <span className="text-rose-600">{slides[currentSlide].highlight}</span>}
+                      {slides[currentSlide].subTitle && (
+                        <>
+                          <br />
+                          {slides[currentSlide].subTitle}
+                        </>
+                      )}
+                    </h1>
+                  )}
+                  {slides[currentSlide].description && (
+                    <p className="mt-3 max-w-xl mx-auto text-base sm:text-lg text-gray-300 mb-10 leading-relaxed">
+                      {slides[currentSlide].description}
+                    </p>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Slider Indicators */}
+              <div className="mt-8 w-full flex flex-col items-center gap-4">
+                {/* Dot Indicators */}
+                <div className="flex gap-3">
+                  {slides.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${index === currentSlide ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white"}`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
+        </div>
+      )}
 
       {/* Services Section - Smoothly overlaps with the hero section */}
       <section className="relative z-20 pb-4 sm:pb-8 flex sm:block items-center -mt-8 sm:-mt-12 backdrop-blur-sm">

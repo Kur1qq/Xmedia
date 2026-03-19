@@ -285,11 +285,11 @@ export default function LivestreamPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
+                                                <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
                                                     <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-rose-600 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
                                                         Live Stream
                                                     </div>
-                                                    <Link href="/portfolio/live">
+                                                    <Link href="/portfolio/livestream">
                                                         <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
                                                             <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
                                                             Өмнөх ажлууд харах
@@ -337,28 +337,48 @@ export default function LivestreamPage() {
                                                 {activeService.priceTiers && activeService.priceTiers.length > 0 && (
                                                     <div className="mb-6">
                                                         <p className="text-sm text-gray-400 mb-3 uppercase tracking-wider font-semibold">Шууд дамжуулалтын цаг & Камер сонгох</p>
-                                                        <div className="flex bg-white/5 border border-white/10 rounded-[12px] w-full max-w-sm">
-                                                            {/* Left: Duration selection */}
-                                                            <div className="w-1/2 p-1 flex flex-col gap-1 border-r border-white/10">
-                                                                {uniqueLabels.map(range => (
-                                                                    <button
-                                                                        key={range}
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            setTierRange(range);
-                                                                            const firstTier = activeService.priceTiers?.find(t => (t.label?.trim() || "") === range);
-                                                                            if (firstTier) {
-                                                                                setForm(f => ({ ...f, tierId: firstTier.id.toString() }));
-                                                                            }
-                                                                        }}
-                                                                        className={`flex-1 px-3 py-2 text-xs font-bold rounded-[8px] transition-all flex items-center justify-center ${tierRange === range
-                                                                            ? "bg-rose-600 text-white shadow-[0_0_10px_rgba(225,29,72,0.3)]"
-                                                                            : "text-gray-400 hover:text-white hover:bg-white/5"
-                                                                            }`}
-                                                                    >
-                                                                        {range}
-                                                                    </button>
-                                                                ))}
+                                                        <div className="flex bg-white/5 border border-white/10 rounded-[12px] w-full">
+                                                            <div className="w-1/2 p-1 flex flex-col justify-center gap-1 border-r border-white/10">
+                                                                <div className="px-2 py-0.5 text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center">
+                                                                    Цаг сонгох
+                                                                </div>
+                                                                <Popover>
+                                                                    <PopoverTrigger asChild>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="w-full px-3 py-2 text-xs font-bold rounded-[8px] bg-white/5 border border-white/10 text-white flex items-center justify-between hover:bg-white/10 transition-all"
+                                                                        >
+                                                                            <span>{tierRange || "Цаг сонгох"}</span>
+                                                                            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                                                                        </button>
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent className="w-[160px] p-1 bg-[#111] border-white/10 shadow-2xl z-[200]" align="center">
+                                                                        <div className="flex flex-col gap-0.5">
+                                                                            {uniqueLabels.map(range => (
+                                                                                <button
+                                                                                    key={range}
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setTierRange(range);
+                                                                                        const firstTier = activeService.priceTiers?.find(t => (t.label?.trim() || "") === range);
+                                                                                        if (firstTier) {
+                                                                                            setForm(f => ({ ...f, tierId: firstTier.id.toString() }));
+                                                                                        }
+                                                                                    }}
+                                                                                    className={cn(
+                                                                                        "w-full px-3 py-2 text-xs font-bold rounded-[6px] transition-all flex items-center justify-between",
+                                                                                        tierRange === range
+                                                                                            ? "bg-rose-600/10 text-rose-500"
+                                                                                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                                                                                    )}
+                                                                                >
+                                                                                    {range}
+                                                                                    {tierRange === range && <Check className="w-3.5 h-3.5" />}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    </PopoverContent>
+                                                                </Popover>
                                                             </div>
 
                                                             {/* Right: Camera selection (Dropdown) */}

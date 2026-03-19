@@ -235,17 +235,15 @@ export default function BundlesPage() {
                                                 )}
 
                                                 <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-rose-600 border border-rose-600/20 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
-                                                            <PackageCheck className="w-3.5 h-3.5" /> Багц Үйлчилгээ
-                                                        </div>
-                                                        <Link href="/portfolio/bundle">
-                                                            <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
-                                                                <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
-                                                                Өмнөх ажлууд харах
-                                                            </Button>
-                                                        </Link>
+                                                    <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-rose-600 border border-rose-600/20 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
+                                                        <PackageCheck className="w-3.5 h-3.5" /> Багц Үйлчилгээ
                                                     </div>
+                                                    <Link href="/portfolio/bundle">
+                                                        <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
+                                                            <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
+                                                            Өмнөх ажлууд харах
+                                                        </Button>
+                                                    </Link>
                                                 </div>
 
                                                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{activeBundle.name}</h2>
@@ -259,11 +257,11 @@ export default function BundlesPage() {
                                                         <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
                                                             <Check className="w-4 h-4 text-rose-600" />Багцад багтсан үйлчилгээ
                                                         </h4>
-                                                        <div className="flex flex-col gap-1.5">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                                                             {activeBundle.includedServices.map((svc, i) => (
-                                                                <div key={i} className="flex items-center gap-2.5 text-sm text-gray-300">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-600 shrink-0" />
-                                                                    <span>{svc}</span>
+                                                                <div key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-600 shrink-0 mt-[6px]" />
+                                                                    <span className="leading-snug">{svc}</span>
                                                                 </div>
                                                             ))}
                                                         </div>

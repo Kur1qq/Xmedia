@@ -300,15 +300,20 @@ export default function PhotographersPage() {
                                                 )}
 
                                                 <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
-                                                    <div className="flex items-center gap-3">
-                                                        {activeService.mainType && <span className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 border border-rose-600/20 rounded-full text-[10px] md:text-xs font-medium text-rose-600 uppercase tracking-wider">{activeService.mainType.name}</span>}
-                                                        <Link href="/portfolio/photographer">
-                                                            <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
-                                                                <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
-                                                                Өмнөх ажлууд харах
-                                                            </Button>
-                                                        </Link>
-                                                    </div>
+                                                    {activeService.mainType && (
+                                                        <span className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 border border-rose-600/20 rounded-full text-[10px] md:text-xs font-medium text-rose-600 uppercase tracking-wider">
+                                                            {activeService.mainType.name === 'Зураглаач' ? 'Videography' : 
+                                                             activeService.mainType.name === 'Зурагчин' ? 'Photography' : 
+                                                             activeService.mainType.name === 'Дрон' ? 'Drone' : 
+                                                             activeService.mainType.name}
+                                                        </span>
+                                                    )}
+                                                    <Link href="/portfolio/photographer">
+                                                        <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
+                                                            <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
+                                                            Өмнөх ажлууд харах
+                                                        </Button>
+                                                    </Link>
                                                 </div>
 
                                                 <h2 className="text-2xl md:text-3xl font-bold mb-3">{activeService.name}</h2>

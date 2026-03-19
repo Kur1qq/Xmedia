@@ -219,17 +219,15 @@ export default function VideoEditingPage() {
                                                 )}
 
                                                 <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex w-fit items-center gap-2 px-3 py-1 bg-rose-600/10 text-rose-600 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase border border-rose-600/20">
-                                                            EDITING
-                                                        </div>
-                                                        <Link href="/portfolio/edit">
-                                                            <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
-                                                                <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
-                                                                Өмнөх ажлууд харах
-                                                            </Button>
-                                                        </Link>
+                                                    <div className="flex w-fit items-center gap-2 px-3 py-1 bg-rose-600/10 text-rose-600 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase border border-rose-600/20">
+                                                        EDITING
                                                     </div>
+                                                    <Link href="/portfolio/edit">
+                                                        <Button variant="outline" className="text-rose-600 hover:text-white hover:bg-rose-600/20 border-rose-600/50 bg-rose-600/10 px-3 py-1.5 h-auto gap-2 text-xs md:text-sm animate-pulse shadow-[0_0_15px_hsla(var(--primary),0.5)] transition-all duration-300">
+                                                            <GalleryVerticalEnd className="w-3.5 h-3.5 text-rose-600" />
+                                                            Өмнөх ажлууд харах
+                                                        </Button>
+                                                    </Link>
                                                 </div>
                                                 <h2 className="text-2xl md:text-3xl font-bold mb-3">{activeService.name}</h2>
                                                 <p className="text-gray-400 mb-6 leading-relaxed text-sm md:text-base">{activeService.description}</p>
