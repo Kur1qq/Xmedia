@@ -285,10 +285,7 @@ export default function LivestreamPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
-                                                    <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-rose-600 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
-                                                        Live Stream
-                                                    </div>
+                                                <div className="flex items-center gap-4">
                                                     <Link href="/portfolio/livestream">
                                                         <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
                                                             <GalleryVerticalEnd className="w-3 h-3" />

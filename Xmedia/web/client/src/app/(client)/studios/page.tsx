@@ -266,7 +266,7 @@ export default function StudiosPage() {
                                                             </div>
                                                         </Link>
                                                     </div>
-                                                </div>
+                                                </div> 
 
                                                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{activeStudio.name}</h2>
                                                 <Link

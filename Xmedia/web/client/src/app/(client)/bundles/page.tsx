@@ -235,9 +235,6 @@ export default function BundlesPage() {
                                                 )}
 
                                                 <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
-                                                    <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-rose-600 border border-rose-600/20 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase">
-                                                        <PackageCheck className="w-3.5 h-3.5" /> Багц Үйлчилгээ
-                                                    </div>
                                                     <Link href="/portfolio/bundle">
                                                         <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
                                                             <GalleryVerticalEnd className="w-3 h-3" />

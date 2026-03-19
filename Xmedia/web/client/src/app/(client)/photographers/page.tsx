@@ -299,15 +299,7 @@ export default function PhotographersPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
-                                                    {activeService.mainType && (
-                                                        <span className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 border border-rose-600/20 rounded-full text-[10px] md:text-xs font-medium text-rose-600 uppercase tracking-wider">
-                                                            {activeService.mainType.name === 'Зураглаач' ? 'Videography' : 
-                                                             activeService.mainType.name === 'Зурагчин' ? 'Photography' : 
-                                                             activeService.mainType.name === 'Дрон' ? 'Drone' : 
-                                                             activeService.mainType.name}
-                                                        </span>
-                                                    )}
+                                                <div className="flex items-center gap-4">
                                                     <Link href="/portfolio/photographer">
                                                         <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
                                                             <GalleryVerticalEnd className="w-3 h-3" />
@@ -414,13 +406,11 @@ export default function PhotographersPage() {
                                                                                 <div
                                                                                     key={pkg.id}
                                                                                     onClick={() => handlePackageSelect(activeService.id, pkg)}
-                                                                                    className={`cursor-pointer p-4 rounded-xl border relative transition-all ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
+                                                                                    className={`cursor-pointer p-3 rounded-xl border relative transition-all flex flex-col items-center justify-center ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
                                                                                 >
-                                                                                    {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-rose-600" /></div>}
-                                                                                    <div className="mt-2 flex items-baseline gap-2">
-                                                                                        <p className="text-rose-600 font-bold text-lg">{Number(pkg.price).toLocaleString()}₮</p>
-                                                                                        <p className="text-xs text-gray-400 font-medium">/ {pkg.duration} цаг</p>
-                                                                                    </div>
+                                                                                    {isSelected && <div className="absolute top-2 right-2"><Check className="w-3 h-3 text-rose-600" /></div>}
+                                                                                    <p className="text-lg font-bold text-white mb-1">{pkg.duration} цаг</p>
+                                                                                    <p className="text-gray-400 font-bold mt-1 text-xs">{Number(pkg.price).toLocaleString()}₮</p>
                                                                                 </div>
                                                                             );
                                                                         })}

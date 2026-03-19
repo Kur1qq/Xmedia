@@ -218,10 +218,7 @@ export default function VideoEditingPage() {
                                                     </div>
                                                 )}
 
-                                                <div className="flex flex-wrap gap-4 items-center justify-between mb-3">
-                                                    <div className="flex w-fit items-center gap-2 px-3 py-1 bg-rose-600/10 text-rose-600 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase border border-rose-600/20">
-                                                        EDITING
-                                                    </div>
+                                                <div className="flex items-center gap-4">
                                                     <Link href="/portfolio/edit">
                                                         <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
                                                             <GalleryVerticalEnd className="w-3 h-3" />
@@ -263,18 +260,15 @@ export default function VideoEditingPage() {
                                                                     <div
                                                                         key={pkg.id}
                                                                         onClick={() => handlePackageSelect(activeService.id, pkg)}
-                                                                        className={`cursor-pointer p-4 rounded-xl border relative transition-all ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
+                                                                        className={`cursor-pointer p-3 rounded-xl border relative transition-all flex flex-col items-center justify-center ${isSelected ? 'border-rose-600 bg-rose-600/10' : 'border-white/10 bg-white/5 hover:border-white/30'}`}
                                                                     >
-                                                                        {isSelected && <div className="absolute top-4 right-4"><Check className="w-4 h-4 text-rose-600" /></div>}
+                                                                        {isSelected && <div className="absolute top-2 right-2"><Check className="w-3 h-3 text-rose-600" /></div>}
                                                                         {(() => {
                                                                             const title = pkg.priceLabel || pkg.subType?.name || "Үндсэн багц";
-                                                                            const isEdit = title.trim().toLowerCase() === "эдит";
                                                                             return (
                                                                                 <>
-                                                                                    {!isEdit && <p className="text-sm font-medium pr-6">{title}</p>}
-                                                                                    <p className={`text-rose-600 font-bold text-lg ${isEdit ? "" : "mt-3"}`}>
-                                                                                        {Number(pkg.price).toLocaleString()}₮
-                                                                                    </p>
+                                                                                    <p className="text-lg font-bold text-white mb-1">{title}</p>
+                                                                                    <p className="text-gray-400 font-bold mt-1 text-xs">{Number(pkg.price).toLocaleString()}₮</p>
                                                                                 </>
                                                                             );
                                                                         })()}
