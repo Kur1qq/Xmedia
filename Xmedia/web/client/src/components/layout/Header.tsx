@@ -7,7 +7,8 @@ import { siteConfig } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Menu, User as UserIcon, LogOut } from "lucide-react";
+import { Menu, User as UserIcon, LogOut, MoreHorizontal, ShoppingCart } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/lib/store/auth";
 import { motion } from "framer-motion";
@@ -20,6 +21,7 @@ export function Header() {
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isOrderHistoryOpen, setIsOrderHistoryOpen] = React.useState(false);
     const { user, logout } = useAuthStore();
+    const pathname = usePathname();
     const [navItems, setNavItems] = React.useState(siteConfig.nav);
 
     const [presentationUrl, setPresentationUrl] = React.useState("/taniltsuulga.pdf");
@@ -46,6 +48,16 @@ export function Header() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+
+    const mainNavItems = navItems.filter(item => 
+        ['/studios', '/livestream', '/bundles'].includes(item.href) || 
+        ['Студи', 'Шууд дамжуулалт', 'Багц'].some(l => item.label.includes(l))
+    );
+    const moreNavItems = navItems.filter(item => 
+        ['/photographers', '/video-editing'].includes(item.href) || 
+        ['Зураглаач', 'Зурагчин', 'Эдит'].some(l => item.label.includes(l))
+    );
+
     return (
         <>
             {/* ── Main Header Bar ── */}
@@ -55,80 +67,85 @@ export function Header() {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className={cn(
                     "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300",
-                    isScrolled ? "bg-black/80 backdrop-blur-md border-b border-white/10 py-3" : "bg-transparent py-5"
+                    isScrolled ? "bg-black/90 backdrop-blur-md border-b border-white/5 py-3" : "bg-black/30 backdrop-blur-sm py-5"
                 )}
             >
                 <div className="container flex h-14 items-center justify-between">
                     {/* Logo */}
                     <div className="flex-1 flex justify-start">
                         <Link href="/" className="hover:opacity-90 transition-opacity">
-                            <Image src="/x logo.png" alt={siteConfig.name} width={140} height={50} className="object-contain w-auto h-auto" priority />
+                            <Image
+                                src="/x logo.png"
+                                alt="Xtudio logo"
+                                width={100}
+                                height={36}
+                                className="h-16 w-auto object-contain"
+                                priority
+                            />
                         </Link>
                     </div>
 
                     {/* Desktop: Navigation links */}
-                    <div className="hidden lg:flex justify-center items-center">
-                        <div className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-black/70 border border-white/10 backdrop-blur-md shadow-sm shadow-red-500/10">
-                            {navItems.map((item) => (
-                                item.href === "/contact" ? (
-                                    <ContactModal
-                                        key={item.href}
-                                        trigger={
-                                            <Button
-                                                variant="ghost"
-                                                className="px-5 py-1 text-sm font-medium text-white/75 rounded-full transition-all duration-200 hover:text-white hover:bg-white/10"
-                                            >
-                                                {item.label}
-                                            </Button>
-                                        }
-                                    />
-                                ) : (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        className="px-5 py-1 text-sm font-medium text-white/75 rounded-full transition-all duration-200 hover:text-white hover:bg-white/10"
-                                    >
-                                        {item.label}
-                                    </Link>
-                                )
-                            ))}
-                        </div>
+                    <div className="hidden lg:flex justify-center items-center gap-8">
+                        {mainNavItems.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className="relative px-1 py-2 text-sm font-medium transition-all duration-200 text-white/80 hover:text-white"
+                                >
+                                    {item.label}
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeNav"
+                                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-rose-600"
+                                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                                        />
+                                    )}
+                                </Link>
+                            );
+                        })}
+
+                        <ContactModal
+                            trigger={
+                                <button className="relative px-1 py-2 text-sm font-medium transition-all duration-200 text-white/80 hover:text-white">
+                                    Холбоо барих
+                                </button>
+                            }
+                        />
                     </div>
 
                     {/* Desktop: right buttons */}
-                    <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
+                    <div className="hidden lg:flex flex-1 justify-end items-center gap-4">
                         <CartDrawer />
-                        <a href={presentationUrl} download="XTUDIO_Танилцуулга.pdf" target="_blank" rel="noopener noreferrer">
-                            <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
-                                Танилцуулга
-                            </Button>
-                        </a>
-                        <ContactModal
-                            trigger={
-                                <Button variant="ghost" className="text-white text-sm transition-all duration-300 hover:text-rose-600 hover:bg-white/10">
-                                    Холбоо барих
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8">
+                                    <MoreHorizontal className="w-5 h-5" />
                                 </Button>
-                            }
-                        />
-                        {user && (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button className="font-semibold text-sm px-4 bg-white/5 border border-white/20 backdrop-blur-sm text-white hover:bg-white/10 flex items-center gap-2">
-                                        <Image src="/xtudio_logo_favico.ico" alt="user" width={10} height={10} className="w-4 h-4 object-contain rounded-sm" />
-                                        {user.name}
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56 bg-black/95 border-white/10 text-white" align="end">
-                                    <DropdownMenuItem onClick={() => setIsOrderHistoryOpen(true)} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer">
-                                        <UserIcon className="w-4 h-4 mr-2" /> Миний захиалгын түүх
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-52 bg-black/95 border-white/10 text-white" align="end">
+                                {moreNavItems.map((item) => (
+                                    <DropdownMenuItem key={item.href} asChild>
+                                        <Link href={item.href} className="w-full cursor-pointer hover:bg-white/10">
+                                            {item.label}
+                                        </Link>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => logout()} className="text-rose-600 hover:bg-rose-600/10 focus:bg-rose-600/10 cursor-pointer mt-1 font-medium focus:text-rose-600">
-                                        <LogOut className="w-4 h-4 mr-2" />
-                                        Гарах
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
+                                ))}
+                                {user && (
+                                    <>
+                                        <div className="my-1 border-t border-white/10" />
+                                        <DropdownMenuItem onClick={() => setIsOrderHistoryOpen(true)} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer">
+                                            <UserIcon className="w-4 h-4 mr-2" /> Захиалгын түүх
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => logout()} className="text-rose-500 hover:bg-rose-600/10 focus:bg-rose-600/10 cursor-pointer font-medium focus:text-rose-500">
+                                            <LogOut className="w-4 h-4 mr-2" /> Гарах
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
 
                     {/* Mobile hamburger */}

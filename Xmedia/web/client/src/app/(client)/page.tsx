@@ -18,6 +18,7 @@ interface Slide {
   subTitle: string;
   description: string;
   image: string;
+  buttonLink?: string;
 }
 
 export default function Home() {
@@ -141,52 +142,64 @@ export default function Home() {
             </AnimatePresence>
           </div>
 
-          <section className="relative flex-1 flex flex-col items-center justify-end pb-12 md:pb-20 overflow-hidden z-10 w-full">
-
-            <div className="container relative z-10 flex flex-col items-center text-center px-4 mt-16 md:mt-24">
+          <section className="relative flex-1 flex flex-col items-start justify-center pb-12 md:pb-20 overflow-hidden z-10 w-full">
+            <div className="container relative z-10 flex flex-col items-start text-left px-4 mt-20 md:mt-32">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={slides[currentSlide].id}
-                  initial={{ opacity: 0, filter: "blur(10px)" }}
-                  animate={{ opacity: 1, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, filter: "blur(10px)" }}
+                  initial={{ opacity: 0, x: -20, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, x: 20, filter: "blur(10px)" }}
                   transition={{ duration: 0.7, ease: "easeInOut" }}
-                  className="max-w-4xl mx-auto"
+                  className="max-w-4xl"
                 >
-                  {(slides[currentSlide].title || slides[currentSlide].highlight || slides[currentSlide].subTitle) && (
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 font-sans leading-tight">
-                      {slides[currentSlide].title} {slides[currentSlide].highlight && <span className="text-rose-600">{slides[currentSlide].highlight}</span>}
-                      {slides[currentSlide].subTitle && (
-                        <>
-                          <br />
-                          {slides[currentSlide].subTitle}
-                        </>
-                      )}
-                    </h1>
-                  )}
+                  {/* Title: first part + highlighted word + last part */}
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter text-white mb-3 leading-tight">
+                    {slides[currentSlide].title && (
+                      <span>{slides[currentSlide].title} </span>
+                    )}
+                    {slides[currentSlide].highlight && (
+                      <span className="text-rose-600">{slides[currentSlide].highlight}</span>
+                    )}
+                    {slides[currentSlide].subTitle && (
+                      <span> {slides[currentSlide].subTitle}</span>
+                    )}
+                  </h1>
+
+                  {/* Description */}
                   {slides[currentSlide].description && (
-                    <p className="mt-3 max-w-xl mx-auto text-base sm:text-lg text-gray-300 mb-10 leading-relaxed">
+                    <p className="text-sm sm:text-base text-white/70 font-medium mb-6 max-w-lg">
                       {slides[currentSlide].description}
                     </p>
                   )}
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Link href={slides[currentSlide].buttonLink || "/studios"}>
+                      <button className="bg-rose-600 hover:bg-rose-700 text-white px-10 py-4 rounded-3xl font-bold text-lg transition-all shadow-2xl">
+                        Захиалах
+                      </button>
+                    </Link>
+                  </motion.div>
                 </motion.div>
               </AnimatePresence>
 
-              {/* Slider Indicators */}
-              <div className="mt-8 w-full flex flex-col items-center gap-4">
-                {/* Dot Indicators */}
-                <div className="flex gap-3">
-                  {slides.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentSlide(index)}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${index === currentSlide ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white"}`}
-                    />
-                  ))}
-                </div>
-              </div>
             </div>
           </section>
+
+          {/* Slider Indicators — positioned just above cards */}
+          <div className="relative z-30 flex justify-center gap-3 -mt-4 mb-14">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${index === currentSlide ? "w-12 bg-rose-600" : "w-6 bg-white/30 hover:bg-white/50"}`}
+              />
+            ))}
+          </div>
         </div>
       )}
 

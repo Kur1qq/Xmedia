@@ -24,6 +24,7 @@ export default function HeroPage() {
         image: "",
         order: "",
         isActive: true,
+        buttonLink: "/studios",
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +103,7 @@ export default function HeroPage() {
                 image: slide.image || "",
                 order: slide.order?.toString() || "0",
                 isActive: slide.isActive,
+                buttonLink: slide.buttonLink || "/studios",
             });
         } else {
             setEditingSlide(null);
@@ -113,6 +115,7 @@ export default function HeroPage() {
                 image: "",
                 order: "0",
                 isActive: true,
+                buttonLink: "/studios",
             });
         }
         setIsModalOpen(true);
@@ -512,15 +515,29 @@ export default function HeroPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
+                                        <label className="text-xs text-gray-400 block">Захиалах товч — хаашаа чиглүүлэх</label>
+                                        <select
+                                            value={formData.buttonLink}
+                                            onChange={e => setFormData({ ...formData, buttonLink: e.target.value })}
+                                            className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                        >
+                                            <option value="/studios">Студио</option>
+                                            <option value="/photographers">Зурагчин</option>
+                                            <option value="/video-editing">Эдит</option>
+                                            <option value="/livestream">Шууд дамжуулалт</option>
+                                            <option value="/bundles">Багц үйлчилгээ</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
                                         <label className="text-xs text-gray-400 block">Дараалал (Order)</label>
                                         <input type="number" value={formData.order} onChange={e => setFormData({ ...formData, order: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
                                     </div>
-                                    <div className="flex items-center pt-5">
-                                        <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                                            <input type="checkbox" className="accent-primary" checked={formData.isActive} onChange={e => setFormData({ ...formData, isActive: e.target.checked })} />
-                                            Идэвхтэй харуулах
-                                        </label>
-                                    </div>
+                                </div>
+                                <div className="flex items-center pt-1">
+                                    <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                                        <input type="checkbox" className="accent-primary" checked={formData.isActive} onChange={e => setFormData({ ...formData, isActive: e.target.checked })} />
+                                        Идэвхтэй харуулах
+                                    </label>
                                 </div>
                             </form>
                         </div>
