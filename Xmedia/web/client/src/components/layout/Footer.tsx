@@ -2,14 +2,14 @@ import Link from "next/link";
 
 export function Footer() {
     return (
-        <div className="fixed bottom-4 left-4 z-50">
+        <div className="fixed bottom-4 md:bottom-5 left-1/2 -translate-x-1/2 z-50 text-center w-full">
             <Link
                 href="https://www.orgilmedia.mn/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] sm:text-xs font-bold text-white/40 tracking-widest drop-shadow-md hover:text-white/80 transition-colors duration-300"
+                className="text-[10px] sm:text-[11px] font-medium text-black tracking-[0.2em] hover:opacity-70 transition-opacity duration-300 pointer-events-auto"
             >
-                POWERED BY ORGILMEDIA
+                POWERED BY <strong className="font-extrabold">ORGIL</strong>MEDIA
             </Link>
         </div>
     );

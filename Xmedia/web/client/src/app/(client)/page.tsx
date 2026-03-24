@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Radio, Image, Film, Package, Mic, MonitorPlay } from "lucide-react";
+import { Camera, Radio, Image, Film, Package, Mic, MonitorPlay, Video } from "lucide-react";
 
 const IconMap: Record<string, any> = {
-  Camera, Radio, Image, Film, Package, Mic, MonitorPlay
+  Camera, Radio, Image, Film, Package, Mic, MonitorPlay, Video
 };
 import SnowEffect from "@/components/SnowEffect";
+import { cn } from "@/lib/utils";
 
 // Slide Data
 interface Slide {
@@ -100,13 +101,13 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="flex-1 flex flex-col pt-36 sm:pt-0 pb-8">
+    <div className="flex-1 flex flex-col pt-36 sm:pt-0 pb-8 bg-white min-h-screen">
       <SnowEffect enabled={snowEffect} />
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
       {slides.length > 0 && (
-        <div className="hidden sm:flex flex-col flex-1 overflow-hidden relative">
-          {/* Background Slider - Moved up to take full flex-1 container space */}
-          <div className="absolute inset-0 z-0">
+        <div className="hidden sm:flex flex-col relative px-4 sm:px-6 lg:px-8 pt-24 pb-0 max-w-[1600px] mx-auto w-full flex-1 min-h-[93vh]">
+          {/* Background Slider Container */}
+          <div className="absolute inset-x-4 top-24 bottom-16 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[40px] overflow-hidden shadow-2xl">
             <AnimatePresence mode="popLayout">
               <motion.div
                 key={slides[currentSlide].id}
@@ -134,16 +135,14 @@ export default function Home() {
                     style={{ transform: "scale(1.01)" }}
                   />
                 )}
-                {/* Added a smoother gradient fade into the background color at the bottom */}
-                <div className="absolute top-2/3 bottom-0 left-0 right-0 bg-gradient-to-b from-transparent via-background/40 to-background" />
-                {/* Extra bottom gradient for absolute seamless transition */}
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent" />
+                {/* Subtle overlay to make text readable */}
+                <div className="absolute inset-0 bg-black/30" />
               </motion.div>
             </AnimatePresence>
           </div>
 
-          <section className="relative flex-1 flex flex-col items-start justify-center pb-12 md:pb-20 overflow-hidden z-10 w-full">
-            <div className="container relative z-10 flex flex-col items-start text-left px-4 mt-20 md:mt-32">
+          <section className="relative flex-1 flex flex-col items-start justify-center pb-20 md:pb-28 z-10 w-full h-full">
+            <div className="container relative z-10 flex flex-col items-start text-left px-4 mt-20 md:mt-24">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={slides[currentSlide].id}
@@ -178,11 +177,7 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                   >
-                    <Link href={slides[currentSlide].buttonLink || "/studios"}>
-                      <button className="bg-rose-600 hover:bg-rose-700 text-white px-10 py-4 rounded-3xl font-bold text-lg transition-all shadow-2xl">
-                        Захиалах
-                      </button>
-                    </Link>
+                    
                   </motion.div>
                 </motion.div>
               </AnimatePresence>
@@ -191,47 +186,46 @@ export default function Home() {
           </section>
 
           {/* Slider Indicators — positioned just above cards */}
-          <div className="relative z-30 flex justify-center gap-3 -mt-4 mb-14">
+          <div className="relative z-30 flex justify-center gap-3 mt-auto mb-40 lg:mb-44">
             {slides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${index === currentSlide ? "w-12 bg-rose-600" : "w-6 bg-white/30 hover:bg-white/50"}`}
+                className={`h-1.5 rounded-full transition-all duration-300 shadow-xl ${index === currentSlide ? "w-12 bg-rose-600" : "w-6 bg-white/70 hover:bg-white"}`}
               />
             ))}
           </div>
         </div>
       )}
 
-      {/* Services Section - Smoothly overlaps with the hero section */}
-      <section className="relative z-20 pb-4 sm:pb-8 flex sm:block items-center -mt-8 sm:-mt-12 backdrop-blur-sm">
-        <div className="container mx-auto px-4 w-full">
+      {/* Services Section - Overlaps exactly half of its height over the image */}
+      <section className="relative z-20 flex items-center -mt-32">
+        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto pb-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="w-full max-w-5xl mx-auto flex flex-wrap justify-center gap-3 mt-0 sm:gap-4"
+            className="w-full flex flex-wrap lg:flex-nowrap justify-center gap-3 sm:gap-4 lg:gap-5"
           >
             {(homeCards.length > 0 ? homeCards : [
-              { icon: 'Camera', label: "Студио", desc: "Мэргэжлийн зураг авалт", href: "/studios" },
-              { icon: 'Radio', label: "Шууд дамжуулалт", desc: "Онлайн live streaming", href: "/livestream" },
-              { icon: 'Image', label: "Зураглаач", desc: "Гэрэл зурагчны үйлчилгээ", href: "/photographers" },
-              { icon: 'Film', label: "Эдит", desc: "Видео эдит & монтаж", href: "/video-editing" },
-              { icon: 'Package', label: "Багц", desc: "Хамгийн сайн саналууд", href: "/bundles" },
+              { icon: 'Camera', label: "СТУДИ ТҮРЭЭС", href: "/studios" },
+              { icon: 'Video', label: "ЗУРАГЧИН &\nЗУРАГЛААЧ", href: "/photographers" },
+              { icon: 'MonitorPlay', label: "ШУУД\nДАМЖУУЛАЛТ", href: "/livestream" },
+              { icon: 'Film', label: "ВИДЕО &\nФОТО ЭДИТ", href: "/video-editing" },
+              { icon: 'Package', label: "БАГЦ ҮЙЛЧИЛГЭЭ", href: "/bundles" },
             ]).map((card, idx) => {
               const Icon = IconMap[card.icon || 'Camera'] || Camera;
               return (
                 <Link
                   key={idx}
                   href={card.href || "#"}
-                  className="w-[calc(50%-0.375rem)] md:w-auto md:flex-1 min-h-[110px] group flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-4 sm:p-4 rounded-2xl bg-muted/30 border border-border hover:bg-muted/50 hover:border-rose-600/40 transition-all duration-300 transform translate-y-4"
+                  className="w-[calc(50%-0.6rem)] lg:flex-1 lg:max-w-[200px] h-[120px] sm:h-[128px] group flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-[24px] bg-[#111] hover:bg-[#1A1A1A] transition-all duration-300 shadow-2xl"
                 >
-                  <div className="w-10 h-10 flex items-center justify-center rounded-full bg-rose-600/10 group-hover:bg-rose-600/20 transition-colors duration-300 mb-0.5">
-                    <Icon className="w-5 h-5 text-rose-600" />
-                  </div>
-                  <p className="text-foreground text-sm font-semibold text-center">{card.label}</p>
-                  <p className="text-muted-foreground text-xs text-center leading-snug">{card.desc}</p>
+                  <Icon strokeWidth={1.5} className="w-7 h-7 text-white/80 group-hover:text-white transition-colors" />
+                  <p className="text-white font-bold text-[11px] sm:text-xs text-center leading-tight whitespace-pre-line tracking-wide">
+                    {card.label}
+                  </p>
                 </Link>
               );
             })}

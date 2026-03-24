@@ -61,16 +61,18 @@ export function Header() {
     return (
         <>
             {/* ── Main Header Bar ── */}
-            <motion.header
-                initial={{ y: -100 }}
-                animate={{ y: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className={cn(
-                    "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300",
-                    isScrolled ? "bg-black/90 backdrop-blur-md border-b border-white/5 py-3" : "bg-black/30 backdrop-blur-sm py-5"
-                )}
-            >
-                <div className="container flex h-14 items-center justify-between">
+            <div className="fixed top-4 left-0 right-0 z-50 w-full flex justify-center pointer-events-none">
+                <div className="w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 relative flex justify-center">
+                    <motion.header
+                        initial={{ y: -100 }}
+                        animate={{ y: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className={cn(
+                            "w-full transition-all duration-300 rounded-[40px] pointer-events-auto",
+                            isScrolled ? "bg-black/95 backdrop-blur-md shadow-lg py-2" : "bg-black py-2"
+                        )}
+                    >
+                        <div className="px-6 flex h-14 items-center justify-between w-full">
                     {/* Logo */}
                     <div className="flex-1 flex justify-start">
                         <Link href="/" className="hover:opacity-90 transition-opacity">
@@ -86,30 +88,13 @@ export function Header() {
                     </div>
 
                     {/* Desktop: Navigation links */}
-                    <div className="hidden lg:flex justify-center items-center gap-8">
-                        {mainNavItems.map((item) => {
-                            const isActive = pathname === item.href;
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="relative px-1 py-2 text-sm font-medium transition-all duration-200 text-white/80 hover:text-white"
-                                >
-                                    {item.label}
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="activeNav"
-                                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-rose-600"
-                                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                                        />
-                                    )}
-                                </Link>
-                            );
-                        })}
-
+                    <div className="hidden lg:flex justify-center items-center gap-10">
+                        <Link href="/taniltsuulga.pdf" target="_blank" className="text-white text-[13px] font-bold tracking-widest hover:text-[#DF1C54] transition-colors uppercase">
+                            Танилцуулга
+                        </Link>
                         <ContactModal
                             trigger={
-                                <button className="relative px-1 py-2 text-sm font-medium transition-all duration-200 text-white/80 hover:text-white">
+                                <button className="text-white text-[13px] font-bold tracking-widest hover:text-[#DF1C54] transition-colors uppercase">
                                     Холбоо барих
                                 </button>
                             }
@@ -117,17 +102,20 @@ export function Header() {
                     </div>
 
                     {/* Desktop: right buttons */}
-                    <div className="hidden lg:flex flex-1 justify-end items-center gap-4">
+                    <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
                         <CartDrawer />
+                        <a href="tel:95905686" className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#333] transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        </a>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8">
-                                    <MoreHorizontal className="w-5 h-5" />
-                                </Button>
+                                <button className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#333] transition-colors">
+                                    <Menu className="w-5 h-5" />
+                                </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-52 bg-black/95 border-white/10 text-white" align="end">
-                                {moreNavItems.map((item) => (
-                                    <DropdownMenuItem key={item.href} asChild>
+                            <DropdownMenuContent className="w-52 bg-black/95 border-white/10 p-2 text-white" align="end">
+                                {navItems.map((item) => (
+                                    <DropdownMenuItem key={item.href} asChild className="mb-1 rounded-md">
                                         <Link href={item.href} className="w-full cursor-pointer hover:bg-white/10">
                                             {item.label}
                                         </Link>
@@ -149,14 +137,14 @@ export function Header() {
                     </div>
 
                     {/* Mobile hamburger */}
-                    <div className="flex items-center justify-end gap-2 lg:hidden flex-1">
+                    <div className="flex items-center justify-end gap-3 lg:hidden flex-1">
                         <CartDrawer />
                         <Sheet open={isOpen} onOpenChange={setIsOpen}>
                             <SheetTrigger asChild>
-                                <Button variant="ghost" size="icon" className="shrink-0 text-white hover:bg-white/10">
-                                    <Menu className="h-6 w-6" />
+                                <button className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#333] transition-colors shrink-0">
+                                    <Menu className="w-5 h-5" />
                                     <span className="sr-only">Toggle navigation menu</span>
-                                </Button>
+                                </button>
                             </SheetTrigger>
                             <SheetContent side="right">
                                 <SheetHeader>
@@ -231,6 +219,8 @@ export function Header() {
                     </div>
                 </div>
             </motion.header>
+            </div>
+            </div>
 
             {/* Modals outside of header boundary */}
             <OrderHistoryModal isOpen={isOrderHistoryOpen} onClose={() => setIsOrderHistoryOpen(false)} />
