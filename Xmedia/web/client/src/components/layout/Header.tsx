@@ -62,7 +62,7 @@ export function Header() {
         <>
             {/* ── Main Header Bar ── */}
             <div className="fixed top-4 left-0 right-0 z-50 w-full pointer-events-none">
-                <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative">
+                <div className="w-full max-w-[2560px] mx-auto px-4 sm:px-6 lg:px-8 relative">
                     <motion.header
                         initial={{ y: -100 }}
                         animate={{ y: 0 }}

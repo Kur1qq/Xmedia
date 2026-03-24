@@ -101,11 +101,11 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="flex-1 flex flex-col pt-36 sm:pt-0 pb-8 bg-white min-h-screen">
+    <div className="flex-1 flex flex-col pt-36 sm:pt-0 bg-white sm:h-screen sm:overflow-hidden">
       <SnowEffect enabled={snowEffect} />
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
       {slides.length > 0 && (
-        <div className="hidden sm:flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[1600px] mx-auto w-full flex-1 min-h-[95vh]">
+        <div className="hidden sm:flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full flex-1">
           {/* Background Slider Container */}
           <div className="absolute inset-x-4 top-20 bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[40px] overflow-hidden shadow-2xl">
             <AnimatePresence mode="popLayout">
@@ -141,7 +141,7 @@ export default function Home() {
             </AnimatePresence>
           </div>
 
-          <section className="relative flex-1 flex flex-col items-start justify-center pb-20 md:pb-28 z-10 w-full h-full">
+          <section className="relative flex-1 flex flex-col items-start justify-center pb-20 md:pb-28 z-10 w-full">
             <div className="container relative z-10 flex flex-col items-start text-left px-4 mt-20 md:mt-24">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -177,7 +177,7 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                   >
-                    
+
                   </motion.div>
                 </motion.div>
               </AnimatePresence>
@@ -186,7 +186,7 @@ export default function Home() {
           </section>
 
           {/* Slider Indicators — positioned just above cards */}
-          <div className="relative z-30 flex justify-center gap-3 mt-auto mb-40 lg:mb-44">
+          <div className="absolute z-30 flex justify-center gap-3 inset-x-0 bottom-40 lg:bottom-44">
             {slides.map((_, index) => (
               <button
                 key={index}
@@ -199,8 +199,8 @@ export default function Home() {
       )}
 
       {/* Services Section - Overlaps exactly half of its height over the image */}
-      <section className="relative z-20 flex items-center -mt-32">
-        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto pb-4">
+      <section className="relative z-20 flex items-center -mt-[98px] sm:-mt-[103px]">
+        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[2560px] mx-auto pb-16 sm:pb-8 lg:pb-12 xl:pb-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -220,9 +220,9 @@ export default function Home() {
                 <Link
                   key={idx}
                   href={card.href || "#"}
-                  className="w-[calc(50%-0.6rem)] lg:flex-1 lg:max-w-[200px] h-[120px] sm:h-[128px] group flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-[24px] bg-[#111] hover:bg-[#1A1A1A] transition-all duration-300 shadow-2xl"
+                  className="w-[calc(50%-0.6rem)] lg:flex-1 lg:max-w-[220px] h-[100px] sm:h-[110px] group flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-[20px] bg-[#111] hover:bg-[#1A1A1A] transition-all duration-300 shadow-2xl"
                 >
-                  <Icon strokeWidth={1.5} className="w-7 h-7 text-white/80 group-hover:text-white transition-colors" />
+                  <Icon strokeWidth={1.5} className="w-6 h-6 text-white/80 group-hover:text-white transition-colors" />
                   <p className="text-white font-bold text-[11px] sm:text-xs text-center leading-tight whitespace-pre-line tracking-wide">
                     {card.label}
                   </p>

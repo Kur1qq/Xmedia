@@ -1,6 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
+    const pathname = usePathname();
+
+    if (pathname !== "/") return null;
+
     return (
         <div className="fixed bottom-4 md:bottom-5 left-1/2 -translate-x-1/2 z-50 text-center w-full">
             <Link
