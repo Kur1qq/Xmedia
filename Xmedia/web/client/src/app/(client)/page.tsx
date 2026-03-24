@@ -105,9 +105,9 @@ export default function Home() {
       <SnowEffect enabled={snowEffect} />
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
       {slides.length > 0 && (
-        <div className="hidden sm:flex flex-col relative px-4 sm:px-6 lg:px-8 pt-24 pb-0 max-w-[1600px] mx-auto w-full flex-1 min-h-[93vh]">
+        <div className="hidden sm:flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[1600px] mx-auto w-full flex-1 min-h-[95vh]">
           {/* Background Slider Container */}
-          <div className="absolute inset-x-4 top-24 bottom-16 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[40px] overflow-hidden shadow-2xl">
+          <div className="absolute inset-x-4 top-20 bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[40px] overflow-hidden shadow-2xl">
             <AnimatePresence mode="popLayout">
               <motion.div
                 key={slides[currentSlide].id}

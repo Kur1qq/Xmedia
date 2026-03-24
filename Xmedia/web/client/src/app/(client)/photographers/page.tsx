@@ -398,8 +398,11 @@ export default function PhotographersPage() {
                                                             )}
 
                                                             {availablePackages.length > 0 && !isDroneBattery && (
-                                                                <div>
-                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                <div className="mb-4 w-full">
+                                                                    <h4 className="text-white font-semibold mb-2 flex items-center gap-2 text-sm">
+                                                                        Үнийн багцууд
+                                                                    </h4>
+                                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                                                         {availablePackages.map(pkg => {
                                                                             const isSelected = (currentPackage?.id === pkg.id) || (!currentPackage && availablePackages[0].id === pkg.id);
                                                                             return (

@@ -248,11 +248,11 @@ export default function VideoEditingPage() {
 
                                                 {/* Packages selection */}
                                                 {activeService.packages && activeService.packages.length > 0 && (
-                                                    <div className="mb-6 w-full mt-auto pt-4">
-                                                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                            Контентийн төрөл сонгох
+                                                    <div className="mb-4 w-full mt-auto pt-4">
+                                                        <h4 className="text-white font-semibold mb-2 flex items-center gap-2 text-sm">
+                                                            Үнийн багцууд
                                                         </h4>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                                             {activeService.packages.map((pkg) => {
                                                                 const currentSelectedPkg = selectedPackages[activeService.id] || activeService.packages![0];
                                                                 const isSelected = currentSelectedPkg.id === pkg.id;
