@@ -69,10 +69,10 @@ export function Header() {
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         className={cn(
                             "w-full transition-all duration-300 rounded-[40px] pointer-events-auto",
-                            isScrolled ? "bg-black/95 backdrop-blur-md shadow-lg py-2" : "bg-black py-2"
+                            isScrolled ? "bg-black/95 backdrop-blur-md shadow-lg py-1" : "bg-black py-1"
                         )}
                     >
-                        <div className="px-6 flex h-14 items-center justify-between w-full">
+                        <div className="px-6 flex h-12 items-center justify-between w-full">
                     {/* Logo */}
                     <div className="flex-1 flex justify-start">
                         <Link href="/" className="hover:opacity-90 transition-opacity">
@@ -81,7 +81,7 @@ export function Header() {
                                 alt="Xtudio logo"
                                 width={100}
                                 height={36}
-                                className="h-16 w-auto object-contain"
+                                className="h-10 w-auto object-contain"
                                 priority
                             />
                         </Link>
