@@ -268,8 +268,8 @@ export default function VideoEditingPage() {
                                                                             const title = pkg.priceLabel || pkg.subType?.name || "Үндсэн багц";
                                                                             return (
                                                                                 <>
-                                                                                    <p className="text-lg font-bold text-white mb-1">{title}</p>
-                                                                                    <p className="text-gray-400 font-bold mt-1 text-xs">{Number(pkg.price).toLocaleString()}₮</p>
+                                                                                    <p className="text-sm text-center font-bold text-white mb-1 leading-tight">{title}</p>
+                                                                                    <p className="text-gray-400 text-center font-bold mt-1 text-xs">{Number(pkg.price).toLocaleString()}₮</p>
                                                                                 </>
                                                                             );
                                                                         })()}
