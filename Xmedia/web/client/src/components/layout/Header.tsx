@@ -61,8 +61,8 @@ export function Header() {
     return (
         <>
             {/* ── Main Header Bar ── */}
-            <div className="fixed top-4 left-0 right-0 z-50 w-full flex justify-center pointer-events-none">
-                <div className="w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 relative flex justify-center">
+            <div className="fixed top-4 left-0 right-0 z-50 w-full pointer-events-none">
+                <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative">
                     <motion.header
                         initial={{ y: -100 }}
                         animate={{ y: 0 }}
