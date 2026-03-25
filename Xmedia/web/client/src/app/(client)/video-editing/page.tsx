@@ -77,6 +77,15 @@ export default function VideoEditingPage() {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (form.name || form.phone || form.email) {
+            const timer = setTimeout(() => {
+                saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [form.name, form.phone, form.email]);
+
     const activeService = services.find(s => s.id === activeServiceId);
     const currentPackage = activeService ? selectedPackages[activeService.id] : null;
 
@@ -87,7 +96,7 @@ export default function VideoEditingPage() {
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
         setIsBooking(false);
-        setForm(prev => ({ ...prev, date: undefined, notes: "", name: "", phone: "", email: "" }));
+        setForm(prev => ({ ...prev, date: undefined, notes: "" }));
     };
 
     const validateForm = (isBuyNow: boolean = false) => {
@@ -175,7 +184,7 @@ export default function VideoEditingPage() {
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, notes: "", name: "", phone: "", email: "" })); };
+    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, notes: "" })); };
 
     return (
         <div className="h-screen bg-black text-white relative overflow-hidden flex flex-col">

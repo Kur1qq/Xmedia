@@ -96,6 +96,15 @@ export default function StudiosPage() {
     }, [user]);
 
     useEffect(() => {
+        if (form.name || form.phone || form.email) {
+            const timer = setTimeout(() => {
+                saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [form.name, form.phone, form.email]);
+
+    useEffect(() => {
         if (!form.date || !activeStudio || !isBooking) { setBookedTimes([]); return; }
         setLoadingSlots(true);
         setForm(prev => ({ ...prev, time: "" }));
@@ -124,7 +133,7 @@ export default function StudiosPage() {
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
         setIsBooking(false);
-        setForm(prev => ({ ...prev, date: undefined, time: "", name: "", phone: "", email: "" }));
+        setForm(prev => ({ ...prev, date: undefined, time: "" }));
     };
 
     const validateForm = (isBuyNow: boolean = false) => {
@@ -211,7 +220,7 @@ export default function StudiosPage() {
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", name: "", phone: "", email: "" })); };
+    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "" })); };
 
     return (
         <div className="h-screen bg-black text-white relative overflow-hidden flex flex-col">

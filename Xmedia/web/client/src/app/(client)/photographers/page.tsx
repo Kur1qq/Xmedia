@@ -96,6 +96,15 @@ export default function PhotographersPage() {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (form.name || form.phone || form.email) {
+            const timer = setTimeout(() => {
+                saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [form.name, form.phone, form.email]);
+
     const activeService = services.find(s => s.id === activeServiceId);
     const currentPackage = activeService ? selectedPackages[activeService.id] : null;
 
@@ -135,7 +144,7 @@ export default function PhotographersPage() {
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
         setIsBooking(false);
-        setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", name: "", phone: "", email: "" }));
+        setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1" }));
     };
 
     const validateForm = (isBuyNow: boolean = false) => {
@@ -256,7 +265,7 @@ export default function PhotographersPage() {
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", name: "", phone: "", email: "" })); };
+    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1" })); };
 
     return (
         <div className="h-screen bg-black text-white relative overflow-hidden flex flex-col">

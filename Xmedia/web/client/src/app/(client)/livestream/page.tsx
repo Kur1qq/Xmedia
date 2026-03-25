@@ -100,6 +100,15 @@ export default function LivestreamPage() {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (form.name || form.phone || form.email) {
+            const timer = setTimeout(() => {
+                saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [form.name, form.phone, form.email]);
+
     // Fetch booked slots when date or selected service changes
     useEffect(() => {
         if (!form.date || !isBooking || !activeService) { setBookedTimes([]); return; }
@@ -203,12 +212,12 @@ export default function LivestreamPage() {
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "", name: "", phone: "", email: "" })); setShowCameras(false); };
+    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "" })); setShowCameras(false); };
 
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
         setIsBooking(false);
-        setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "", name: "", phone: "", email: "" }));
+        setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "" }));
         setShowCameras(false);
     }
 

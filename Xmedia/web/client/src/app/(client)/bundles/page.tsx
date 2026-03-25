@@ -77,6 +77,15 @@ export default function BundlesPage() {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (form.name || form.phone || form.email) {
+            const timer = setTimeout(() => {
+                saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [form.name, form.phone, form.email]);
+
     const activeBundle = bundles.find(b => b.id === activeBundleId);
 
     const validateForm = (isBuyNow: boolean = false) => {
@@ -177,13 +186,13 @@ export default function BundlesPage() {
 
     const closeBooking = () => {
         setIsBooking(false);
-        setForm(prev => ({ ...prev, date: undefined, name: "", phone: "", email: "" }));
+        setForm(prev => ({ ...prev, date: undefined }));
     };
 
     const handleTabChange = (id: number) => {
         setActiveBundleId(id);
         setIsBooking(false);
-        setForm(prev => ({ ...prev, date: undefined, name: "", phone: "", email: "" }));
+        setForm(prev => ({ ...prev, date: undefined }));
     };
 
     return (
