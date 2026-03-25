@@ -178,11 +178,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             include: { items: true }
         });
         if (dto.paymentType === 'invoice') {
-            this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }], new Date().toISOString().slice(0, 10), { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone }).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
-            if (dto.email) {
-                this.mailService.sendOrderConfirmationEmail(dto.email, booking.id, dto.name, total, 1)
-                    .catch(err => this.logger.error(`Failed to send confirmation email async: ${err.message}`));
-            }
+            this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: 1, unitPrice: total, totalPrice: total }], new Date().toISOString().slice(0, 10), { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone }).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             return { ...booking, checkoutUrl: null };
         }
         try {
@@ -207,7 +203,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
         }
         catch (error) {
-            this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: dto.duration, unitPrice: dto.unitPrice, totalPrice: total }], new Date().toISOString().slice(0, 10), { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone }).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
+            this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: 1, unitPrice: total, totalPrice: total }], new Date().toISOString().slice(0, 10), { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone }).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             return { ...booking, checkoutUrl: null };
         }
     }
@@ -282,15 +278,11 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (dto.paymentType === 'invoice') {
             const invoiceItems = createdBookings.map(b => ({
                 description: b.item.serviceName || b.item.serviceType,
-                quantity: b.item.duration,
-                unitPrice: b.item.unitPrice,
+                quantity: 1,
+                unitPrice: b.total,
                 totalPrice: b.total,
             }));
             this.sendInvoiceForBooking(firstBooking.id, dto.name, dto.email, dto.phone, invoiceItems, new Date().toISOString().slice(0, 10)).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
-            if (dto.email) {
-                this.mailService.sendOrderConfirmationEmail(dto.email, firstBooking.id, dto.name, totalAmount, createdBookings.length)
-                    .catch(err => this.logger.error(`Failed to send confirmation email async: ${err.message}`));
-            }
             return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
         try {
@@ -300,8 +292,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 serviceName: `Xmedia багц (${createdBookings.length} үйлчилгээ)`,
                 items: createdBookings.map(b => ({
                     name: b.item.serviceName || b.item.serviceType,
-                    amount: b.item.unitPrice,
-                    quantity: b.item.duration,
+                    amount: b.total,
+                    quantity: 1,
                 })),
                 quantity: 1,
                 customerEmail: dto.email,
@@ -323,8 +315,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
         catch (error) {
             const invoiceItems = createdBookings.map(b => ({
                 description: b.item.serviceName || b.item.serviceType,
-                quantity: b.item.duration,
-                unitPrice: b.item.unitPrice,
+                quantity: 1,
+                unitPrice: b.total,
                 totalPrice: b.total,
             }));
             this.sendInvoiceForBooking(firstBooking.id, dto.name, dto.email, dto.phone, invoiceItems, createdBookings[0]?.item.date || new Date().toISOString().slice(0, 10)).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));

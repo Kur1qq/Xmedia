@@ -125,10 +125,10 @@ export function CartDrawer() {
     return (<>
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <button className="relative w-10 h-10 rounded-full bg-[#DF1C54] flex items-center justify-center text-white hover:bg-[#c9184a] transition-colors shadow-lg shrink-0">
-                    <ShoppingCart className="w-5 h-5" />
+                <button className="relative w-9 h-9 rounded-full bg-[#DF1C54] flex items-center justify-center text-white hover:bg-[#c9184a] transition-colors shadow-lg shrink-0">
+                    <ShoppingCart className="w-[18px] h-[18px]" />
                     {items.length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-[#DF1C54] text-[10px] font-bold flex items-center justify-center rounded-full shadow-md">
+                        <span className="absolute -top-1 -right-1 w-[14px] h-[14px] bg-white text-[#DF1C54] text-[9px] font-bold flex items-center justify-center rounded-full shadow-md">
                             {items.length}
                         </span>
                     )}
