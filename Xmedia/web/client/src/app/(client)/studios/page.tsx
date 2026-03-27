@@ -60,6 +60,7 @@ export default function StudiosPage() {
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [calendarOpen, setCalendarOpen] = useState(false);
     const { addItem } = useCartStore();
 
     useEffect(() => {
@@ -68,7 +69,17 @@ export default function StudiosPage() {
             .then(data => {
                 const fetchedStudios = Array.isArray(data) ? data : data.data ?? data.items ?? [];
                 setStudios(fetchedStudios);
-                if (fetchedStudios.length > 0) setActiveServiceId(fetchedStudios[0].id);
+                if (fetchedStudios.length > 0) {
+                    setActiveServiceId(fetchedStudios[0].id);
+                    // Auto-select first package for each studio
+                    const initial: Record<number, StudioPackage> = {};
+                    fetchedStudios.forEach((s: Studio) => {
+                        if (s.packages && s.packages.length > 0) {
+                            initial[s.id] = s.packages[0];
+                        }
+                    });
+                    setSelectedPackages(initial);
+                }
             })
             .catch(() => toast.error("Студиудын мэдээлэл татахад алдаа гарлаа."))
             .finally(() => setLoading(false));
@@ -387,7 +398,7 @@ export default function StudiosPage() {
                                                         </div>
                                                     )}
 
-                                                    <Popover>
+                                                    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                                                         <PopoverTrigger asChild>
                                                             <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
                                                                 <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" />
@@ -395,7 +406,7 @@ export default function StudiosPage() {
                                                             </Button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-auto p-0 bg-[#111] border-white/10 z-[200]" align="start">
-                                                            <Calendar mode="single" selected={form.date} onSelect={d => setForm({ ...form, date: d })} className="bg-[#111] text-white" />
+                                                            <Calendar mode="single" selected={form.date} onSelect={d => { setForm({ ...form, date: d }); setCalendarOpen(false); }} className="bg-[#111] text-white" />
                                                         </PopoverContent>
                                                     </Popover>
                                                     <div>

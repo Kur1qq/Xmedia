@@ -25,6 +25,7 @@ interface Slide {
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<Slide[]>([]);
+  const [slidesLoading, setSlidesLoading] = useState(true);
   const [snowEffect, setSnowEffect] = useState(false);
   const [homeCards, setHomeCards] = useState<any[]>([]);
 
@@ -40,6 +41,8 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Failed to fetch slides", error);
+      } finally {
+        setSlidesLoading(false);
       }
     };
     fetchSlides();
@@ -104,7 +107,15 @@ export default function Home() {
     <div className="flex-1 flex flex-col pt-36 sm:pt-0 bg-white sm:h-screen sm:overflow-hidden">
       <SnowEffect enabled={snowEffect} />
       {/* Hero Section - Hidden on mobile, visible on sm and up */}
-      {slides.length > 0 && (
+      {slidesLoading ? (
+        <div className="hidden sm:flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full flex-1">
+          <div className="absolute inset-x-4 top-20 bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[40px] overflow-hidden shadow-2xl">
+            <div className="absolute inset-0 bg-[#111] animate-pulse">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
+            </div>
+          </div>
+        </div>
+      ) : slides.length > 0 && (
         <div className="hidden sm:flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full flex-1">
           {/* Background Slider Container */}
           <div className="absolute inset-x-4 top-20 bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[40px] overflow-hidden shadow-2xl">
@@ -158,7 +169,7 @@ export default function Home() {
                       <span>{slides[currentSlide].title} </span>
                     )}
                     {slides[currentSlide].highlight && (
-                      <span className="text-rose-600">{slides[currentSlide].highlight}</span>
+                      <span className="text-primary">{slides[currentSlide].highlight}</span>
                     )}
                     {slides[currentSlide].subTitle && (
                       <span> {slides[currentSlide].subTitle}</span>
@@ -220,10 +231,10 @@ export default function Home() {
                 <Link
                   key={idx}
                   href={card.href || "#"}
-                  className="w-[calc(50%-0.6rem)] lg:flex-1 lg:max-w-[220px] h-[100px] sm:h-[110px] group flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-[20px] bg-[#111] hover:bg-[#1A1A1A] transition-all duration-300 shadow-2xl"
+                  className="w-[calc(50%-0.6rem)] lg:flex-1 lg:max-w-[220px] h-[100px] sm:h-[110px] group flex flex-col items-center justify-center gap-3 p-3 sm:p-4 rounded-[20px] bg-[#111] hover:bg-[#1A1A1A] transition-all duration-300 shadow-2xl"
                 >
-                  <Icon strokeWidth={1.5} className="w-6 h-6 text-white/80 group-hover:text-white transition-colors" />
-                  <p className="text-white font-bold text-[11px] sm:text-xs text-center leading-tight whitespace-pre-line tracking-wide">
+                  <Icon strokeWidth={1.5} className="w-6 h-6 text-white/80 group-hover:text-[#DF1C54] transition-colors" />
+                  <p className="text-white font-medium text-[11px] sm:text-xs text-center leading-tight whitespace-pre-line tracking-wide">
                     {card.label}
                   </p>
                 </Link>

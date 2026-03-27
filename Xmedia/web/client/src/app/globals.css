@@ -67,7 +67,7 @@
   --popover: #303030;
   --popover-foreground: #C2C2C2;
 
-  --primary: #e11d48;
+  --primary: #DF1C54;
   --primary-foreground: #FFFFFF;
 
   --secondary: #303030;
@@ -94,12 +94,12 @@
 
   --sidebar: #303030;
   --sidebar-foreground: #C2C2C2;
-  --sidebar-primary: #e11d48;
+  --sidebar-primary: #DF1C54;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #000000;
   --sidebar-accent-foreground: #C2C2C2;
   --sidebar-border: #797979;
-  --sidebar-ring: #e11d48;
+  --sidebar-ring: #DF1C54;
 }
 
 .dark {
@@ -155,4 +155,9 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }

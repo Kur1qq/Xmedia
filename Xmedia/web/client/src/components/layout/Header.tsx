@@ -77,7 +77,7 @@ export function Header() {
                     <div className="flex-1 flex justify-start">
                         <Link href="/" className="hover:opacity-90 transition-opacity">
                             <Image
-                                src="/x logo.png"
+                                src="/x logo зөв өнгө.png"
                                 alt="Xtudio logo"
                                 width={100}
                                 height={36}
@@ -87,30 +87,19 @@ export function Header() {
                         </Link>
                     </div>
 
-                    {/* Desktop: Navigation links */}
-                    <div className="hidden lg:flex justify-center items-center gap-10">
-                        <Link href="/taniltsuulga.pdf" target="_blank" className="text-white text-[13px] font-bold tracking-widest hover:text-[#DF1C54] transition-colors uppercase">
-                            Танилцуулга
-                        </Link>
-                        <ContactModal
-                            trigger={
-                                <button className="text-white text-[13px] font-bold tracking-widest hover:text-[#DF1C54] transition-colors uppercase">
-                                    Холбоо барих
-                                </button>
-                            }
-                        />
-                    </div>
+                    {/* Desktop: Navigation links — ContactModal self-contains both nav items and anchors popover to them */}
+                    <ContactModal presentationUrl={presentationUrl} />
 
                     {/* Desktop: right buttons */}
                     <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
                         <CartDrawer />
-                        <a href="tel:95905686" className="w-9 h-9 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#333] transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        <a href="tel:95905686" className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#333] transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                         </a>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <button className="w-9 h-9 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#333] transition-colors">
-                                    <Menu className="w-[18px] h-[18px]" />
+                                <button className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#333] transition-colors">
+                                    <Menu className="w-4 h-4" />
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-52 bg-black/95 border-white/10 p-2 text-white" align="end">
@@ -141,8 +130,8 @@ export function Header() {
                         <CartDrawer />
                         <Sheet open={isOpen} onOpenChange={setIsOpen}>
                             <SheetTrigger asChild>
-                                <button className="w-9 h-9 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#333] transition-colors shrink-0">
-                                    <Menu className="w-[18px] h-[18px]" />
+                                <button className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#333] transition-colors shrink-0">
+                                    <Menu className="w-4 h-4" />
                                     <span className="sr-only">Toggle navigation menu</span>
                                 </button>
                             </SheetTrigger>

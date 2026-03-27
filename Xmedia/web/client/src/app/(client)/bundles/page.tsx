@@ -43,6 +43,7 @@ export default function BundlesPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [calendarOpen, setCalendarOpen] = useState(false);
     const [form, setForm] = useState({
         date: undefined as Date | undefined,
         name: "", phone: "", email: ""
@@ -345,7 +346,7 @@ export default function BundlesPage() {
 
                                                     <div>
                                                         <p className="text-sm text-gray-400 mb-2">Хэзээ ашиглах вэ? <span className="text-rose-600">*</span></p>
-                                                        <Popover>
+                                                        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                                                             <PopoverTrigger asChild>
                                                                 <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-12 rounded-xl", !form.date && "text-gray-500")}>
                                                                     <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" />
@@ -353,7 +354,7 @@ export default function BundlesPage() {
                                                                 </Button>
                                                             </PopoverTrigger>
                                                             <PopoverContent className="w-auto p-0 bg-[#111] border-white/10 z-[200]" align="start">
-                                                                <Calendar mode="single" selected={form.date} onSelect={d => setForm({ ...form, date: d })} className="bg-[#111] text-white" />
+                                                                <Calendar mode="single" selected={form.date} onSelect={d => { setForm({ ...form, date: d }); setCalendarOpen(false); }} className="bg-[#111] text-white" />
                                                             </PopoverContent>
                                                         </Popover>
                                                         <p className="text-xs text-gray-500 mt-2 italic">* Цагийн дэлгэрэнгүй хуваарийг манай баг холбогдож тохиролцох болно.</p>
