@@ -55,16 +55,28 @@ async function bootstrap() {
         fs.mkdirSync(uploadDir, { recursive: true });
     }
     app.use('/public', express.static((0, path_1.join)(process.cwd(), 'public')));
+    app.use((req, res, next) => {
+        res.header('Vary', 'Origin');
+        next();
+    });
+    const allowedOrigins = [
+        'https://xtudio.mn',
+        'https://www.xtudio.mn',
+        'https://admin.xtudio.mn',
+        'https://xtudio-six.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+    ];
     app.enableCors({
-        origin: [
-            'https://xtudio.mn',
-            'https://www.xtudio.mn',
-            'https://admin.xtudio.mn',
-            'https://xtudio-six.vercel.app',
-            'http://localhost:3000',
-            'http://localhost:3001',
-            'http://localhost:3002',
-        ],
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            }
+            else {
+                callback(null, false);
+            }
+        },
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
         credentials: true,
     });

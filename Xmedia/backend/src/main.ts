@@ -30,16 +30,30 @@ async function bootstrap() {
   // Serve static files from the public directory
   app.use('/public', express.static(join(process.cwd(), 'public')));
 
+  // Add middleware to properly handle CORS headers for caching
+  app.use((req, res, next) => {
+    res.header('Vary', 'Origin');
+    next();
+  });
+
+  const allowedOrigins = [
+    'https://xtudio.mn',
+    'https://www.xtudio.mn',
+    'https://admin.xtudio.mn',
+    'https://xtudio-six.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+  ];
+
   app.enableCors({
-    origin: [
-      'https://xtudio.mn',
-      'https://www.xtudio.mn',
-      'https://admin.xtudio.mn',
-      'https://xtudio-six.vercel.app',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-    ],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
