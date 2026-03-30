@@ -105,11 +105,11 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="flex-1 flex flex-col pt-0 bg-[#f5f5f5] sm:h-screen sm:overflow-hidden">
+    <div className="flex-1 flex flex-col pt-0 bg-[#f5f5f5] h-[100dvh] overflow-hidden">
       <SnowEffect enabled={snowEffect} />
       {/* Hero Section */}
       {slidesLoading ? (
-        <div className="flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full h-[300px] sm:h-auto sm:flex-1">
+        <div className="flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full flex-1 min-h-[150px]">
           <div className="absolute inset-x-4 top-20 bottom-0 sm:bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-2xl">
             <div className="absolute inset-0 bg-[#111] animate-pulse">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
@@ -117,7 +117,7 @@ export default function Home() {
           </div>
         </div>
       ) : slides.length > 0 && (
-        <div className="flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full h-[300px] sm:h-auto sm:flex-1">
+        <div className="flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full flex-1 min-h-[150px]">
           {/* Background Slider Container */}
           <div 
             className="absolute inset-x-4 top-20 bottom-0 sm:bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-2xl touch-pan-y select-none"
@@ -231,7 +231,7 @@ export default function Home() {
 
       {/* Services Section - Overlaps exactly half of its height over the image */}
       <section className="relative z-20 flex items-center mt-3 sm:-mt-[98px]">
-        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[2560px] mx-auto pb-28 sm:pb-8 lg:pb-12 xl:pb-16">
+        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[2560px] mx-auto pb-14 sm:pb-8 lg:pb-12 xl:pb-16 shrink-0">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
