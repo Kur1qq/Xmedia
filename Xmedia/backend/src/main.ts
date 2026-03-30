@@ -31,7 +31,15 @@ async function bootstrap() {
   app.use('/public', express.static(join(process.cwd(), 'public')));
 
   app.enableCors({
-    origin: true, // Allow ALL origins bypass
+    origin: [
+      'https://xtudio.mn',
+      'https://www.xtudio.mn',
+      'https://admin.xtudio.mn',
+      'https://xtudio-six.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
