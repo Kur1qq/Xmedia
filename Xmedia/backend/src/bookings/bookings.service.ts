@@ -696,7 +696,10 @@ export class BookingsService {
         const items = await this.prisma.bookingItem.findMany({
             where: {
                 ...serviceWhere,
-                booking: { status: { not: 'CANCELLED' } },
+                booking: {
+                    status: 'CONFIRMED',
+                    paymentStatus: 'PAID',
+                },
                 startTime: { not: null },
                 endTime: { not: null },
             },

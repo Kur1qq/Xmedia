@@ -71,6 +71,8 @@ export default function LivestreamPage() {
     };
     const [tierRange, setTierRange] = useState<string>("");
     const [showCameras, setShowCameras] = useState(false);
+    const [tierRangePopoverOpen, setTierRangePopoverOpen] = useState(false);
+    const [cameraPopoverOpen, setCameraPopoverOpen] = useState(false);
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -265,9 +267,13 @@ export default function LivestreamPage() {
         }
     }, [uniqueLabels, tierRange, activeService]);
 
-    const parseDuration = (label: string): number => {
-        const match = label.match(/-(\d+)/);
-        return match ? parseInt(match[1], 10) : 0;
+    // Parse "1-4" → { min: 1, max: 4 }; "4-8" → { min: 4, max: 8 }; "4" → { min: 1, max: 4 }
+    const parseRange = (label: string): { min: number; max: number } => {
+        const rangeMatch = label.match(/(\d+)-(\d+)/);
+        if (rangeMatch) return { min: parseInt(rangeMatch[1], 10), max: parseInt(rangeMatch[2], 10) };
+        const singleMatch = label.match(/(\d+)/);
+        const n = singleMatch ? parseInt(singleMatch[1], 10) : 0;
+        return { min: 1, max: n };
     };
 
     const matchingTiers = activeService?.priceTiers
@@ -395,7 +401,7 @@ export default function LivestreamPage() {
                                                                     <div className="px-2 py-0.5 text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center">
                                                                         Цаг сонгох
                                                                     </div>
-                                                                    <Popover>
+                                                                    <Popover open={tierRangePopoverOpen} onOpenChange={setTierRangePopoverOpen}>
                                                                         <PopoverTrigger asChild>
                                                                             <button
                                                                                 type="button"
@@ -417,6 +423,7 @@ export default function LivestreamPage() {
                                                                                             if (firstTier) {
                                                                                                 setForm(f => ({ ...f, tierId: firstTier.id.toString() }));
                                                                                             }
+                                                                                            setTierRangePopoverOpen(false);
                                                                                         }}
                                                                                         className={cn(
                                                                                             "w-full px-3 py-2 text-xs font-bold rounded-[6px] transition-all flex items-center justify-between",
@@ -439,7 +446,7 @@ export default function LivestreamPage() {
                                                                     <div className="px-2 py-0.5 text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center">
                                                                         Камер сонгох
                                                                     </div>
-                                                                    <Popover>
+                                                                    <Popover open={cameraPopoverOpen} onOpenChange={setCameraPopoverOpen}>
                                                                         <PopoverTrigger asChild>
                                                                             <button
                                                                                 type="button"
@@ -455,7 +462,10 @@ export default function LivestreamPage() {
                                                                                     <button
                                                                                         key={tier.id}
                                                                                         type="button"
-                                                                                        onClick={() => setForm(f => ({ ...f, tierId: tier.id.toString() }))}
+                                                                                        onClick={() => {
+                                                                                            setForm(f => ({ ...f, tierId: tier.id.toString() }));
+                                                                                            setCameraPopoverOpen(false);
+                                                                                        }}
                                                                                         className={cn(
                                                                                             "w-full px-3 py-2 text-xs font-bold rounded-[6px] transition-all flex items-center justify-between",
                                                                                             form.tierId === tier.id.toString()
@@ -537,20 +547,8 @@ export default function LivestreamPage() {
                                                                                 value={form.time}
                                                                                 onChange={e => {
                                                                                     const t = e.target.value;
-                                                                                    let et = form.endTime;
-                                                                                    let dur = calcDuration(t, et);
-
-                                                                                    const autoDur = parseDuration(tierRange);
-                                                                                    if (autoDur > 0 && t) {
-                                                                                        const [sh, sm] = t.split(":").map(Number);
-                                                                                        const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
-                                                                                        const endH = Math.floor(exactEndMins / 60);
-                                                                                        const endM = exactEndMins % 60;
-                                                                                        et = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
-                                                                                        dur = autoDur;
-                                                                                    }
-
-                                                                                    setForm({ ...form, time: t, endTime: et, duration: dur.toString() });
+                                                                                    // Clear end time when start changes so user picks fresh
+                                                                                    setForm({ ...form, time: t, endTime: "", duration: "1" });
                                                                                 }}
                                                                                 className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
                                                                             >
@@ -577,21 +575,20 @@ export default function LivestreamPage() {
                                                                                     if (!form.time) return false;
                                                                                     const [sh, sm] = form.time.split(":").map(Number);
                                                                                     const [th, tm] = t.split(":").map(Number);
-                                                                                    if (th === sh && tm === sm) return false;
-
-                                                                                    const autoDur = parseDuration(tierRange);
-                                                                                    if (autoDur > 0) {
-                                                                                        const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
-                                                                                        const thMins = th * 60 + tm;
-                                                                                        return thMins === exactEndMins;
-                                                                                    }
-
                                                                                     const startMins = sh * 60 + sm;
-                                                                                    let endMins = th * 60 + tm;
-                                                                                    if (endMins < startMins) endMins += 24 * 60; // Overnight
+                                                                                    let candidateMins = th * 60 + tm;
+                                                                                    if (candidateMins <= startMins) candidateMins += 24 * 60;
 
-                                                                                    // Check if any booked slot falls between start and end
-                                                                                    for (let m = startMins; m < endMins; m += 30) {
+                                                                                    const { min: minH, max: maxH } = parseRange(tierRange);
+
+                                                                                    // Candidate must be whole-hour intervals within [start+min, start+max]
+                                                                                    const diffMins = candidateMins - startMins;
+                                                                                    if (diffMins % 60 !== 0) return false; // only whole hours
+                                                                                    const diffHrs = diffMins / 60;
+                                                                                    if (diffHrs < minH || diffHrs > maxH) return false;
+
+                                                                                    // Check if any booked slot falls between start and this candidate end
+                                                                                    for (let m = startMins; m < startMins + diffMins; m += 30) {
                                                                                         const checkH = Math.floor(m / 60) % 24;
                                                                                         const checkM = m % 60;
                                                                                         const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
@@ -631,8 +628,8 @@ export default function LivestreamPage() {
                                                                         if (selectedTier) {
                                                                             const durationHrs = calcDuration(form.time, form.endTime);
                                                                             const tierLabel = selectedTier.label?.trim() || "";
-                                                                            if (durationHrs > parseDuration(tierLabel)) {
-                                                                                toast.error(`${tierLabel} багц сонгосон тул ${parseDuration(tierLabel)} цагаас илүү хугацаа сонгох боломжгүй.`);
+                                                                            if (durationHrs > parseRange(tierLabel).max) {
+                                                                                toast.error(`${tierLabel} багц сонгосон тул ${parseRange(tierLabel).max} цагаас илүү хугацаа сонгох боломжгүй.`);
                                                                                 return;
                                                                             }
                                                                         }
