@@ -110,14 +110,6 @@ export declare class EditServiceController {
             description: string | null;
             icon: string | null;
         };
-        mainType: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            description: string | null;
-            sortOrder: number;
-        };
         subType: {
             id: number;
             createdAt: Date;
@@ -127,6 +119,14 @@ export declare class EditServiceController {
             sortOrder: number;
             mainTypeId: number;
         } | null;
+        mainType: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            sortOrder: number;
+        };
     } & {
         id: number;
         createdAt: Date;
@@ -137,8 +137,8 @@ export declare class EditServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
-        mainTypeId: number;
         subTypeId: number | null;
+        mainTypeId: number;
     })[]>;
     findOne(id: string): Promise<{
         packages: ({
@@ -168,14 +168,6 @@ export declare class EditServiceController {
             description: string | null;
             icon: string | null;
         };
-        mainType: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            description: string | null;
-            sortOrder: number;
-        };
         subType: {
             id: number;
             createdAt: Date;
@@ -185,6 +177,14 @@ export declare class EditServiceController {
             sortOrder: number;
             mainTypeId: number;
         } | null;
+        mainType: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            sortOrder: number;
+        };
     } & {
         id: number;
         createdAt: Date;
@@ -195,8 +195,8 @@ export declare class EditServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
-        mainTypeId: number;
         subTypeId: number | null;
+        mainTypeId: number;
     }>;
     create(body: any, req: any): Promise<{
         packages: ({
@@ -226,14 +226,6 @@ export declare class EditServiceController {
             description: string | null;
             icon: string | null;
         };
-        mainType: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            description: string | null;
-            sortOrder: number;
-        };
         subType: {
             id: number;
             createdAt: Date;
@@ -243,6 +235,14 @@ export declare class EditServiceController {
             sortOrder: number;
             mainTypeId: number;
         } | null;
+        mainType: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            sortOrder: number;
+        };
     } & {
         id: number;
         createdAt: Date;
@@ -253,8 +253,8 @@ export declare class EditServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
-        mainTypeId: number;
         subTypeId: number | null;
+        mainTypeId: number;
     }>;
     update(id: string, body: any, req: any): Promise<{
         packages: ({
@@ -284,14 +284,6 @@ export declare class EditServiceController {
             description: string | null;
             icon: string | null;
         };
-        mainType: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            description: string | null;
-            sortOrder: number;
-        };
         subType: {
             id: number;
             createdAt: Date;
@@ -301,6 +293,14 @@ export declare class EditServiceController {
             sortOrder: number;
             mainTypeId: number;
         } | null;
+        mainType: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+            sortOrder: number;
+        };
     } & {
         id: number;
         createdAt: Date;
@@ -311,8 +311,8 @@ export declare class EditServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
-        mainTypeId: number;
         subTypeId: number | null;
+        mainTypeId: number;
     }>;
     remove(id: string, req: any): Promise<{
         id: number;
@@ -324,7 +324,7 @@ export declare class EditServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
-        mainTypeId: number;
         subTypeId: number | null;
+        mainTypeId: number;
     }>;
 }

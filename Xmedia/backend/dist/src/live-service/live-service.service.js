@@ -22,6 +22,8 @@ let LiveServiceService = class LiveServiceService {
             orderBy: { sortOrder: 'asc' },
             include: {
                 category: true,
+                serviceType: { include: { subTypes: { orderBy: { sortOrder: 'asc' } } } },
+                subType: true,
                 priceTiers: { orderBy: { cameraCount: 'asc' } },
                 equipments: { include: { equipment: true } },
             },
@@ -32,6 +34,8 @@ let LiveServiceService = class LiveServiceService {
             where: { id },
             include: {
                 category: true,
+                serviceType: { include: { subTypes: { orderBy: { sortOrder: 'asc' } } } },
+                subType: true,
                 priceTiers: { orderBy: { cameraCount: 'asc' } },
                 equipments: { include: { equipment: true } },
             },
@@ -41,11 +45,13 @@ let LiveServiceService = class LiveServiceService {
         return item;
     }
     async create(data) {
-        const { priceTiers, equipmentIds, categoryId, ...rest } = data;
+        const { priceTiers, equipmentIds, categoryId, serviceTypeId, subTypeId, ...rest } = data;
         return this.prisma.liveService.create({
             data: {
                 ...rest,
                 category: { connect: { id: categoryId } },
+                ...(serviceTypeId ? { serviceType: { connect: { id: serviceTypeId } } } : {}),
+                ...(subTypeId ? { subType: { connect: { id: subTypeId } } } : {}),
                 priceTiers: priceTiers?.length
                     ? { create: priceTiers.map((t) => ({ cameraCount: t.cameraCount, label: t.label || null, price: t.price })) }
                     : undefined,
@@ -55,6 +61,8 @@ let LiveServiceService = class LiveServiceService {
             },
             include: {
                 category: true,
+                serviceType: true,
+                subType: true,
                 priceTiers: { orderBy: { cameraCount: 'asc' } },
                 equipments: { include: { equipment: true } },
             },
@@ -62,7 +70,7 @@ let LiveServiceService = class LiveServiceService {
     }
     async update(id, data) {
         await this.findOne(id);
-        const { priceTiers, equipmentIds, categoryId, ...rest } = data;
+        const { priceTiers, equipmentIds, categoryId, serviceTypeId, subTypeId, ...rest } = data;
         await this.prisma.liveServiceCameraTier.deleteMany({ where: { liveServiceId: id } });
         await this.prisma.liveServiceEquipment.deleteMany({ where: { liveServiceId: id } });
         return this.prisma.liveService.update({
@@ -70,6 +78,8 @@ let LiveServiceService = class LiveServiceService {
             data: {
                 ...rest,
                 ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
+                serviceType: serviceTypeId ? { connect: { id: serviceTypeId } } : { disconnect: true },
+                subType: subTypeId ? { connect: { id: subTypeId } } : { disconnect: true },
                 priceTiers: priceTiers?.length
                     ? { create: priceTiers.map((t) => ({ cameraCount: t.cameraCount, label: t.label || null, price: t.price })) }
                     : undefined,
@@ -79,6 +89,8 @@ let LiveServiceService = class LiveServiceService {
             },
             include: {
                 category: true,
+                serviceType: true,
+                subType: true,
                 priceTiers: { orderBy: { cameraCount: 'asc' } },
                 equipments: { include: { equipment: true } },
             },

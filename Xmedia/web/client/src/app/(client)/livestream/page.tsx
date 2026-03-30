@@ -31,6 +31,12 @@ interface LiveEquipment {
     equipment: { name: string };
 }
 
+interface LiveServiceType {
+    id: number;
+    name: string;
+    subTypes?: { id: number; name: string }[];
+}
+
 interface LiveService {
     id: number;
     name: string;
@@ -40,6 +46,8 @@ interface LiveService {
     priceTiers?: CameraTier[];
     equipments?: LiveEquipment[];
     sortOrder?: number;
+    serviceType?: LiveServiceType | null;
+    subType?: { id: number; name: string } | null;
 }
 
 export default function LivestreamPage() {
@@ -49,6 +57,7 @@ export default function LivestreamPage() {
     const [loading, setLoading] = useState(true);
     const [activeServiceId, setActiveServiceId] = useState<number | null>(null);
     const [isBooking, setIsBooking] = useState(false);
+    const [selectedSubTypeIds, setSelectedSubTypeIds] = useState<Record<number, number>>({});
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", endTime: "", duration: "1", tierId: "", name: "", phone: "", email: "" });
 
@@ -74,15 +83,29 @@ export default function LivestreamPage() {
             .then(data => {
                 const fetchedServices = Array.isArray(data) ? data : data.data ?? data.items ?? [];
                 setServices(fetchedServices);
-                if (fetchedServices.length > 0) {
-                    setActiveServiceId(fetchedServices[0].id);
-                }
+                if (fetchedServices.length > 0) setActiveServiceId(fetchedServices[0].id);
             })
             .catch(() => toast.error("Мэдээлэл татахад алдаа гарлаа."))
             .finally(() => setLoading(false));
     }, []);
 
     const activeService = services.find(s => s.id === activeServiceId);
+    
+    // Derived subTypes for the active service
+    const activeSubTypes = activeService?.serviceType?.subTypes || [];
+    let activeSubTypeId = activeService ? selectedSubTypeIds[activeService.id] : null;
+    if (activeSubTypes.length > 0 && !activeSubTypeId) {
+        activeSubTypeId = activeSubTypes[0].id;
+    }
+
+    const getFinalServiceName = () => {
+        if (!activeService) return "";
+        if (activeSubTypeId && activeSubTypes.length > 0) {
+            const stName = activeSubTypes.find(st => st.id === activeSubTypeId)?.name;
+            if (stName) return `${activeService.name} - ${stName}`;
+        }
+        return activeService.name;
+    };
 
     useEffect(() => {
         if (user) {
@@ -152,7 +175,7 @@ export default function LivestreamPage() {
         addItem({
             serviceType: "LIVE_SERVICE",
             serviceId: activeService.id,
-            serviceName: activeService.name,
+            serviceName: getFinalServiceName(),
             date: format(form.date!, "yyyy-MM-dd"),
             time: form.time,
             duration: durationHrs,
@@ -184,7 +207,7 @@ export default function LivestreamPage() {
                 duration: durationHrs,
                 serviceType: "LIVE_SERVICE", serviceId: activeService.id,
                 unitPrice,
-                serviceName: activeService.name,
+                serviceName: getFinalServiceName(),
                 paymentType,
             };
             if (user && user.id) payload.userId = parseInt(user.id, 10);
@@ -220,7 +243,7 @@ export default function LivestreamPage() {
         setIsBooking(false);
         setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1", tierId: "" }));
         setShowCameras(false);
-    }
+    };
 
     const getStartingPrice = (svc: LiveService) => {
         if (!svc.priceTiers || svc.priceTiers.length === 0) return 0;
@@ -337,6 +360,29 @@ export default function LivestreamPage() {
                                                                         </li>
                                                                     ))}
                                                                 </ul>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Content type selection */}
+                                                    {activeSubTypes.length > 0 && (
+                                                        <div className="mb-8 mt-6">
+                                                            <h3 className="text-base font-bold text-white mb-4">Контентийн төрөл сонгох</h3>
+                                                            <div className="flex flex-wrap gap-2.5">
+                                                                {activeSubTypes.map(st => (
+                                                                    <button
+                                                                        key={st.id}
+                                                                        onClick={() => setSelectedSubTypeIds(prev => ({ ...prev, [activeService.id]: st.id }))}
+                                                                        className={cn(
+                                                                            "px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300",
+                                                                            activeSubTypeId === st.id
+                                                                                ? "bg-rose-600 text-white shadow-[0_0_15px_rgba(225,29,72,0.4)]"
+                                                                                : "bg-[#141414] border border-white/5 text-gray-400 hover:bg-white/5 hover:text-white"
+                                                                        )}
+                                                                    >
+                                                                        {st.name}
+                                                                    </button>
+                                                                ))}
                                                             </div>
                                                         </div>
                                                     )}

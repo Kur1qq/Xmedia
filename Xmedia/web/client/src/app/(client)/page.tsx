@@ -104,21 +104,21 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="flex-1 flex flex-col pt-36 sm:pt-0 bg-white sm:h-screen sm:overflow-hidden">
+    <div className="flex-1 flex flex-col pt-0 bg-[#f5f5f5] sm:h-screen sm:overflow-hidden">
       <SnowEffect enabled={snowEffect} />
-      {/* Hero Section - Hidden on mobile, visible on sm and up */}
+      {/* Hero Section */}
       {slidesLoading ? (
-        <div className="hidden sm:flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full flex-1">
-          <div className="absolute inset-x-4 top-20 bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[40px] overflow-hidden shadow-2xl">
+        <div className="flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full h-[300px] sm:h-auto sm:flex-1">
+          <div className="absolute inset-x-4 top-20 bottom-0 sm:bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-2xl">
             <div className="absolute inset-0 bg-[#111] animate-pulse">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
             </div>
           </div>
         </div>
       ) : slides.length > 0 && (
-        <div className="hidden sm:flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full flex-1">
+        <div className="flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full h-[300px] sm:h-auto sm:flex-1">
           {/* Background Slider Container */}
-          <div className="absolute inset-x-4 top-20 bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[40px] overflow-hidden shadow-2xl">
+          <div className="absolute inset-x-4 top-20 bottom-0 sm:bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-2xl">
             <AnimatePresence mode="popLayout">
               <motion.div
                 key={slides[currentSlide].id}
@@ -152,7 +152,7 @@ export default function Home() {
             </AnimatePresence>
           </div>
 
-          <section className="relative flex-1 flex flex-col items-start justify-center pb-20 md:pb-28 z-10 w-full">
+          <section className="relative flex-1 hidden sm:flex flex-col items-start justify-center pb-20 md:pb-28 z-10 w-full">
             <div className="container relative z-10 flex flex-col items-start text-left px-4 mt-20 md:mt-24">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -197,7 +197,7 @@ export default function Home() {
           </section>
 
           {/* Slider Indicators — positioned just above cards */}
-          <div className="absolute z-30 flex justify-center gap-3 inset-x-0 bottom-40 lg:bottom-44">
+          <div className="absolute z-30 hidden sm:flex justify-center gap-3 inset-x-0 bottom-40 lg:bottom-44">
             {slides.map((_, index) => (
               <button
                 key={index}
@@ -210,7 +210,7 @@ export default function Home() {
       )}
 
       {/* Services Section - Overlaps exactly half of its height over the image */}
-      <section className="relative z-20 flex items-center mt-0 sm:-mt-[98px]">
+      <section className="relative z-20 flex items-center mt-3 sm:-mt-[98px]">
         <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[2560px] mx-auto pb-16 sm:pb-8 lg:pb-12 xl:pb-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

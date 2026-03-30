@@ -178,6 +178,7 @@ model LiveService {
   id            Int     @id @default(autoincrement())
   categoryId    Int     @map("category_id")
   serviceTypeId Int?    @map("service_type_id")
+  subTypeId     Int?    @map("sub_type_id")
   name          String  @db.VarChar(200)
   description   String? @db.Text
   image         String? @db.Text
@@ -190,6 +191,7 @@ model LiveService {
 
   category     ServiceCategory         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   serviceType  LiveServiceType?        @relation(fields: [serviceTypeId], references: [id], onDelete: SetNull)
+  subType      LiveServiceSubType?     @relation(fields: [subTypeId], references: [id], onDelete: SetNull)
   priceTiers   LiveServiceCameraTier[]
   equipments   LiveServiceEquipment[]
   bookingItems BookingItem[] // FIX: back-relation
@@ -208,8 +210,25 @@ model LiveServiceType {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
   services LiveService[]
+  subTypes LiveServiceSubType[]
 
   @@map("live_service_types")
+}
+
+model LiveServiceSubType {
+  id          Int      @id @default(autoincrement())
+  mainTypeId  Int      @map("main_type_id")
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  mainType LiveServiceType @relation(fields: [mainTypeId], references: [id], onDelete: Cascade)
+  services LiveService[]
+
+  @@map("live_service_sub_types")
 }
 
 

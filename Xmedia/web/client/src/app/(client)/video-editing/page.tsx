@@ -50,6 +50,7 @@ export default function VideoEditingPage() {
     const [isBooking, setIsBooking] = useState(false);
     const [selectedPackages, setSelectedPackages] = useState<Record<number, ServicePackage>>({});
     const [submitting, setSubmitting] = useState(false);
+    const [quantity, setQuantity] = useState(1);
     const [form, setForm] = useState({ date: undefined as Date | undefined, notes: "", name: "", phone: "", email: "" });
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [calendarOpen, setCalendarOpen] = useState(false);
@@ -97,6 +98,7 @@ export default function VideoEditingPage() {
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
         setIsBooking(false);
+        setQuantity(1);
         setForm(prev => ({ ...prev, date: undefined, notes: "" }));
     };
 
@@ -129,8 +131,8 @@ export default function VideoEditingPage() {
             serviceId: activeService.id,
             serviceName: activeService.name,
             date: format(form.date!, "yyyy-MM-dd"),
-            time: "09:00", // Defaulting to start of day since edit service doesn't mandate specific time slots
-            duration: 1, // Quantity of service packages
+            time: "09:00",
+            duration: quantity,
             unitPrice: Number(currentPackage ? currentPackage.price : 0),
         });
 
@@ -152,7 +154,7 @@ export default function VideoEditingPage() {
                 phone: form.phone,
                 email: form.email,
                 date: format(form.date!, "yyyy-MM-dd"), time: "09:00",
-                duration: 1,
+                duration: quantity,
                 serviceType: "EDIT_SERVICE", serviceId: activeService.id,
                 unitPrice: Number(currentPackage ? currentPackage.price : 0),
                 serviceName: activeService.name,
@@ -185,7 +187,7 @@ export default function VideoEditingPage() {
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, notes: "" })); };
+    const closeBooking = () => { setIsBooking(false); setQuantity(1); setForm(prev => ({ ...prev, date: undefined, notes: "" })); };
 
     return (
         <div className="h-screen bg-black text-white relative overflow-hidden flex flex-col">
@@ -291,14 +293,27 @@ export default function VideoEditingPage() {
                                                 )}
 
                                                 <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
-                                                    <div className="flex flex-col items-start md:items-center">
+                                                    <div className="flex flex-col items-start gap-1">
                                                         <p className="text-gray-500 text-[10px] uppercase tracking-wider">Нийт үнэ</p>
-                                                        <p className="text-2xl font-bold">
-                                                            {(() => {
-                                                                const thePkg = selectedPackages[activeService.id] || (activeService.packages && activeService.packages[0]);
-                                                                return thePkg ? `${Number(thePkg.price).toLocaleString()}₮` : 'Сонгоно уу';
-                                                            })()}
-                                                        </p>
+                                                        <div className="flex items-center gap-3">
+                                                            <p className="text-2xl font-bold">
+                                                                {(() => {
+                                                                    const thePkg = selectedPackages[activeService.id] || (activeService.packages && activeService.packages[0]);
+                                                                    return thePkg ? `${(Number(thePkg.price) * quantity).toLocaleString()}₮` : 'Сонгоно уу';
+                                                                })()}
+                                                            </p>
+                                                            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1">
+                                                                <button
+                                                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                                                    className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-all text-lg font-medium"
+                                                                >-</button>
+                                                                <span className="w-8 text-center font-bold text-sm">{quantity}ш</span>
+                                                                <button
+                                                                    onClick={() => setQuantity(quantity + 1)}
+                                                                    className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-all text-lg font-medium"
+                                                                >+</button>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <Button onClick={() => {
                                                         if (activeService.packages && activeService.packages.length > 0 && !selectedPackages[activeService.id]) {
@@ -338,8 +353,8 @@ export default function VideoEditingPage() {
                                                     </div>
 
                                                     <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
-                                                        <span className="text-gray-400 text-sm">Нийт:</span>
-                                                        <span className="text-xl font-bold text-rose-600">{((Number(selectedPackages[activeService.id]?.price || 0)) * parseInt("1")).toLocaleString()}₮</span>
+                                                        <span className="text-gray-400 text-sm">Нийт ({quantity}ш):</span>
+                                                        <span className="text-xl font-bold text-rose-600">{(Number(selectedPackages[activeService.id]?.price || 0) * quantity).toLocaleString()}₮</span>
                                                     </div>
                                                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                                         <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
@@ -370,7 +385,7 @@ export default function VideoEditingPage() {
                 onSelectQpay={() => { handleBuyNow("qpay"); }}
                 onSelectInvoice={() => { handleBuyNow("invoice"); }}
                 loading={submitting}
-                amount={currentPackage ? Number(currentPackage.price) : undefined}
+                amount={currentPackage ? Number(currentPackage.price) * quantity : undefined}
             />
         </div>
     );

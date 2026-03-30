@@ -17,6 +17,7 @@ import { LiveServiceModule } from './live-service/live-service.module';
 import { PhotographerServiceModule } from './photographer-service/photographer-service.module';
 import { PhotographerTypeModule } from './photographer-type/photographer-type.module';
 import { EditServiceModule } from './edit-service/edit-service.module';
+import { LiveServiceTypeModule } from './live-service-type/live-service-type.module';
 import { AdminModule } from './admin/admin.module';
 import { LogModule } from './log/log.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
@@ -41,6 +42,7 @@ import { SettingsModule } from './settings/settings.module';
     PhotographerServiceModule,
     PhotographerTypeModule,
     EditServiceModule,
+        LiveServiceTypeModule,
     AdminModule,
     PortfolioModule,
     HeroModule,

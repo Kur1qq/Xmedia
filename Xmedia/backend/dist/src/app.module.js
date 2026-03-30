@@ -25,6 +25,7 @@ const live_service_module_1 = require("./live-service/live-service.module");
 const photographer_service_module_1 = require("./photographer-service/photographer-service.module");
 const photographer_type_module_1 = require("./photographer-type/photographer-type.module");
 const edit_service_module_1 = require("./edit-service/edit-service.module");
+const live_service_type_module_1 = require("./live-service-type/live-service-type.module");
 const admin_module_1 = require("./admin/admin.module");
 const log_module_1 = require("./log/log.module");
 const portfolio_module_1 = require("./portfolio/portfolio.module");
@@ -52,6 +53,7 @@ exports.AppModule = AppModule = __decorate([
             photographer_service_module_1.PhotographerServiceModule,
             photographer_type_module_1.PhotographerTypeModule,
             edit_service_module_1.EditServiceModule,
+            live_service_type_module_1.LiveServiceTypeModule,
             admin_module_1.AdminModule,
             portfolio_module_1.PortfolioModule,
             hero_module_1.HeroModule,

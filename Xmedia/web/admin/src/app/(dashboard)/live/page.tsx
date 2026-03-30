@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Plus, X, Pencil, Trash2, Image as ImageIcon, Camera } from "lucide-react";
+import { Plus, X, Pencil, Trash2, Image as ImageIcon, Camera, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import * as Tabs from '@radix-ui/react-tabs';
 import { getToken } from "@/lib/auth";
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const tabCls = "px-5 h-[45px] flex items-center justify-center text-sm font-medium leading-none text-muted-foreground select-none hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary outline-none cursor-pointer transition-colors";
 
 interface CameraTier {
     id?: number;
@@ -17,25 +20,42 @@ export default function LivePage() {
     const [loading, setLoading] = useState(true);
 
     // --- CATEGORY STATE ---
-    const [categories, setCategories] = useState<any[] /* eslint-disable-line @typescript-eslint/no-explicit-any */>([]);
+    const [categories, setCategories] = useState<any[]>([]);/* eslint-disable-line @typescript-eslint/no-explicit-any */
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isSavingCategory, setIsSavingCategory] = useState(false);
-    const [editingCategory, setEditingCategory] = useState<any | null /* eslint-disable-line @typescript-eslint/no-explicit-any */>(null);
+    const [editingCategory, setEditingCategory] = useState<any | null>(null);/* eslint-disable-line @typescript-eslint/no-explicit-any */
     const [categoryFormData, setCategoryFormData] = useState({ name: "", description: "" });
 
+    // --- MAIN TYPE STATE ---
+    const [mainTypes, setMainTypes] = useState<any[]>([]);/* eslint-disable-line @typescript-eslint/no-explicit-any */
+    const [isMainTypeModalOpen, setIsMainTypeModalOpen] = useState(false);
+    const [isSavingMainType, setIsSavingMainType] = useState(false);
+    const [editingMainType, setEditingMainType] = useState<any | null>(null);/* eslint-disable-line @typescript-eslint/no-explicit-any */
+    const [mainTypeForm, setMainTypeForm] = useState({ name: "", description: "", sortOrder: "0" });
+    const [expandedMainTypes, setExpandedMainTypes] = useState<Record<number, boolean>>({});
+
+    // --- SUB TYPE STATE ---
+    const [isSubTypeModalOpen, setIsSubTypeModalOpen] = useState(false);
+    const [isSavingSubType, setIsSavingSubType] = useState(false);
+    const [editingSubType, setEditingSubType] = useState<any | null>(null);/* eslint-disable-line @typescript-eslint/no-explicit-any */
+    const [subTypeForm, setSubTypeForm] = useState({ name: "", description: "", sortOrder: "0", mainTypeId: "" });
+
     // --- LIVE SERVICE STATE ---
-    const [liveServices, setLiveServices] = useState<any[] /* eslint-disable-line @typescript-eslint/no-explicit-any */>([]);
-    const [equipments, setEquipments] = useState<any[] /* eslint-disable-line @typescript-eslint/no-explicit-any */>([]);
+    const [liveServices, setLiveServices] = useState<any[]>([]);/* eslint-disable-line @typescript-eslint/no-explicit-any */
+    const [equipments, setEquipments] = useState<any[]>([]);/* eslint-disable-line @typescript-eslint/no-explicit-any */
     const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
     const [isSavingService, setIsSavingService] = useState(false);
-    const [editingService, setEditingService] = useState<any | null /* eslint-disable-line @typescript-eslint/no-explicit-any */>(null);
+    const [editingService, setEditingService] = useState<any | null>(null);/* eslint-disable-line @typescript-eslint/no-explicit-any */
     const [serviceFormData, setServiceFormData] = useState({
-        name: "", categoryId: "", description: "", image: "", isActive: true,
+        name: "", categoryId: "", serviceTypeId: "", subTypeId: "", description: "", image: "", isActive: true,
         sortOrder: 0,
         equipmentIds: [] as number[],
         priceTiers: [] as CameraTier[],
         amenities: [] as string[],
     });
+
+    // Derived: sub-types filtered by selected main type
+    const filteredLiveSubTypes = mainTypes.find((m: any) => m.id === parseInt(serviceFormData.serviceTypeId))?.subTypes || [];/* eslint-disable-line @typescript-eslint/no-explicit-any */
 
     // Image Upload
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,14 +63,16 @@ export default function LivePage() {
 
     const fetchData = async () => {
         try {
-            const [resCategories, resServices, resEquipments] = await Promise.all([
-                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/categories`),
-                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/live-services`),
-                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/equipment`),
+            const [resCategories, resServices, resEquipments, resMainTypes] = await Promise.all([
+                fetch(`${API}/categories`),
+                fetch(`${API}/live-services`),
+                fetch(`${API}/equipment`),
+                fetch(`${API}/live-service-types/main`),
             ]);
             if (resCategories.ok) setCategories(await resCategories.json());
             if (resServices.ok) setLiveServices(await resServices.json());
             if (resEquipments.ok) setEquipments(await resEquipments.json());
+            if (resMainTypes.ok) setMainTypes(await resMainTypes.json());
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
@@ -67,7 +89,7 @@ export default function LivePage() {
         const fd = new FormData();
         fd.append('file', file);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/upload`, { method: 'POST', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: fd });
+            const res = await fetch(`${API}/upload`, { method: 'POST', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: fd });
             if (res.ok) {
                 const data = await res.json();
                 setServiceFormData(prev => ({ ...prev, image: data.url }));
@@ -91,7 +113,7 @@ export default function LivePage() {
         setIsSavingCategory(true);
         try {
             const method = editingCategory ? 'PATCH' : 'POST';
-            const url = editingCategory ? `${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/categories/${editingCategory.id}` : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/categories`;
+            const url = editingCategory ? `${API}/categories/${editingCategory.id}` : `${API}/categories`;
             const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(categoryFormData) });
             if (res.ok) { await fetchData(); setIsCategoryModalOpen(false); toast.success("Ангилал хадгалагдлаа"); }
             else toast.error("Алдаа гарлаа");
@@ -102,17 +124,73 @@ export default function LivePage() {
     const handleDeleteCategory = async (id: number) => {
         if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/categories/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${API}/categories/${id}`, { method: 'DELETE' });
             if (res.ok) { setCategories(categories.filter(c => c.id !== id)); toast.success("Ангилал устгагдлаа"); }
             else toast.error("Алдаа гарлаа.");
         } catch { toast.error("Сервертэй холбогдоход алдаа гарлаа."); }
     };
 
     // ==========================================
+    // MAIN TYPE ACTIONS
+    // ==========================================
+    const openMainTypeModal = (mt: any = null) => {/* eslint-disable-line @typescript-eslint/no-explicit-any */
+        setEditingMainType(mt);
+        setMainTypeForm({ name: mt?.name || "", description: mt?.description || "", sortOrder: mt?.sortOrder?.toString() || "0" });
+        setIsMainTypeModalOpen(true);
+    };
+    const saveMainType = async (e: React.FormEvent) => {
+        e.preventDefault(); setIsSavingMainType(true);
+        try {
+            const method = editingMainType ? 'PATCH' : 'POST';
+            const url = editingMainType ? `${API}/live-service-types/main/${editingMainType.id}` : `${API}/live-service-types/main`;
+            const payload = { name: mainTypeForm.name, description: mainTypeForm.description || undefined, sortOrder: parseInt(mainTypeForm.sortOrder) || 0 };
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: JSON.stringify(payload) });
+            if (res.ok) { await fetchData(); setIsMainTypeModalOpen(false); toast.success("Хадгалагдлаа"); }
+            else toast.error("Алдаа гарлаа");
+        } catch { toast.error("Сервертэй алдаа."); }
+        finally { setIsSavingMainType(false); }
+    };
+    const deleteMainType = async (id: number) => {
+        if (!window.confirm("Устгавал дагалдах дэд төрлүүд устгагдана. Итгэлтэй байна уу?")) return;
+        const res = await fetch(`${API}/live-service-types/main/${id}`, { method: 'DELETE', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) } });
+        if (res.ok) { await fetchData(); toast.success("Устгагдлаа"); }
+        else toast.error("Алдаа гарлаа.");
+    };
+
+    // ==========================================
+    // SUB TYPE ACTIONS
+    // ==========================================
+    const openSubTypeModal = (mainTypeId: number, st: any = null) => {/* eslint-disable-line @typescript-eslint/no-explicit-any */
+        setEditingSubType(st);
+        setSubTypeForm({ name: st?.name || "", description: st?.description || "", sortOrder: st?.sortOrder?.toString() || "0", mainTypeId: (st?.mainTypeId || mainTypeId).toString() });
+        setIsSubTypeModalOpen(true);
+    };
+    const saveSubType = async (e: React.FormEvent) => {
+        e.preventDefault(); setIsSavingSubType(true);
+        try {
+            const method = editingSubType ? 'PATCH' : 'POST';
+            const url = editingSubType ? `${API}/live-service-types/sub/${editingSubType.id}` : `${API}/live-service-types/sub`;
+            const payload = { name: subTypeForm.name, description: subTypeForm.description || undefined, sortOrder: parseInt(subTypeForm.sortOrder) || 0, mainTypeId: parseInt(subTypeForm.mainTypeId) };
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) }, body: JSON.stringify(payload) });
+            if (res.ok) { await fetchData(); setIsSubTypeModalOpen(false); toast.success("Хадгалагдлаа"); }
+            else toast.error("Алдаа гарлаа");
+        } catch { toast.error("Сервертэй алдаа."); }
+        finally { setIsSavingSubType(false); }
+    };
+    const deleteSubType = async (id: number) => {
+        if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
+        const res = await fetch(`${API}/live-service-types/sub/${id}`, { method: 'DELETE', headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) } });
+        if (res.ok) { await fetchData(); toast.success("Устгагдлаа"); }
+        else toast.error("Алдаа гарлаа.");
+    };
+
+    const toggleExpand = (id: number) => setExpandedMainTypes(prev => ({ ...prev, [id]: !prev[id] }));
+
+    // ==========================================
     // LIVE SERVICE ACTIONS
     // ==========================================
     const blankService = () => ({
-        name: "", categoryId: categories[0]?.id?.toString() || "", description: "", image: "", isActive: true,
+        name: "", categoryId: categories[0]?.id?.toString() || "", serviceTypeId: "", subTypeId: "", description: "", image: "", isActive: true,
         sortOrder: 0,
         equipmentIds: [] as number[],
         priceTiers: [{ cameraCount: 1, label: "1 камер", price: "" }] as CameraTier[],
@@ -123,7 +201,10 @@ export default function LivePage() {
         if (svc) {
             setEditingService(svc);
             setServiceFormData({
-                name: svc.name, categoryId: svc.categoryId?.toString() || "", description: svc.description || "",
+                name: svc.name, categoryId: svc.categoryId?.toString() || "",
+                serviceTypeId: svc.serviceTypeId?.toString() || "",
+                subTypeId: svc.subTypeId?.toString() || "",
+                description: svc.description || "",
                 image: svc.image || "", isActive: svc.isActive ?? true,
                 sortOrder: svc.sortOrder ?? 0,
                 amenities: svc.amenities || [],
@@ -174,11 +255,13 @@ export default function LivePage() {
         setIsSavingService(true);
         try {
             const method = editingService ? 'PATCH' : 'POST';
-            const url = editingService ? `${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/live-services/${editingService.id}` : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/live-services`;
+            const url = editingService ? `${API}/live-services/${editingService.id}` : `${API}/live-services`;
 
             const payload = {
                 name: serviceFormData.name,
                 categoryId: parseInt(serviceFormData.categoryId),
+                serviceTypeId: serviceFormData.serviceTypeId ? parseInt(serviceFormData.serviceTypeId) : undefined,
+                subTypeId: serviceFormData.subTypeId ? parseInt(serviceFormData.subTypeId) : undefined,
                 description: serviceFormData.description || undefined,
                 image: serviceFormData.image || undefined,
                 isActive: serviceFormData.isActive,
@@ -202,7 +285,7 @@ export default function LivePage() {
     const handleDeleteService = async (id: number) => {
         if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}`}/live-services/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${API}/live-services/${id}`, { method: 'DELETE' });
             if (res.ok) { setLiveServices(liveServices.filter(s => s.id !== id)); toast.success("Устгагдлаа"); }
             else toast.error("Алдаа гарлаа.");
         } catch { toast.error("Сервертэй холбогдоход алдаа гарлаа."); }
@@ -212,17 +295,14 @@ export default function LivePage() {
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold tracking-tight">Шууд дамжуулалт</h1>
-                <p className="text-muted-foreground mt-1">Шууд дамжуулалтын үйлчилгээ болон ангиллыг удирдах хэсэг.</p>
+                <p className="text-muted-foreground mt-1">Шууд дамжуулалтын үйлчилгээ, төрлүүд болон ангиллыг удирдах хэсэг.</p>
             </div>
 
             <Tabs.Root defaultValue="services" className="flex flex-col w-full">
                 <Tabs.List className="flex shrink-0 border-b border-border/50 bg-background" aria-label="Management Tabs">
-                    <Tabs.Trigger value="services" className="px-5 h-[45px] flex items-center justify-center text-sm font-medium leading-none text-muted-foreground select-none hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary outline-none cursor-pointer transition-colors">
-                        Шууд дамжуулалт
-                    </Tabs.Trigger>
-                    <Tabs.Trigger value="categories" className="px-5 h-[45px] flex items-center justify-center text-sm font-medium leading-none text-muted-foreground select-none hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary outline-none cursor-pointer transition-colors">
-                        Ангилал
-                    </Tabs.Trigger>
+                    <Tabs.Trigger value="services" className={tabCls}>Шууд дамжуулалт</Tabs.Trigger>
+                    <Tabs.Trigger value="types" className={tabCls}>Төрлүүд</Tabs.Trigger>
+                    <Tabs.Trigger value="categories" className={tabCls}>Ангилал</Tabs.Trigger>
                 </Tabs.List>
 
                 {/* ===================================== */}
@@ -243,6 +323,7 @@ export default function LivePage() {
                                     <th className="px-6 py-4 font-medium border-b w-[80px]">Зураг</th>
                                     <th className="px-6 py-4 font-medium border-b">Нэр</th>
                                     <th className="px-6 py-4 font-medium border-b">Ангилал</th>
+                                    <th className="px-6 py-4 font-medium border-b">Төрөл</th>
                                     <th className="px-6 py-4 font-medium border-b w-[80px]">Дараалал</th>
                                     <th className="px-6 py-4 font-medium border-b">Камерийн үнэ</th>
                                     <th className="px-6 py-4 font-medium border-b w-[100px]">Төлөв</th>
@@ -264,6 +345,13 @@ export default function LivePage() {
                                                 </td>
                                                 <td className="px-6 py-4 font-medium">{s.name}</td>
                                                 <td className="px-6 py-4">{s.category?.name || "—"}</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        {s.serviceType && <span className="text-xs font-medium text-primary">{s.serviceType.name}</span>}
+                                                        {s.subType && <span className="text-xs text-muted-foreground">{s.subType.name}</span>}
+                                                        {!s.serviceType && <span className="text-xs text-muted-foreground">—</span>}
+                                                    </div>
+                                                </td>
                                                 <td className="px-6 py-4 text-center">{s.sortOrder ?? 0}</td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-col gap-0.5">
@@ -286,6 +374,67 @@ export default function LivePage() {
                             </tbody>
                         </table>
                     </div>
+                </Tabs.Content>
+
+                {/* ===================================== */}
+                {/* TYPES TAB */}
+                {/* ===================================== */}
+                <Tabs.Content value="types" className="outline-none pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold">Үйлчилгээний Төрлүүд</h2>
+                        <button onClick={() => openMainTypeModal()} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                            <Plus className="h-4 w-4" /> Үндсэн төрөл нэмэх
+                        </button>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">Жишээ: <strong>Олон камерт</strong> (Прямой эфир, Онлайн хурал...), <strong>Гэрэл зургийн студи</strong> (1 камер, 2 камер...)</p>
+
+                    {loading ? <p className="text-muted-foreground text-sm">Уншиж байна...</p>
+                        : mainTypes.length === 0 ? (
+                            <div className="text-center py-12 border border-dashed border-border/50 rounded-md text-muted-foreground text-sm">
+                                Үндсэн төрөл байхгүй байна. <br /> <strong>Үндсэн төрөл нэмэх</strong> товчоор нэмнэ үү.
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {mainTypes.map(mt => (
+                                    <div key={mt.id} className="rounded-md border border-border/50 bg-card overflow-hidden">
+                                        {/* Main Type Row */}
+                                        <div className="flex items-center justify-between px-5 py-3 bg-muted/30">
+                                            <button onClick={() => toggleExpand(mt.id)} className="flex items-center gap-2 font-semibold text-sm hover:text-primary transition-colors">
+                                                {expandedMainTypes[mt.id] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                                {mt.name}
+                                                <span className="text-xs text-muted-foreground font-normal">({mt.subTypes?.length || 0} дэд төрөл)</span>
+                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => openSubTypeModal(mt.id)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                                    <Plus className="w-3 h-3" /> Дэд төрөл нэмэх
+                                                </button>
+                                                <button onClick={() => openMainTypeModal(mt)} className="text-muted-foreground hover:text-primary ml-2"><Pencil className="w-4 h-4" /></button>
+                                                <button onClick={() => deleteMainType(mt.id)} className="text-muted-foreground hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        </div>
+                                        {/* Sub Types (expandable) */}
+                                        {expandedMainTypes[mt.id] && (
+                                            <div className="divide-y divide-border/50">
+                                                {mt.subTypes?.length === 0 ? (
+                                                    <p className="px-8 py-3 text-sm text-muted-foreground italic">Дэд төрөл байхгүй байна.</p>
+                                                ) : mt.subTypes?.map((st: any) => (/* eslint-disable-line @typescript-eslint/no-explicit-any */
+                                                    <div key={st.id} className="flex items-center justify-between px-8 py-2.5 text-sm hover:bg-muted/20">
+                                                        <div>
+                                                            <span className="font-medium">{st.name}</span>
+                                                            {st.description && <span className="ml-2 text-muted-foreground text-xs">— {st.description}</span>}
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => openSubTypeModal(mt.id, st)} className="text-muted-foreground hover:text-primary"><Pencil className="w-3.5 h-3.5" /></button>
+                                                            <button onClick={() => deleteSubType(st.id)} className="text-muted-foreground hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                 </Tabs.Content>
 
                 {/* ===================================== */}
@@ -365,6 +514,65 @@ export default function LivePage() {
                 </div>
             )}
 
+            {/* ================= MAIN TYPE MODAL ================= */}
+            {isMainTypeModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !isSavingMainType && setIsMainTypeModalOpen(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingMainType ? 'Үндсэн төрөл засах' : 'Үндсэн төрөл нэмэх'}</h2>
+                            <button onClick={() => !isSavingMainType && setIsMainTypeModalOpen(false)} className="text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="p-4 overflow-y-auto">
+                            <form id="main-type-form" onSubmit={saveMainType} className="space-y-4">
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Нэр <span className="text-red-500">*</span></label>
+                                    <input required placeholder="Олон камерт, Гэрэл зургийн студи..." value={mainTypeForm.name} onChange={e => setMainTypeForm({ ...mainTypeForm, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Тайлбар</label>
+                                    <textarea value={mainTypeForm.description} onChange={e => setMainTypeForm({ ...mainTypeForm, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[60px]" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Дараалал</label>
+                                    <input type="number" value={mainTypeForm.sortOrder} onChange={e => setMainTypeForm({ ...mainTypeForm, sortOrder: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsMainTypeModalOpen(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">Болих</button>
+                            <button type="submit" form="main-type-form" disabled={isSavingMainType} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">{isSavingMainType ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ================= SUB TYPE MODAL ================= */}
+            {isSubTypeModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => !isSavingSubType && setIsSubTypeModalOpen(false)}></div>
+                    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1e1e1e] z-10">
+                            <h2 className="text-lg font-semibold tracking-tight">{editingSubType ? 'Дэд төрөл засах' : 'Дэд төрөл нэмэх'}</h2>
+                            <button onClick={() => !isSavingSubType && setIsSubTypeModalOpen(false)} className="text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="p-4 overflow-y-auto">
+                            <form id="sub-type-form" onSubmit={saveSubType} className="space-y-4">
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Үндсэн төрөл <span className="text-red-500">*</span></label>
+                                    <select required value={subTypeForm.mainTypeId} onChange={e => setSubTypeForm({ ...subTypeForm, mainTypeId: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none">
+                                        <option value="" disabled className="bg-[#1e1e1e]">Сонгох...</option>
+                                        {mainTypes.map(mt => <option key={mt.id} value={mt.id} className="bg-[#1e1e1e]">{mt.name}</option>)}
+                                    </select></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Нэр <span className="text-red-500">*</span></label>
+                                    <input required placeholder="Прямой эфир, Онлайн хурал..." value={subTypeForm.name} onChange={e => setSubTypeForm({ ...subTypeForm, name: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Тайлбар</label>
+                                    <textarea value={subTypeForm.description} onChange={e => setSubTypeForm({ ...subTypeForm, description: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors min-h-[60px]" /></div>
+                                <div className="space-y-1"><label className="text-xs text-gray-400">Дараалал</label>
+                                    <input type="number" value={subTypeForm.sortOrder} onChange={e => setSubTypeForm({ ...subTypeForm, sortOrder: e.target.value })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" /></div>
+                            </form>
+                        </div>
+                        <div className="p-4 border-t border-white/5 flex justify-end gap-3 mt-auto bg-black/20">
+                            <button type="button" onClick={() => setIsSubTypeModalOpen(false)} className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">Болих</button>
+                            <button type="submit" form="sub-type-form" disabled={isSavingSubType} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2">{isSavingSubType ? <span className="animate-pulse">Түр хүлээнэ...</span> : 'Хадгалах'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ===================================== */}
             {/* LIVE SERVICE MODAL */}
             {/* ===================================== */}
@@ -405,6 +613,34 @@ export default function LivePage() {
                                     <div className="space-y-1 col-span-2 sm:col-span-1">
                                         <label className="text-xs text-gray-400">Дараалал (Client дээр харагдах)</label>
                                         <input type="number" value={serviceFormData.sortOrder} onChange={e => setServiceFormData({ ...serviceFormData, sortOrder: parseInt(e.target.value) || 0 })} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" placeholder="0" />
+                                    </div>
+                                    {/* Service Type */}
+                                    <div className="space-y-1 col-span-2 sm:col-span-1">
+                                        <label className="text-xs text-gray-400">Үйлчилгээний төрөл</label>
+                                        <select
+                                            value={serviceFormData.serviceTypeId}
+                                            onChange={e => setServiceFormData({ ...serviceFormData, serviceTypeId: e.target.value, subTypeId: "" })}
+                                            className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none"
+                                        >
+                                            <option value="" className="bg-[#1e1e1e]">— Сонгох (заавал биш) —</option>
+                                            {mainTypes.map((mt: any) => <option key={mt.id} value={mt.id} className="bg-[#1e1e1e]">{mt.name}</option>)}{/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                                        </select>
+                                    </div>
+                                    {/* Sub Type */}
+                                    <div className="space-y-1 col-span-2 sm:col-span-1">
+                                        <label className="text-xs text-gray-400">Дэд төрөл</label>
+                                        <select
+                                            value={serviceFormData.subTypeId}
+                                            onChange={e => setServiceFormData({ ...serviceFormData, subTypeId: e.target.value })}
+                                            disabled={filteredLiveSubTypes.length === 0}
+                                            className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors appearance-none disabled:opacity-40"
+                                        >
+                                            <option value="" className="bg-[#1e1e1e]">— Сонгох (заавал биш) —</option>
+                                            {filteredLiveSubTypes.map((st: any) => <option key={st.id} value={st.id} className="bg-[#1e1e1e]">{st.name}</option>)}{/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                                        </select>
+                                        {serviceFormData.serviceTypeId && filteredLiveSubTypes.length === 0 && (
+                                            <p className="text-[10px] text-amber-400 mt-1">⚠️ Энэ төрөлд дэд төрөл байхгүй байна.</p>
+                                        )}
                                     </div>
                                 </div>
 
