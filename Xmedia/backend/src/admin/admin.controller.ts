@@ -108,7 +108,7 @@ export class AdminController {
     @Post()
     async create(@Body() body: any, @Req() req: any) {
         const result = await this.adminService.create(body);
-        await this.adminLogService.log(req.admin.id, 'CREATE', 'AdminUser', result.id, `Created ${result.username}`, req.ip);
+        await this.adminLogService.log(req.user?.id, 'CREATE', 'AdminUser', result.id, `Created ${result.username}`, req.ip);
         return result;
     }
 
@@ -116,7 +116,7 @@ export class AdminController {
     @Patch(':id')
     async update(@Param('id') id: string, @Body() body: any, @Req() req: any) {
         const result = await this.adminService.update(+id, body);
-        await this.adminLogService.log(req.admin.id, 'UPDATE', 'Admin', +id, undefined, req.ip);
+        await this.adminLogService.log(req.user?.id, 'UPDATE', 'Admin', +id, undefined, req.ip);
         return result;
     }
 
@@ -124,7 +124,7 @@ export class AdminController {
     @Delete(':id')
     async remove(@Param('id') id: string, @Req() req: any) {
         const result = await this.adminService.remove(+id);
-        await this.adminLogService.log(req.admin.id, 'DELETE', 'Admin', +id, undefined, req.ip);
+        await this.adminLogService.log(req.user?.id, 'DELETE', 'Admin', +id, undefined, req.ip);
         return result;
     }
 }

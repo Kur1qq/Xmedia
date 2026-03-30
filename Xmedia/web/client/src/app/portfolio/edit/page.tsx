@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Search, X, ImageIcon, Film, Youtube, Facebook, Play } from "lucide-react";
+import { ArrowLeft, Search, X, ImageIcon, Film, Youtube, Facebook, Play, Instagram, Music } from "lucide-react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -16,9 +16,12 @@ interface PortfolioItem {
     isPublished: boolean;
     youtubeUrl?: string;
     facebookUrl?: string;
+    instagramUrl?: string;
+    tiktokUrl?: string;
 }
 
-function toEmbedUrl(youtubeUrl?: string, facebookUrl?: string): string | null {
+// Convert URLs → embed URL
+function toEmbedUrl(youtubeUrl?: string, facebookUrl?: string, tiktokUrl?: string): string | null {
     if (youtubeUrl) {
         const ytMatch = youtubeUrl.match(
             /(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
@@ -27,6 +30,10 @@ function toEmbedUrl(youtubeUrl?: string, facebookUrl?: string): string | null {
     }
     if (facebookUrl) {
         return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(facebookUrl)}&autoplay=1`;
+    }
+    if (tiktokUrl) {
+        const match = tiktokUrl.match(/video\/(\d+)/);
+        if (match) return `https://www.tiktok.com/embed/v2/${match[1]}`;
     }
     return null;
 }
@@ -67,8 +74,8 @@ export default function EditPortfolioPage() {
 
 
 
-    const embedUrl = lightbox ? toEmbedUrl(lightbox.youtubeUrl, lightbox.facebookUrl) : null;
-    const isVideoItem = lightbox ? !!(lightbox.youtubeUrl || lightbox.facebookUrl) : false;
+    const embedUrl = lightbox ? toEmbedUrl(lightbox.youtubeUrl, lightbox.facebookUrl, lightbox.tiktokUrl) : null;
+    const isVideoItem = lightbox ? !!(lightbox.youtubeUrl || lightbox.facebookUrl || lightbox.instagramUrl || lightbox.tiktokUrl) : false;
 
     return (
         <div ref={containerRef} className="h-screen overflow-y-scroll bg-black text-white">
@@ -190,9 +197,20 @@ export default function EditPortfolioPage() {
                                         title={lightbox.title}
                                     />
                                 </div>
-                            ) : lightbox.images[0] ? (
-                                <img src={lightbox.images[0]} alt={lightbox.title}
-                                    className="w-full rounded-2xl object-cover max-h-[80vh]" />
+                            ) : lightbox.images && lightbox.images.length > 0 ? (
+                                <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 w-full">
+                                    {lightbox.images.map((img, idx) => (
+                                        <div key={idx} className="shrink-0 w-full snap-center relative">
+                                            <img src={img} alt={`${lightbox.title} ${idx + 1}`}
+                                                className="w-full rounded-2xl object-cover max-h-[80vh]" />
+                                            {lightbox.images.length > 1 && (
+                                                <div className="absolute top-4 right-6 px-3 py-1 bg-black/60 backdrop-blur rounded-full text-xs font-medium text-white/90">
+                                                    {idx + 1} / {lightbox.images.length}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
                                 <div className="w-full rounded-2xl bg-zinc-900 flex items-center justify-center" style={{ aspectRatio: "16/9" }}>
                                     <span className="text-white/20 text-sm">Зураг байхгүй</span>
@@ -216,7 +234,7 @@ export default function EditPortfolioPage() {
                                 </div>
                                 {/* Platform links for video items */}
                                 {isVideoItem && (
-                                    <div className="flex gap-2 shrink-0">
+                                    <div className="flex gap-2 shrink-0 flex-wrap">
                                         {lightbox.youtubeUrl && (
                                             <a href={lightbox.youtubeUrl} target="_blank" rel="noopener noreferrer"
                                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600/90/10 border border-rose-600/90/30 text-rose-600 text-xs hover:bg-rose-600/90/20 transition-colors">
@@ -227,6 +245,18 @@ export default function EditPortfolioPage() {
                                             <a href={lightbox.facebookUrl} target="_blank" rel="noopener noreferrer"
                                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-600/10 border border-blue-600/30 text-blue-400 text-xs hover:bg-blue-600/20 transition-colors">
                                                 <Facebook className="w-3.5 h-3.5" /> Facebook
+                                            </a>
+                                        )}
+                                        {lightbox.instagramUrl && (
+                                            <a href={lightbox.instagramUrl} target="_blank" rel="noopener noreferrer"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-600/10 border border-pink-600/30 text-pink-400 text-xs hover:bg-pink-600/20 transition-colors">
+                                                <Instagram className="w-3.5 h-3.5" /> Instagram
+                                            </a>
+                                        )}
+                                        {lightbox.tiktokUrl && (
+                                            <a href={lightbox.tiktokUrl} target="_blank" rel="noopener noreferrer"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-600/10 border border-gray-600/30 text-gray-300 text-xs hover:bg-gray-600/20 transition-colors">
+                                                <Music className="w-3.5 h-3.5" /> TikTok
                                             </a>
                                         )}
                                     </div>
@@ -288,7 +318,7 @@ function PhotoCard({ item, index, onClick }: { item: PortfolioItem; index: numbe
 /* ─── Video Edit Card ─── */
 function VideoCard({ item, index, onClick }: { item: PortfolioItem; index: number; onClick: () => void }) {
     const img = Array.isArray(item.images) ? item.images[0] : null;
-    const hasVideo = !!(item.youtubeUrl || item.facebookUrl);
+    const hasVideo = !!(item.youtubeUrl || item.facebookUrl || item.instagramUrl || item.tiktokUrl);
 
     return (
         <motion.div
@@ -332,6 +362,8 @@ function VideoCard({ item, index, onClick }: { item: PortfolioItem; index: numbe
             <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 {item.youtubeUrl && <div className="w-7 h-7 rounded-full bg-rose-600/90 flex items-center justify-center"><Youtube className="w-3.5 h-3.5 text-white" /></div>}
                 {item.facebookUrl && <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center"><Facebook className="w-3.5 h-3.5 text-white" /></div>}
+                {item.instagramUrl && <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center"><Instagram className="w-3.5 h-3.5 text-white" /></div>}
+                {item.tiktokUrl && <div className="w-7 h-7 rounded-full bg-black border border-white/20 flex items-center justify-center"><Music className="w-3.5 h-3.5 text-white" /></div>}
             </div>
 
             {/* Text */}

@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { PaymentStatus } from '@prisma/client';
 
@@ -21,7 +21,8 @@ export class DashboardController {
             activeEquipment,
             recentPaidBookings,
             pendingInvoiceUsers,
-            recentWeeklyBookings
+            recentWeeklyBookings,
+            groupedRevenueData
         ] = await Promise.all([
             this.prisma.user.count(),
             this.prisma.booking.count(),
@@ -54,6 +55,17 @@ export class DashboardController {
                 select: {
                     totalAmount: true,
                     createdAt: true
+                }
+            }),
+            this.prisma.bookingItem.groupBy({
+                by: ['itemType'],
+                where: {
+                    booking: {
+                        paymentStatus: 'PAID'
+                    }
+                },
+                _sum: {
+                    totalPrice: true
                 }
             })
         ]);
@@ -98,6 +110,34 @@ export class DashboardController {
 
         const revenueChart = Array.from(revenueByMonth.entries()).map(([label, amount]) => ({ label, amount }));
 
+        let studioRevenue = 0;
+        let liveRevenue = 0;
+        let editRevenue = 0;
+        let bundleRevenue = 0;
+        let photographerRevenue = 0;
+
+        groupedRevenueData.forEach(item => {
+            const amount = Number(item._sum.totalPrice || 0);
+            switch (item.itemType) {
+                case 'STUDIO':
+                    studioRevenue += amount;
+                    break;
+                case 'LIVE_SERVICE':
+                    liveRevenue += amount;
+                    break;
+                case 'EDIT_SERVICE':
+                    editRevenue += amount;
+                    break;
+                case 'BUNDLE_SERVICE':
+                    bundleRevenue += amount;
+                    break;
+                case 'SERVICE':
+                case 'PHOTOGRAPHER_SERVICE':
+                    photographerRevenue += amount;
+                    break;
+            }
+        });
+
         return {
             totalUsers,
             totalBookings,
@@ -106,7 +146,105 @@ export class DashboardController {
             activeEquipment,
             revenueChart,
             weeklyRevenueChart,
-            pendingInvoiceUsers
+            pendingInvoiceUsers,
+            breakdown: {
+                studioRevenue,
+                liveRevenue,
+                editRevenue,
+                bundleRevenue,
+                photographerRevenue
+            }
+        };
+    }
+
+    @Get('custom-revenue')
+    async getCustomRevenue(
+        @Query('startDate') startDate?: string,
+        @Query('endDate') endDate?: string,
+        @Query('serviceType') serviceType?: string
+    ) {
+        let dateFilter: any = {};
+        if (startDate && endDate) {
+            // Include entire end date by setting time to 23:59:59.999
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            
+            dateFilter = {
+                gte: start,
+                lte: end
+            };
+        } else if (startDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            dateFilter = { gte: start };
+        } else if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            dateFilter = { lte: end };
+        }
+
+        let itemTypeFilter: any = undefined;
+        if (serviceType && serviceType !== 'ALL') {
+             if (serviceType === 'PHOTOGRAPHER_SERVICE') {
+                 itemTypeFilter = { in: ['SERVICE', 'PHOTOGRAPHER_SERVICE'] };
+             } else {
+                 itemTypeFilter = serviceType;
+             }
+        }
+
+        const whereClause: any = {
+            paymentStatus: 'PAID'
+        };
+
+        if (Object.keys(dateFilter).length > 0) {
+            whereClause.createdAt = dateFilter;
+        }
+
+        const result = await this.prisma.bookingItem.aggregate({
+            _sum: {
+                totalPrice: true
+            },
+            where: {
+                booking: whereClause,
+                ...(itemTypeFilter ? { itemType: itemTypeFilter } : {})
+            }
+        });
+
+        // Fetch granular details for Excel export
+        const items = await this.prisma.bookingItem.findMany({
+            where: {
+                booking: whereClause,
+                ...(itemTypeFilter ? { itemType: itemTypeFilter } : {})
+            },
+            include: {
+                booking: {
+                    include: {
+                        user: { select: { username: true, phone: true } }
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        const details = items.map(item => ({
+            id: item.id,
+            bookingId: item.bookingId,
+            userName: item.booking?.user?.username || 'Тодорхойгүй',
+            userPhone: item.booking?.user?.phone || 'Тодорхойгүй',
+            serviceType: item.itemType,
+            totalPrice: Number(item.totalPrice),
+            date: item.createdAt,
+            bookingDate: item.bookingDate
+        }));
+
+        return {
+            customRevenue: result._sum.totalPrice || 0,
+            details
         };
     }
 }

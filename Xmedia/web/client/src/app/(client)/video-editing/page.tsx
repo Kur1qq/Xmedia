@@ -203,10 +203,10 @@ export default function VideoEditingPage() {
                             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
                                 className="w-full flex flex-col lg:flex-row gap-8 lg:gap-16">
 
-                                <div className={`relative h-[250px] lg:h-[450px] max-h-[50vh] lg:w-[45%] flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
+                                <div className={`relative h-[250px] lg:h-[450px] max-h-[50vh] lg:w-[45%] flex-shrink-0 rounded-[24px] flex items-center justify-center ${isBooking ? 'hidden lg:block' : ''}`}>
                                     {activeService.image
-                                        ? <motion.div key={activeService.image} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${activeService.image}')` }} />
-                                        : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><Film className="w-16 h-16 text-zinc-600" /></div>
+                                        ? <motion.img key={activeService.image} src={activeService.image} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="max-w-full max-h-full object-contain rounded-[24px]" />
+                                        : <div className="w-full h-full rounded-[24px] bg-zinc-800 flex items-center justify-center"><Film className="w-16 h-16 text-zinc-600" /></div>
                                     }
                                 </div>
 

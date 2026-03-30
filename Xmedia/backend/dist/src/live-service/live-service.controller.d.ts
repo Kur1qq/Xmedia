@@ -49,6 +49,7 @@ export declare class LiveServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
+        serviceTypeId: number | null;
         sortOrder: number;
     }>;
     findAll(): Promise<({
@@ -96,6 +97,7 @@ export declare class LiveServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
+        serviceTypeId: number | null;
         sortOrder: number;
     })[]>;
     findOne(id: string): Promise<{
@@ -143,6 +145,7 @@ export declare class LiveServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
+        serviceTypeId: number | null;
         sortOrder: number;
     }>;
     update(id: string, body: any, req: any): Promise<{
@@ -190,6 +193,7 @@ export declare class LiveServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
+        serviceTypeId: number | null;
         sortOrder: number;
     }>;
     remove(id: string, req: any): Promise<{
@@ -202,6 +206,7 @@ export declare class LiveServiceController {
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
         isActive: boolean;
         categoryId: number;
+        serviceTypeId: number | null;
         sortOrder: number;
     }>;
 }

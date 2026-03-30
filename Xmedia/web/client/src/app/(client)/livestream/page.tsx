@@ -123,13 +123,13 @@ export default function LivestreamPage() {
     const validateForm = (isBuyNow: boolean = false) => {
         if (isBuyNow) {
             if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) { toast.error("Мэдээллээ бүрэн оруулна уу (Нэр, Утас, Имэйл)."); return false; }
-            
+
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(form.email.trim())) {
                 toast.error("Имэйл хаягаа зөв оруулна уу.");
                 return false;
             }
-            
+
             const phoneRegex = /^[0-9]{8}$/;
             if (!phoneRegex.test(form.phone.trim())) {
                 toast.error("Утасны дугаар 8 оронтой тоо байх ёстой.");
@@ -227,7 +227,7 @@ export default function LivestreamPage() {
         return Math.min(...svc.priceTiers.map(t => Number(t.price)));
     };
 
-    const uniqueLabels = activeService?.priceTiers 
+    const uniqueLabels = activeService?.priceTiers
         ? Array.from(new Set(activeService.priceTiers.map(t => t.label?.trim()).filter(Boolean))) as string[]
         : [];
 
@@ -261,354 +261,354 @@ export default function LivestreamPage() {
                 <div className="min-h-full flex items-center justify-center py-8">
                     <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
 
-                    {loading ? (
-                        <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-rose-600" /></div>
-                    ) : services.length === 0 ? (
-                        <p className="text-gray-500 text-center py-24">Одоогоор үйлчилгээ нэмэгдээгүй байна.</p>
-                    ) : activeService && (
-                        <div className="space-y-6 w-full">
-                            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-                                className="w-full flex flex-col lg:flex-row gap-8 lg:gap-16">
+                        {loading ? (
+                            <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-rose-600" /></div>
+                        ) : services.length === 0 ? (
+                            <p className="text-gray-500 text-center py-24">Одоогоор үйлчилгээ нэмэгдээгүй байна.</p>
+                        ) : activeService && (
+                            <div className="space-y-6 w-full">
+                                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+                                    className="w-full flex flex-col lg:flex-row gap-8 lg:gap-16">
 
-                                <div className={`relative h-[250px] lg:h-[450px] max-h-[50vh] lg:w-[45%] flex-shrink-0 rounded-[24px] overflow-hidden ${isBooking ? 'hidden lg:block' : ''}`}>
-                                    {activeService.image
-                                        ? <motion.div key={activeService.image} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-cover bg-center transition-all duration-500" style={{ backgroundImage: `url('${activeService.image}')` }} />
-                                        : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center"><Radio className="w-16 h-16 text-zinc-600" /></div>
-                                    }
-                                </div>
+                                    <div className={`relative h-[250px] lg:h-[450px] max-h-[50vh] lg:w-[45%] flex-shrink-0 rounded-[24px] flex items-center justify-center ${isBooking ? 'hidden lg:block' : ''}`}>
+                                        {activeService.image
+                                            ? <motion.img key={activeService.image} src={activeService.image} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-full max-h-full object-contain rounded-[24px] transition-all duration-500" />
+                                            : <div className="w-full h-full rounded-[24px] bg-zinc-800 flex items-center justify-center"><Radio className="w-16 h-16 text-zinc-600" /></div>
+                                        }
+                                    </div>
 
-                                <div className="flex-1 flex flex-col justify-center">
-                                    <AnimatePresence mode="wait">
-                                        {!isBooking ? (
-                                            <motion.div key={`detail-${activeService.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4 pt-0">
+                                    <div className="flex-1 flex flex-col justify-center">
+                                        <AnimatePresence mode="wait">
+                                            {!isBooking ? (
+                                                <motion.div key={`detail-${activeService.id}`} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col h-full py-4 pt-0">
 
-                                                {services.length > 1 && (
-                                                    <div className="flex flex-wrap gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-[16px]">
-                                                        {services.map(svc => (
-                                                            <button
-                                                                key={svc.id}
-                                                                onClick={() => handleTabChange(svc.id)}
-                                                                className={`flex-1 py-2.5 px-4 rounded-[12px] text-sm font-semibold transition-all ${activeServiceId === svc.id ? 'bg-[#1a1a1a] text-white shadow-md border border-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                                                            >
-                                                                {svc.name}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
-
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-0">{activeService.name}</h2>
-                                                    <Link href="/portfolio/live">
-                                                        <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
-                                                            <GalleryVerticalEnd className="w-3 h-3" />
-                                                            Өмнөх ажил
-                                                        </div>
-                                                    </Link>
-                                                </div>
-                                                <p className="text-gray-400 mb-6 leading-relaxed text-sm md:text-base">{activeService.description}</p>
-
-                                                {(activeService.amenities && activeService.amenities.length > 0) && (
-                                                    <div className="mb-6 w-full">
-                                                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                            <Info className="w-4 h-4 text-rose-600" />Онцлог талууд
-                                                        </h4>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                            {activeService.amenities.map((amenity, i) => (
-                                                                <div key={i} className="flex items-center gap-2.5 text-xs text-gray-200 bg-[#141414] px-3 py-2 rounded-lg border border-white/5 truncate">
-                                                                    <Check className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                                                                    <span className="truncate">{amenity}</span>
-                                                                </div>
+                                                    {services.length > 1 && (
+                                                        <div className="flex flex-wrap gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-[16px]">
+                                                            {services.map(svc => (
+                                                                <button
+                                                                    key={svc.id}
+                                                                    onClick={() => handleTabChange(svc.id)}
+                                                                    className={`flex-1 py-2.5 px-4 rounded-[12px] text-sm font-semibold transition-all ${activeServiceId === svc.id ? 'bg-[#1a1a1a] text-white shadow-md border border-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                                                >
+                                                                    {svc.name}
+                                                                </button>
                                                             ))}
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
 
-                                                {activeService.equipments && activeService.equipments.length > 0 && (
-                                                    <div className="mb-6 w-full">
-                                                        <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
-                                                            <Info className="w-4 h-4 text-rose-600" />Тоног төхөөрөмж
-                                                        </h4>
-                                                        <div className="bg-[#141414] p-4 rounded-lg border border-white/5">
-                                                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                                {activeService.equipments.map((eq, i) => (
-                                                                    <li key={i} className="flex items-start gap-2.5 text-xs text-gray-300">
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-[5px]" />
-                                                                        <span className="flex-1 leading-snug">{eq.equipment?.name}</span>
-                                                                    </li>
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <h2 className="text-2xl md:text-3xl font-bold text-white mb-0">{activeService.name}</h2>
+                                                        <Link href="/portfolio/live">
+                                                            <div className="flex w-fit items-center gap-2 px-2.5 py-1 bg-rose-600/10 text-white rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-rose-600/20 transition-all cursor-pointer">
+                                                                <GalleryVerticalEnd className="w-3 h-3" />
+                                                                Өмнөх ажил
+                                                            </div>
+                                                        </Link>
+                                                    </div>
+                                                    <p className="text-gray-400 mb-6 leading-relaxed text-sm md:text-base">{activeService.description}</p>
+
+                                                    {(activeService.amenities && activeService.amenities.length > 0) && (
+                                                        <div className="mb-6 w-full">
+                                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                                <Info className="w-4 h-4 text-rose-600" />Онцлог талууд
+                                                            </h4>
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                {activeService.amenities.map((amenity, i) => (
+                                                                    <div key={i} className="flex items-center gap-2.5 text-xs text-gray-200 bg-[#141414] px-3 py-2 rounded-lg border border-white/5 truncate">
+                                                                        <Check className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                                                        <span className="truncate">{amenity}</span>
+                                                                    </div>
                                                                 ))}
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {activeService.priceTiers && activeService.priceTiers.length > 0 && (
-                                                    <div className="mb-6">
-                                                        <p className="text-sm text-gray-400 mb-3 uppercase tracking-wider font-semibold">Шууд дамжуулалтын цаг & Камер сонгох</p>
-                                                        <div className="flex bg-white/5 border border-white/10 rounded-[12px] w-full">
-                                                            <div className="w-1/2 p-1 flex flex-col justify-center gap-1 border-r border-white/10">
-                                                                <div className="px-2 py-0.5 text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center">
-                                                                    Цаг сонгох
-                                                                </div>
-                                                                <Popover>
-                                                                    <PopoverTrigger asChild>
-                                                                        <button
-                                                                            type="button"
-                                                                            className="w-full px-3 py-2 text-xs font-bold rounded-[8px] bg-white/5 border border-white/10 text-white flex items-center justify-between hover:bg-white/10 transition-all"
-                                                                        >
-                                                                            <span>{tierRange || "Цаг сонгох"}</span>
-                                                                            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                                                                        </button>
-                                                                    </PopoverTrigger>
-                                                                    <PopoverContent className="w-[160px] p-1 bg-[#111] border-white/10 shadow-2xl z-[200]" align="center">
-                                                                        <div className="flex flex-col gap-0.5">
-                                                                            {uniqueLabels.map(range => (
-                                                                                <button
-                                                                                    key={range}
-                                                                                    type="button"
-                                                                                    onClick={() => {
-                                                                                        setTierRange(range);
-                                                                                        const firstTier = activeService.priceTiers?.find(t => (t.label?.trim() || "") === range);
-                                                                                        if (firstTier) {
-                                                                                            setForm(f => ({ ...f, tierId: firstTier.id.toString() }));
-                                                                                        }
-                                                                                    }}
-                                                                                    className={cn(
-                                                                                        "w-full px-3 py-2 text-xs font-bold rounded-[6px] transition-all flex items-center justify-between",
-                                                                                        tierRange === range
-                                                                                            ? "bg-rose-600/10 text-rose-500"
-                                                                                            : "text-gray-400 hover:text-white hover:bg-white/5"
-                                                                                    )}
-                                                                                >
-                                                                                    {range}
-                                                                                    {tierRange === range && <Check className="w-3.5 h-3.5" />}
-                                                                                </button>
-                                                                            ))}
-                                                                        </div>
-                                                                    </PopoverContent>
-                                                                </Popover>
                                                             </div>
-
-                                                            {/* Right: Camera selection (Dropdown) */}
-                                                            <div className="w-1/2 p-1 flex flex-col justify-center gap-1">
-                                                                <div className="px-2 py-0.5 text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center">
-                                                                    Камер сонгох
-                                                                </div>
-                                                                <Popover>
-                                                                    <PopoverTrigger asChild>
-                                                                        <button
-                                                                            type="button"
-                                                                            className="w-full px-3 py-2 text-xs font-bold rounded-[8px] bg-white/5 border border-white/10 text-white flex items-center justify-between hover:bg-white/10 transition-all"
-                                                                        >
-                                                                            <span>{currentTier?.cameraCount || 0}ш</span>
-                                                                            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                                                                        </button>
-                                                                    </PopoverTrigger>
-                                                                    <PopoverContent className="w-[160px] p-1 bg-[#111] border-white/10 shadow-2xl z-[200]" align="center">
-                                                                        <div className="flex flex-col gap-0.5">
-                                                                            {matchingTiers.map(tier => (
-                                                                                <button
-                                                                                    key={tier.id}
-                                                                                    type="button"
-                                                                                    onClick={() => setForm(f => ({ ...f, tierId: tier.id.toString() }))}
-                                                                                    className={cn(
-                                                                                        "w-full px-3 py-2 text-xs font-bold rounded-[6px] transition-all flex items-center justify-between",
-                                                                                        form.tierId === tier.id.toString()
-                                                                                            ? "bg-rose-600/10 text-rose-500"
-                                                                                            : "text-gray-400 hover:text-white hover:bg-white/5"
-                                                                                    )}
-                                                                                >
-                                                                                    {tier.cameraCount}ш
-                                                                                    {form.tierId === tier.id.toString() && <Check className="w-3.5 h-3.5" />}
-                                                                                </button>
-                                                                            ))}
-                                                                        </div>
-                                                                    </PopoverContent>
-                                                                </Popover>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
-                                                    <div className="flex flex-col items-start md:items-center">
-                                                        <p className="text-gray-500 text-[10px] uppercase tracking-wider">Эхлэх үнэ</p>
-                                                        <p className="text-xl md:text-2xl font-bold text-white">
-                                                            {form.tierId
-                                                                ? Number(activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price ?? 0).toLocaleString() + "₮/цаг"
-                                                                : getStartingPrice(activeService).toLocaleString() + "₮"
-                                                            }
-                                                        </p>
-                                                    </div>
-                                                    <Button onClick={() => {
-                                                        setIsBooking(true);
-                                                    }} className="w-full md:w-auto px-8 h-12 bg-rose-600 hover:bg-rose-600/90 font-semibold rounded-lg transition-all text-white">Захиалга өгөх</Button>
-                                                </div>
-                                            </motion.div>
-                                        ) : (
-                                            <motion.div key={`booking-${activeService.id}`} initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} className="h-full flex flex-col py-4">
-                                                <div className="flex items-center justify-between mb-6">
-                                                    <div className="flex items-center gap-3">
-                                                        <Button variant="ghost" size="icon" onClick={() => setIsBooking(false)} className="text-gray-400 hover:text-white hover:bg-white/10 shrink-0"><ArrowLeft className="w-5 h-5" /></Button>
-                                                        <h2 className="text-xl font-bold line-clamp-1">Захиалга — <span className="text-rose-600">{activeService.name}</span></h2>
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-4 flex-1">
-                                                    <div className="space-y-3 rounded-lg bg-white/5 border border-white/10 p-4">
-                                                        <p className="text-sm text-white font-medium">Захиалагчийн мэдээлэл</p>
-                                                        <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Таны нэр *" />
-                                                        <Input type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Утасны дугаар *" />
-                                                        <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Имэйл хаяг *" />
-                                                    </div>
-                                                    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                                                        <PopoverTrigger asChild>
-                                                            <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
-                                                                <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" />
-                                                                <span>{form.date ? format(form.date, "yyyy-MM-dd") : "Огноо сонгох"}</span>
-                                                            </Button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-auto p-0 bg-[#111] border-white/10 z-[200]" align="start">
-                                                            <Calendar mode="single" selected={form.date} onSelect={d => { setForm({ ...form, date: d }); setCalendarOpen(false); }} className="bg-[#111] text-white" />
-                                                        </PopoverContent>
-                                                    </Popover>
-                                                    {form.tierId && activeService.priceTiers && activeService.priceTiers.length > 0 && (
-                                                        <div className="px-3 py-2 rounded-lg bg-rose-600/10 border border-rose-600/30 text-xs text-rose-400">
-                                                            Сонгогдсон: <span className="font-semibold">{activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.label?.trim()}</span> — {Number(activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.price ?? 0).toLocaleString()}₮/цаг
                                                         </div>
                                                     )}
-                                                    <div>
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <p className="text-sm text-gray-400">Цаг сонгох</p>
-                                                            {loadingSlots && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-500" />}
+
+                                                    {activeService.equipments && activeService.equipments.length > 0 && (
+                                                        <div className="mb-6 w-full">
+                                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                                                                <Info className="w-4 h-4 text-rose-600" />Тоног төхөөрөмж
+                                                            </h4>
+                                                            <div className="bg-[#141414] p-4 rounded-lg border border-white/5">
+                                                                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                    {activeService.equipments.map((eq, i) => (
+                                                                        <li key={i} className="flex items-start gap-2.5 text-xs text-gray-300">
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-[5px]" />
+                                                                            <span className="flex-1 leading-snug">{eq.equipment?.name}</span>
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
                                                         </div>
-                                                        {!form.date ? (
-                                                            <p className="text-xs text-gray-600 italic">Эхлээд огноо сонгоно уу</p>
-                                                        ) : (
-                                                            <>
-                                                                <div className="grid grid-cols-2 gap-3">
-                                                                    <div>
-                                                                        <p className="text-xs text-gray-500 mb-1">Эхлэх цаг</p>
-                                                                        <select
-                                                                            value={form.time}
-                                                                            onChange={e => {
-                                                                                const t = e.target.value;
-                                                                                let et = form.endTime;
-                                                                                let dur = calcDuration(t, et);
-                                                                                
-                                                                                const autoDur = parseDuration(tierRange);
-                                                                                if (autoDur > 0 && t) {
-                                                                                    const [sh, sm] = t.split(":").map(Number);
-                                                                                    const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
-                                                                                    const endH = Math.floor(exactEndMins / 60);
-                                                                                    const endM = exactEndMins % 60;
-                                                                                    et = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
-                                                                                    dur = autoDur;
-                                                                                }
-                                                                                
-                                                                                setForm({ ...form, time: t, endTime: et, duration: dur.toString() });
-                                                                            }}
-                                                                            className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
-                                                                        >
-                                                                            <option value="">-- : --</option>
-                                                                            {HALF_HOURLY_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
-                                                                                <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
-                                                                            ))}
-                                                                        </select>
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-xs text-gray-500 mb-1">Дуусах цаг</p>
-                                                                        <select
-                                                                            value={form.endTime}
-                                                                            disabled={!form.time}
-                                                                            onChange={e => {
-                                                                                const et = e.target.value;
-                                                                                const dur = calcDuration(form.time, et);
-                                                                                setForm({ ...form, endTime: et, duration: dur.toString() });
-                                                                            }}
-                                                                            className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                                                                        >
-                                                                            <option value="">-- : --</option>
-                                                                            {HALF_HOURLY_TIMES.filter(t => {
-                                                                                if (!form.time) return false;
-                                                                                const [sh, sm] = form.time.split(":").map(Number);
-                                                                                const [th, tm] = t.split(":").map(Number);
-                                                                                if (th === sh && tm === sm) return false;
-                                                                                
-                                                                                const autoDur = parseDuration(tierRange);
-                                                                                if (autoDur > 0) {
-                                                                                    const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
-                                                                                    const thMins = th * 60 + tm;
-                                                                                    return thMins === exactEndMins;
-                                                                                }
+                                                    )}
 
-                                                                                const startMins = sh * 60 + sm;
-                                                                                let endMins = th * 60 + tm;
-                                                                                if (endMins < startMins) endMins += 24 * 60; // Overnight
-                                                                                
-                                                                                // Check if any booked slot falls between start and end
-                                                                                for (let m = startMins; m < endMins; m += 30) {
-                                                                                    const checkH = Math.floor(m / 60) % 24;
-                                                                                    const checkM = m % 60;
-                                                                                    const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
-                                                                                    if (bookedTimes.includes(checkStr)) return false;
-                                                                                }
-                                                                                return true;
-                                                                            }).map(t => (
-                                                                                <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
-                                                                            ))}
-                                                                        </select>
+                                                    {activeService.priceTiers && activeService.priceTiers.length > 0 && (
+                                                        <div className="mb-6">
+                                                            <p className="text-sm text-gray-400 mb-3 uppercase tracking-wider font-semibold">Шууд дамжуулалтын цаг & Камер сонгох</p>
+                                                            <div className="flex bg-white/5 border border-white/10 rounded-[12px] w-full">
+                                                                <div className="w-1/2 p-1 flex flex-col justify-center gap-1 border-r border-white/10">
+                                                                    <div className="px-2 py-0.5 text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center">
+                                                                        Цаг сонгох
                                                                     </div>
+                                                                    <Popover>
+                                                                        <PopoverTrigger asChild>
+                                                                            <button
+                                                                                type="button"
+                                                                                className="w-full px-3 py-2 text-xs font-bold rounded-[8px] bg-white/5 border border-white/10 text-white flex items-center justify-between hover:bg-white/10 transition-all"
+                                                                            >
+                                                                                <span>{tierRange || "Цаг сонгох"}</span>
+                                                                                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                                                                            </button>
+                                                                        </PopoverTrigger>
+                                                                        <PopoverContent className="w-[160px] p-1 bg-[#111] border-white/10 shadow-2xl z-[200]" align="center">
+                                                                            <div className="flex flex-col gap-0.5">
+                                                                                {uniqueLabels.map(range => (
+                                                                                    <button
+                                                                                        key={range}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setTierRange(range);
+                                                                                            const firstTier = activeService.priceTiers?.find(t => (t.label?.trim() || "") === range);
+                                                                                            if (firstTier) {
+                                                                                                setForm(f => ({ ...f, tierId: firstTier.id.toString() }));
+                                                                                            }
+                                                                                        }}
+                                                                                        className={cn(
+                                                                                            "w-full px-3 py-2 text-xs font-bold rounded-[6px] transition-all flex items-center justify-between",
+                                                                                            tierRange === range
+                                                                                                ? "bg-rose-600/10 text-rose-500"
+                                                                                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                                                                                        )}
+                                                                                    >
+                                                                                        {range}
+                                                                                        {tierRange === range && <Check className="w-3.5 h-3.5" />}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        </PopoverContent>
+                                                                    </Popover>
                                                                 </div>
-                                                                {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
-                                                                    <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
-                                                                )}
-                                                            </>
-                                                        )}
-                                                    </div>
 
-                                                    <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
-                                                        <span className="text-gray-400 text-sm">Нийт үнэ:</span>
-                                                        <span className="text-xl font-bold text-white">
-                                                            {form.tierId
-                                                                ? ((activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price as number ?? 0)).toLocaleString() + "₮"
-                                                                : "Сонгох"
-                                                            }
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                                                        <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
-                                                            Сагсанд нэмэх
-                                                        </Button>
-                                                        <Button type="button"
-                                                            onClick={() => {
-                                                                if (validateForm(true)) {
-                                                                    const selectedTier = activeService.priceTiers?.find(t => t.id.toString() === form.tierId);
-                                                                    if (selectedTier) {
-                                                                        const durationHrs = calcDuration(form.time, form.endTime);
-                                                                        const tierLabel = selectedTier.label?.trim() || "";
-                                                                        if (durationHrs > parseDuration(tierLabel)) {
-                                                                            toast.error(`${tierLabel} багц сонгосон тул ${parseDuration(tierLabel)} цагаас илүү хугацаа сонгох боломжгүй.`);
-                                                                            return;
-                                                                        }
-                                                                    }
-                                                                    setShowPaymentModal(true);
+                                                                {/* Right: Camera selection (Dropdown) */}
+                                                                <div className="w-1/2 p-1 flex flex-col justify-center gap-1">
+                                                                    <div className="px-2 py-0.5 text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center">
+                                                                        Камер сонгох
+                                                                    </div>
+                                                                    <Popover>
+                                                                        <PopoverTrigger asChild>
+                                                                            <button
+                                                                                type="button"
+                                                                                className="w-full px-3 py-2 text-xs font-bold rounded-[8px] bg-white/5 border border-white/10 text-white flex items-center justify-between hover:bg-white/10 transition-all"
+                                                                            >
+                                                                                <span>{currentTier?.cameraCount || 0}ш</span>
+                                                                                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                                                                            </button>
+                                                                        </PopoverTrigger>
+                                                                        <PopoverContent className="w-[160px] p-1 bg-[#111] border-white/10 shadow-2xl z-[200]" align="center">
+                                                                            <div className="flex flex-col gap-0.5">
+                                                                                {matchingTiers.map(tier => (
+                                                                                    <button
+                                                                                        key={tier.id}
+                                                                                        type="button"
+                                                                                        onClick={() => setForm(f => ({ ...f, tierId: tier.id.toString() }))}
+                                                                                        className={cn(
+                                                                                            "w-full px-3 py-2 text-xs font-bold rounded-[6px] transition-all flex items-center justify-between",
+                                                                                            form.tierId === tier.id.toString()
+                                                                                                ? "bg-rose-600/10 text-rose-500"
+                                                                                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                                                                                        )}
+                                                                                    >
+                                                                                        {tier.cameraCount}ш
+                                                                                        {form.tierId === tier.id.toString() && <Check className="w-3.5 h-3.5" />}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        </PopoverContent>
+                                                                    </Popover>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
+                                                        <div className="flex flex-col items-start md:items-center">
+                                                            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Эхлэх үнэ</p>
+                                                            <p className="text-xl md:text-2xl font-bold text-white">
+                                                                {form.tierId
+                                                                    ? Number(activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price ?? 0).toLocaleString() + "₮/цаг"
+                                                                    : getStartingPrice(activeService).toLocaleString() + "₮"
                                                                 }
-                                                            }}
-                                                            disabled={submitting}
-                                                            className="flex-1 h-11 bg-rose-600 hover:bg-rose-600/90 font-semibold text-white">
-                                                            {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Уншиж байна...</> : "Шууд авах"}
-                                                        </Button>
+                                                            </p>
+                                                        </div>
+                                                        <Button onClick={() => {
+                                                            setIsBooking(true);
+                                                        }} className="w-full md:w-auto px-8 h-12 bg-rose-600 hover:bg-rose-600/90 font-semibold rounded-lg transition-all text-white">Захиалга өгөх</Button>
                                                     </div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
+                                                </motion.div>
+                                            ) : (
+                                                <motion.div key={`booking-${activeService.id}`} initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} className="h-full flex flex-col py-4">
+                                                    <div className="flex items-center justify-between mb-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <Button variant="ghost" size="icon" onClick={() => setIsBooking(false)} className="text-gray-400 hover:text-white hover:bg-white/10 shrink-0"><ArrowLeft className="w-5 h-5" /></Button>
+                                                            <h2 className="text-xl font-bold line-clamp-1">Захиалга — <span className="text-rose-600">{activeService.name}</span></h2>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-4 flex-1">
+                                                        <div className="space-y-3 rounded-lg bg-white/5 border border-white/10 p-4">
+                                                            <p className="text-sm text-white font-medium">Захиалагчийн мэдээлэл</p>
+                                                            <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Таны нэр *" />
+                                                            <Input type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Утасны дугаар *" />
+                                                            <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="bg-[#1a1a1a] border-white/10 text-white h-10" placeholder="Имэйл хаяг *" />
+                                                        </div>
+                                                        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                                                            <PopoverTrigger asChild>
+                                                                <Button variant="outline" className={cn("w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white h-10", !form.date && "text-gray-500")}>
+                                                                    <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" />
+                                                                    <span>{form.date ? format(form.date, "yyyy-MM-dd") : "Огноо сонгох"}</span>
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-auto p-0 bg-[#111] border-white/10 z-[200]" align="start">
+                                                                <Calendar mode="single" selected={form.date} onSelect={d => { setForm({ ...form, date: d }); setCalendarOpen(false); }} className="bg-[#111] text-white" />
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                        {form.tierId && activeService.priceTiers && activeService.priceTiers.length > 0 && (
+                                                            <div className="px-3 py-2 rounded-lg bg-rose-600/10 border border-rose-600/30 text-xs text-rose-400">
+                                                                Сонгогдсон: <span className="font-semibold">{activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.label?.trim()}</span> — {Number(activeService.priceTiers.find(t => t.id.toString() === form.tierId)?.price ?? 0).toLocaleString()}₮/цаг
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <p className="text-sm text-gray-400">Цаг сонгох</p>
+                                                                {loadingSlots && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-500" />}
+                                                            </div>
+                                                            {!form.date ? (
+                                                                <p className="text-xs text-gray-600 italic">Эхлээд огноо сонгоно уу</p>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="grid grid-cols-2 gap-3">
+                                                                        <div>
+                                                                            <p className="text-xs text-gray-500 mb-1">Эхлэх цаг</p>
+                                                                            <select
+                                                                                value={form.time}
+                                                                                onChange={e => {
+                                                                                    const t = e.target.value;
+                                                                                    let et = form.endTime;
+                                                                                    let dur = calcDuration(t, et);
+
+                                                                                    const autoDur = parseDuration(tierRange);
+                                                                                    if (autoDur > 0 && t) {
+                                                                                        const [sh, sm] = t.split(":").map(Number);
+                                                                                        const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
+                                                                                        const endH = Math.floor(exactEndMins / 60);
+                                                                                        const endM = exactEndMins % 60;
+                                                                                        et = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+                                                                                        dur = autoDur;
+                                                                                    }
+
+                                                                                    setForm({ ...form, time: t, endTime: et, duration: dur.toString() });
+                                                                                }}
+                                                                                className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
+                                                                            >
+                                                                                <option value="">-- : --</option>
+                                                                                {HALF_HOURLY_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
+                                                                                    <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
+                                                                                ))}
+                                                                            </select>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-xs text-gray-500 mb-1">Дуусах цаг</p>
+                                                                            <select
+                                                                                value={form.endTime}
+                                                                                disabled={!form.time}
+                                                                                onChange={e => {
+                                                                                    const et = e.target.value;
+                                                                                    const dur = calcDuration(form.time, et);
+                                                                                    setForm({ ...form, endTime: et, duration: dur.toString() });
+                                                                                }}
+                                                                                className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                            >
+                                                                                <option value="">-- : --</option>
+                                                                                {HALF_HOURLY_TIMES.filter(t => {
+                                                                                    if (!form.time) return false;
+                                                                                    const [sh, sm] = form.time.split(":").map(Number);
+                                                                                    const [th, tm] = t.split(":").map(Number);
+                                                                                    if (th === sh && tm === sm) return false;
+
+                                                                                    const autoDur = parseDuration(tierRange);
+                                                                                    if (autoDur > 0) {
+                                                                                        const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
+                                                                                        const thMins = th * 60 + tm;
+                                                                                        return thMins === exactEndMins;
+                                                                                    }
+
+                                                                                    const startMins = sh * 60 + sm;
+                                                                                    let endMins = th * 60 + tm;
+                                                                                    if (endMins < startMins) endMins += 24 * 60; // Overnight
+
+                                                                                    // Check if any booked slot falls between start and end
+                                                                                    for (let m = startMins; m < endMins; m += 30) {
+                                                                                        const checkH = Math.floor(m / 60) % 24;
+                                                                                        const checkM = m % 60;
+                                                                                        const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                        if (bookedTimes.includes(checkStr)) return false;
+                                                                                    }
+                                                                                    return true;
+                                                                                }).map(t => (
+                                                                                    <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
+                                                                                ))}
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
+                                                                        <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
+                                                            <span className="text-gray-400 text-sm">Нийт үнэ:</span>
+                                                            <span className="text-xl font-bold text-white">
+                                                                {form.tierId
+                                                                    ? ((activeService.priceTiers?.find(t => t.id.toString() === form.tierId)?.price as number ?? 0)).toLocaleString() + "₮"
+                                                                    : "Сонгох"
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                                                            <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">
+                                                                Сагсанд нэмэх
+                                                            </Button>
+                                                            <Button type="button"
+                                                                onClick={() => {
+                                                                    if (validateForm(true)) {
+                                                                        const selectedTier = activeService.priceTiers?.find(t => t.id.toString() === form.tierId);
+                                                                        if (selectedTier) {
+                                                                            const durationHrs = calcDuration(form.time, form.endTime);
+                                                                            const tierLabel = selectedTier.label?.trim() || "";
+                                                                            if (durationHrs > parseDuration(tierLabel)) {
+                                                                                toast.error(`${tierLabel} багц сонгосон тул ${parseDuration(tierLabel)} цагаас илүү хугацаа сонгох боломжгүй.`);
+                                                                                return;
+                                                                            }
+                                                                        }
+                                                                        setShowPaymentModal(true);
+                                                                    }
+                                                                }}
+                                                                disabled={submitting}
+                                                                className="flex-1 h-11 bg-rose-600 hover:bg-rose-600/90 font-semibold text-white">
+                                                                {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Уншиж байна...</> : "Шууд авах"}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
 
             <PaymentMethodModal
                 open={showPaymentModal}

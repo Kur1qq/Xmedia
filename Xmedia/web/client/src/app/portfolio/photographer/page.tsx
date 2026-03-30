@@ -125,9 +125,20 @@ export default function PhotographerPortfolioPage() {
                             className="relative max-w-4xl w-full"
                             onClick={e => e.stopPropagation()}
                         >
-                            {lightbox.images[0] && (
-                                <img src={lightbox.images[0]} alt={lightbox.title}
-                                    className="w-full rounded-xl object-cover max-h-[80vh]" />
+                            {lightbox.images && lightbox.images.length > 0 && (
+                                <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 w-full">
+                                    {lightbox.images.map((img, idx) => (
+                                        <div key={idx} className="shrink-0 w-full snap-center relative">
+                                            <img src={img} alt={`${lightbox.title} ${idx + 1}`}
+                                                className="w-full rounded-xl object-cover max-h-[80vh]" />
+                                            {lightbox.images.length > 1 && (
+                                                <div className="absolute top-4 right-6 px-3 py-1 bg-black/60 backdrop-blur rounded-full text-xs font-medium text-white/90">
+                                                    {idx + 1} / {lightbox.images.length}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                             <div className="mt-4">
                                 <h2 className="text-2xl font-bold">{lightbox.title}</h2>

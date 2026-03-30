@@ -703,24 +703,23 @@ export class BookingsService {
             select: { startTime: true, endTime: true },
         });
 
-        // All possible time slots (09:00 – 21:00)
-        const ALL_TIMES = [
-            '09:00', '10:00', '11:00', '12:00', '13:00',
-            '14:00', '15:00', '16:00', '17:00', '18:00',
-            '19:00', '20:00', '21:00',
-        ];
+        // All 30-minute slots across the full 24-hour day (00:00 – 23:30)
+        const ALL_TIMES = Array.from({ length: 48 }, (_, i) => {
+            const h = Math.floor(i / 2);
+            const m = i % 2 === 0 ? '00' : '30';
+            return `${String(h).padStart(2, '0')}:${m}`;
+        });
 
         const bookedTimes: string[] = [];
 
         for (const time of ALL_TIMES) {
             const [h, m] = time.split(':').map(Number);
             const slotStart = h * 60 + m; // minutes from midnight
-            const slotEnd = slotStart + 60; // 1-hour slot
+            const slotEnd = slotStart + 30; // 30-minute slot
 
             const overlaps = items.some(item => {
                 if (!item.startTime || !item.endTime) return false;
-                // Parse time string directly to avoid timezone issues
-                // startTime/endTime stored as "HH:MM:SS" — just split and parse
+                // startTime/endTime stored as "HH:MM:SS" — split and parse directly
                 const [sh, sm] = item.startTime.split(':').map(Number);
                 const [eh, em] = item.endTime.split(':').map(Number);
                 const bookedStart = sh * 60 + sm;

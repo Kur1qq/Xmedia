@@ -175,25 +175,43 @@ model Service {
 
 // Шууд дамжуулалтын үйлчилгээ (камерийн тоогоор үнэлдэг)
 model LiveService {
-  id          Int     @id @default(autoincrement())
-  categoryId  Int     @map("category_id")
-  name        String  @db.VarChar(200)
-  description String? @db.Text
-  image       String? @db.Text
-  amenities   Json?
-  isActive    Boolean @default(true) @map("is_active")
-  sortOrder   Int     @default(0) @map("sort_order")
+  id            Int     @id @default(autoincrement())
+  categoryId    Int     @map("category_id")
+  serviceTypeId Int?    @map("service_type_id")
+  name          String  @db.VarChar(200)
+  description   String? @db.Text
+  image         String? @db.Text
+  amenities     Json?
+  isActive      Boolean @default(true) @map("is_active")
+  sortOrder     Int     @default(0) @map("sort_order")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
   category     ServiceCategory         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  serviceType  LiveServiceType?        @relation(fields: [serviceTypeId], references: [id], onDelete: SetNull)
   priceTiers   LiveServiceCameraTier[]
   equipments   LiveServiceEquipment[]
   bookingItems BookingItem[] // FIX: back-relation
 
   @@map("live_services")
 }
+
+model LiveServiceType {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  services LiveService[]
+
+  @@map("live_service_types")
+}
+
 
 // камерийн тоогоор тогтоосон үнийн мэдээлэл
 model LiveServiceCameraTier {
@@ -679,8 +697,10 @@ model PortfolioItem {
   // LIVE-specific fields
   liveDate    DateTime? @map("live_date") @db.Timestamp(0)
   viewCount   Int?      @map("view_count")
-  youtubeUrl  String?   @map("youtube_url") @db.VarChar(500)
-  facebookUrl String?   @map("facebook_url") @db.VarChar(500)
+  youtubeUrl   String?   @map("youtube_url") @db.VarChar(500)
+  facebookUrl  String?   @map("facebook_url") @db.VarChar(500)
+  instagramUrl String?   @map("instagram_url") @db.VarChar(500)
+  tiktokUrl    String?   @map("tiktok_url") @db.VarChar(500)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
@@ -720,6 +740,7 @@ model SiteSettings {
   homeCards     Json?    @map("home_cards")
   contactInfo   Json?    @map("contact_info")
   presentationUrl String?
+  logoUrl       String?  @map("logo_url")
   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
   @@map("site_settings")

@@ -18,6 +18,8 @@ export declare class PortfolioController {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }[]>;
     findOne(id: string): Promise<{
         id: number;
@@ -34,6 +36,8 @@ export declare class PortfolioController {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }>;
     create(body: {
         serviceType: PortfolioServiceType;
@@ -43,6 +47,12 @@ export declare class PortfolioController {
         tags?: string[];
         isPublished?: boolean;
         sortOrder?: number;
+        liveDate?: Date;
+        viewCount?: number;
+        youtubeUrl?: string;
+        facebookUrl?: string;
+        instagramUrl?: string;
+        tiktokUrl?: string;
     }): Promise<{
         id: number;
         createdAt: Date;
@@ -58,6 +68,8 @@ export declare class PortfolioController {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }>;
     update(id: string, body: {
         serviceType?: PortfolioServiceType;
@@ -67,6 +79,12 @@ export declare class PortfolioController {
         tags?: string[];
         isPublished?: boolean;
         sortOrder?: number;
+        liveDate?: Date | null;
+        viewCount?: number | null;
+        youtubeUrl?: string | null;
+        facebookUrl?: string | null;
+        instagramUrl?: string | null;
+        tiktokUrl?: string | null;
     }): Promise<{
         id: number;
         createdAt: Date;
@@ -82,6 +100,8 @@ export declare class PortfolioController {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }>;
     remove(id: string): Promise<{
         id: number;
@@ -98,5 +118,7 @@ export declare class PortfolioController {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }>;
 }

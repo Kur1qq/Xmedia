@@ -78,17 +78,17 @@ let AdminController = class AdminController {
     findOne(id) { return this.adminService.findOne(+id); }
     async create(body, req) {
         const result = await this.adminService.create(body);
-        await this.adminLogService.log(req.admin.id, 'CREATE', 'AdminUser', result.id, `Created ${result.username}`, req.ip);
+        await this.adminLogService.log(req.user?.id, 'CREATE', 'AdminUser', result.id, `Created ${result.username}`, req.ip);
         return result;
     }
     async update(id, body, req) {
         const result = await this.adminService.update(+id, body);
-        await this.adminLogService.log(req.admin.id, 'UPDATE', 'Admin', +id, undefined, req.ip);
+        await this.adminLogService.log(req.user?.id, 'UPDATE', 'Admin', +id, undefined, req.ip);
         return result;
     }
     async remove(id, req) {
         const result = await this.adminService.remove(+id);
-        await this.adminLogService.log(req.admin.id, 'DELETE', 'Admin', +id, undefined, req.ip);
+        await this.adminLogService.log(req.user?.id, 'DELETE', 'Admin', +id, undefined, req.ip);
         return result;
     }
 };

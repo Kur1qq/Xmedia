@@ -23,6 +23,8 @@ export function Header() {
     const { user, logout } = useAuthStore();
     const pathname = usePathname();
     const [navItems, setNavItems] = React.useState(siteConfig.nav);
+    const [logoUrl, setLogoUrl] = React.useState("/x logo зөв өнгө.png");
+    const [contactSections, setContactSections] = React.useState<any[]>([]);
 
     const [presentationUrl, setPresentationUrl] = React.useState("/taniltsuulga.pdf");
 
@@ -40,6 +42,12 @@ export function Header() {
                     }
                     if (data.presentationUrl) {
                         setPresentationUrl(data.presentationUrl);
+                    }
+                    if (data.logoUrl) {
+                        setLogoUrl(data.logoUrl);
+                    }
+                    if (data.contactInfo && Array.isArray(data.contactInfo) && data.contactInfo.length > 0) {
+                        setContactSections(data.contactInfo);
                     }
                 }
             })
@@ -77,12 +85,13 @@ export function Header() {
                     <div className="flex-1 flex justify-start">
                         <Link href="/" className="hover:opacity-90 transition-opacity">
                             <Image
-                                src="/x logo зөв өнгө.png"
+                                src={logoUrl}
                                 alt="Xtudio logo"
                                 width={100}
                                 height={36}
                                 className="h-10 w-auto object-contain"
                                 priority
+                                unoptimized
                             />
                         </Link>
                     </div>
@@ -155,32 +164,68 @@ export function Header() {
                                     <hr className="my-1 border-white/10" />
                                     <div className="flex flex-col gap-2 text-[12px] text-left text-gray-300 bg-white/5 p-3 rounded-xl border border-white/10 mx-auto w-full">
                                         <p className="font-bold text-white mb-1 text-center text-[14px]">Холбоо барих</p>
-
-                                        <div className="space-y-1">
-                                            <p className="text-rose-400 font-bold text-[12px]">Жижиг дунд бизнесийн үйлчилгээ</p>
-                                            <div className="flex justify-between items-center text-[12px]">
-                                                <span className="text-gray-400">Утас:</span>
-                                                <a href="tel:95905686" className="text-white">9590 5686</a>
-                                            </div>
-                                            <div className="flex justify-between items-center text-[12px]">
-                                                <span className="text-gray-400">И-мэйл:</span>
-                                                <a href="mailto:Contact@xtudio.mn" className="text-white">Contact@xtudio.mn</a>
-                                            </div>
-                                        </div>
-
-                                        <div className="h-px bg-white/10 w-full my-1"></div>
-
-                                        <div className="space-y-1">
-                                            <p className="text-blue-400 font-bold text-[12px]">Групп компани</p>
-                                            <div className="flex justify-between items-center text-[12px]">
-                                                <span className="text-gray-400">Утас:</span>
-                                                <a href="tel:91915686" className="text-white">9191 5686</a>
-                                            </div>
-                                            <div className="flex justify-between items-center text-[12px]">
-                                                <span className="text-gray-400">И-мэйл:</span>
-                                                <a href="mailto:Contact@orgilmedia.mn" className="text-white">Contact@orgilmedia.mn</a>
-                                            </div>
-                                        </div>
+                                        {contactSections.length > 0 ? (
+                                            contactSections.map((section: any, idx: number) => (
+                                                <div key={idx}>
+                                                    {idx > 0 && <div className="h-px bg-white/10 w-full my-1" />}
+                                                    <p className={`font-bold text-[12px] mb-1 ${section.color === 'blue' ? 'text-blue-400' : 'text-rose-400'}`}>{section.title}</p>
+                                                    {section.phone && (
+                                                        <div className="flex justify-between items-center text-[12px]">
+                                                            <span className="text-gray-400">Утас:</span>
+                                                            <a href={`tel:${section.phone.replace(/\s+/g, '')}`} className="text-white">{section.phone}</a>
+                                                        </div>
+                                                    )}
+                                                    {section.email && (
+                                                        <div className="flex justify-between items-center text-[12px]">
+                                                            <span className="text-gray-400">И-мэйл:</span>
+                                                            <a href={`mailto:${section.email}`} className="text-white truncate ml-2">{section.email}</a>
+                                                        </div>
+                                                    )}
+                                                    {section.instagram && (
+                                                        <div className="flex justify-between items-center text-[12px]">
+                                                            <span className="text-gray-400">Instagram:</span>
+                                                            <a href={section.instagram} target="_blank" rel="noopener noreferrer" className="text-white truncate ml-2">
+                                                                {section.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, '@').replace(/\/$/, '')}
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                    {section.facebook && (
+                                                        <div className="flex justify-between items-center text-[12px]">
+                                                            <span className="text-gray-400">Facebook:</span>
+                                                            <a href={section.facebook} target="_blank" rel="noopener noreferrer" className="text-white truncate ml-2">
+                                                                {section.facebook.replace(/^https?:\/\/(www\.)?facebook\.com\//, '').replace(/\/$/, '')}
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <>
+                                                <div className="space-y-1">
+                                                    <p className="text-rose-400 font-bold text-[12px]">Жижиг дунд бизнесийн үйлчилгээ</p>
+                                                    <div className="flex justify-between items-center text-[12px]">
+                                                        <span className="text-gray-400">Утас:</span>
+                                                        <a href="tel:95905686" className="text-white">9590 5686</a>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-[12px]">
+                                                        <span className="text-gray-400">И-мэйл:</span>
+                                                        <a href="mailto:Contact@xtudio.mn" className="text-white">Contact@xtudio.mn</a>
+                                                    </div>
+                                                </div>
+                                                <div className="h-px bg-white/10 w-full my-1" />
+                                                <div className="space-y-1">
+                                                    <p className="text-blue-400 font-bold text-[12px]">Групп компани</p>
+                                                    <div className="flex justify-between items-center text-[12px]">
+                                                        <span className="text-gray-400">Утас:</span>
+                                                        <a href="tel:91915686" className="text-white">9191 5686</a>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-[12px]">
+                                                        <span className="text-gray-400">И-мэйл:</span>
+                                                        <a href="mailto:Contact@orgilmedia.mn" className="text-white">Contact@orgilmedia.mn</a>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
 
                                     {user && (

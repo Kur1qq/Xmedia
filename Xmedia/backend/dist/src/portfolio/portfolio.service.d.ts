@@ -18,6 +18,8 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
@@ -34,6 +36,8 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }>;
     create(data: {
         serviceType: PortfolioServiceType;
@@ -47,6 +51,8 @@ export declare class PortfolioService {
         viewCount?: number;
         youtubeUrl?: string;
         facebookUrl?: string;
+        instagramUrl?: string;
+        tiktokUrl?: string;
     }): Promise<{
         id: number;
         createdAt: Date;
@@ -62,6 +68,8 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }>;
     update(id: number, data: {
         serviceType?: PortfolioServiceType;
@@ -75,6 +83,8 @@ export declare class PortfolioService {
         viewCount?: number | null;
         youtubeUrl?: string | null;
         facebookUrl?: string | null;
+        instagramUrl?: string | null;
+        tiktokUrl?: string | null;
     }): Promise<{
         id: number;
         createdAt: Date;
@@ -90,6 +100,8 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }>;
     remove(id: number): Promise<{
         id: number;
@@ -106,5 +118,7 @@ export declare class PortfolioService {
         viewCount: number | null;
         youtubeUrl: string | null;
         facebookUrl: string | null;
+        instagramUrl: string | null;
+        tiktokUrl: string | null;
     }>;
 }

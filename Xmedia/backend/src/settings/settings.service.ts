@@ -15,7 +15,7 @@ export class SettingsService {
         return this.getOrCreate();
     }
 
-    async updateSettings(data: { snowEffect?: boolean; headerNav?: any; homeCards?: any; contactInfo?: any; presentationUrl?: string }) {
+    async updateSettings(data: { snowEffect?: boolean; headerNav?: any; homeCards?: any; contactInfo?: any; presentationUrl?: string; logoUrl?: string }) {
         const settings = await this.getOrCreate();
         return this.prisma.siteSettings.update({
             where: { id: settings.id },

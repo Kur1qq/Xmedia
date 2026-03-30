@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { X, CheckCircle, Clock, XCircle, ChevronDown, Package, CalendarDays, List, ChevronLeft, ChevronRight, ArrowLeft, User, CreditCard, Activity, Calendar, Edit2, Trash2, Mail, MoreVertical } from "lucide-react";
+import { X, CheckCircle, Clock, XCircle, ChevronDown, Package, CalendarDays, List, ChevronLeft, ChevronRight, ArrowLeft, User, CreditCard, Activity, Calendar, Edit2, Trash2, Mail, MoreVertical, Download } from "lucide-react";
 import { toast } from "sonner";
 import { getAdminInfo } from "@/lib/auth";
+import * as xlsx from "xlsx";
 
 // ---- Booking service type detection ----
 function detectBookingType(booking: any): string {
@@ -76,6 +77,7 @@ export default function BookingsPage() {
     const [cancelledBookings, setCancelledBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<'list' | 'calendar'>('list');
+    const [activeTypeFilter, setActiveTypeFilter] = useState<string | null>(null);
     const [tab, setTab] = useState<'paid' | 'pending' | 'cancelled'>('paid');
     const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
     const [newNoteText, setNewNoteText] = useState("");
@@ -87,9 +89,84 @@ export default function BookingsPage() {
         name: '', phone: '', email: '',
         date: shortDate(new Date()) ? new Date().toISOString().split('T')[0] : '',
         startTime: '10:00', endTime: '12:00',
-        serviceType: 'STUDIO', serviceId: '1',
+        serviceType: 'STUDIO', serviceId: '',
         totalAmount: 100000, status: 'CONFIRMED', paymentStatus: 'PAID', notes: ''
     });
+    const [serviceOptions, setServiceOptions] = useState<{ id: string; name: string }[]>([]);
+    const [serviceOptionsLoading, setServiceOptionsLoading] = useState(false);
+    const [timeConflict, setTimeConflict] = useState<string | null>(null);
+    const [adminBookedSlots, setAdminBookedSlots] = useState<string[]>([]);
+
+    // 30-min interval time slots
+    const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
+        const h = Math.floor(i / 2).toString().padStart(2, '00');
+        const m = i % 2 === 0 ? '00' : '30';
+        return `${h}:${m}`;
+    });
+
+    const SERVICE_TYPE_MAP: Record<string, string> = {
+        STUDIO: 'STUDIO',
+        PHOTOGRAPHER_SERVICE: 'PHOTOGRAPHER_SERVICE',
+        EDIT_SERVICE: 'EDIT_SERVICE',
+        LIVE_SERVICE: 'LIVE_SERVICE',
+        BUNDLE_SERVICE: 'BUNDLE_SERVICE',
+    };
+
+    const fetchAdminBookedSlots = async (serviceType: string, serviceId: string, date: string) => {
+        if (!serviceId || !date || !serviceType) { setAdminBookedSlots([]); return; }
+        try {
+            const res = await fetch(`${API}/bookings/available-slots?serviceType=${SERVICE_TYPE_MAP[serviceType] || serviceType}&serviceId=${serviceId}&date=${date}`);
+            if (res.ok) {
+                const data = await res.json();
+                setAdminBookedSlots(Array.isArray(data.bookedTimes) ? data.bookedTimes : []);
+            } else {
+                setAdminBookedSlots([]);
+            }
+        } catch { setAdminBookedSlots([]); }
+    };
+
+    const SERVICE_TYPE_ENDPOINTS: Record<string, string> = {
+        STUDIO: 'studio',
+        PHOTOGRAPHER_SERVICE: 'photographer-services',
+        EDIT_SERVICE: 'edit-services',
+        LIVE_SERVICE: 'live-services',
+        BUNDLE_SERVICE: 'bundle-services',
+    };
+
+    const fetchServiceOptions = async (type: string) => {
+        const endpoint = SERVICE_TYPE_ENDPOINTS[type];
+        if (!endpoint) { setServiceOptions([]); return; }
+        setServiceOptionsLoading(true);
+        setServiceOptions([]);
+        try {
+            const res = await fetch(`${API}/${endpoint}`);
+            if (res.ok) {
+                const data: any[] = await res.json();
+                const opts = data.map(s => ({ id: String(s.id), name: s.name || `#${s.id}` }));
+                setServiceOptions(opts);
+                setAddForm(f => ({ ...f, serviceId: opts[0]?.id || '' }));
+            }
+        } catch (e) { console.error(e); setServiceOptions([]); }
+        finally { setServiceOptionsLoading(false); }
+    };
+
+    // Fetch services when modal opens or serviceType changes
+    useEffect(() => {
+        if (isAddModalOpen) {
+            fetchServiceOptions(addForm.serviceType);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAddModalOpen, addForm.serviceType]);
+
+    // Fetch booked slots when date / service selection changes
+    useEffect(() => {
+        if (isAddModalOpen && addForm.date && addForm.serviceId) {
+            fetchAdminBookedSlots(addForm.serviceType, addForm.serviceId, addForm.date);
+        } else {
+            setAdminBookedSlots([]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAddModalOpen, addForm.date, addForm.serviceId, addForm.serviceType]);
 
     const openBookingModal = (b: any, event: React.MouseEvent) => {
         event.stopPropagation();
@@ -190,6 +267,38 @@ export default function BookingsPage() {
 
     const submitManualBooking = async (e: React.FormEvent) => {
         e.preventDefault();
+        setTimeConflict(null);
+
+        // Studio overlap check using already-loaded bookings
+        if (addForm.serviceType === 'STUDIO' && addForm.serviceId && addForm.date && addForm.startTime && addForm.endTime) {
+            const newStart = addForm.startTime;
+            const newEnd = addForm.endTime;
+            if (newStart >= newEnd) {
+                setTimeConflict('Эхлэх цаг дуусах цагаас өмнө байх ёстой.');
+                return;
+            }
+            const dateKey = addForm.date;
+            const dayBookings = bookingsByDateKey[dateKey] || [];
+            const studioId = String(addForm.serviceId);
+            const conflicts = dayBookings.filter(b => {
+                const bItem = b._item;
+                if (!bItem || b._type !== 'studio') return false;
+                if (String(bItem.studioId ?? bItem.studio?.id) !== studioId) return false;
+                const bs = bItem.startTime?.slice(0, 5);
+                const be = bItem.endTime?.slice(0, 5);
+                if (!bs || !be) return false;
+                // Overlap: new.start < existing.end && new.end > existing.start
+                return newStart < be && newEnd > bs;
+            });
+            if (conflicts.length > 0) {
+                const c = conflicts[0];
+                const bs = c._item.startTime.slice(0, 5);
+                const be = c._item.endTime.slice(0, 5);
+                setTimeConflict(`Цаг давхцалдаа: ${bs}–${be} цагт #${c.id} захиалга буй байна.`);
+                return;
+            }
+        }
+
         setIsSaving(true);
         try {
             const token = localStorage.getItem('admin_token');
@@ -206,14 +315,61 @@ export default function BookingsPage() {
                 setIsAddModalOpen(false);
             } else {
                 const err = await res.json();
-                alert(`Алдаа гарлаа: ${err.message || 'Unknown error'}`);
+                toast.error(`Алдаа гарлаа: ${err.message || 'Unknown error'}`);
             }
         } catch (error) {
             console.error(error);
-            alert("Холболтын алдаа гарлаа.");
+            toast.error("Холболтын алдаа гарлаа.");
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const downloadExcel = () => {
+        if (!filteredBookings || filteredBookings.length === 0) {
+            toast.error("Татах өгөгдөл алга байна.");
+            return;
+        }
+
+        const excelData = filteredBookings.map((booking, index) => {
+            const btype = detectBookingType(booking);
+            let serviceLabel = "Үйлчилгээ";
+            if (btype === 'studio') serviceLabel = "Студио";
+            if (btype === 'live') serviceLabel = "Шууд дамжуулалт";
+            if (btype === 'edit') serviceLabel = "Эдит";
+            if (btype === 'bundle') serviceLabel = "Багц үйлчилгээ";
+            if (btype === 'photographer') serviceLabel = "Зурагчин, Зураглаач";
+
+            return {
+                "№": index + 1,
+                "Захиалгын ID": `#${booking.id}`,
+                "Үйлчилгээний Төрөл": serviceLabel,
+                "Хэрэглэгч": booking.user?.username || 'Тодорхойгүй',
+                "И-Мэйл": booking.user?.email || '',
+                "Утас": booking.user?.phone || '',
+                "Нийт дүн": `${Number(booking.totalAmount).toLocaleString()}`,
+                "Төлбөрийн Төлөв": booking.paymentStatus === 'PAID' ? 'Төлөгдсөн' : booking.paymentStatus === 'REFUNDED' ? 'Буцаагдсан' : 'Хүлээгдэж буй',
+                "Захиалгын Төлөв": booking.status === 'CONFIRMED' ? 'Баталгаажсан' : booking.status === 'COMPLETED' ? 'Дууссан' : booking.status === 'CANCELLED' ? 'Цуцлагдсан' : 'Шалгагдаж буй',
+                "Үүсгэсэн Огноо": new Date(booking.createdAt).toLocaleString('mn-MN')
+            };
+        });
+
+        const worksheet = xlsx.utils.aoa_to_sheet([
+            ["ХЯНАЛТЫН САМБАР - ЗАХИАЛГЫН ТАЙЛАН"],
+            [`Төлөв: ${tab === 'paid' ? 'Төлөгдсөн' : tab === 'pending' ? 'Хүлээгдэж буй' : 'Цуцлагдсан'}`],
+            [""]
+        ]);
+
+        xlsx.utils.sheet_add_json(worksheet, excelData, { origin: "A4", skipHeader: false });
+
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, "Захиалгууд");
+        
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const d = new Date();
+        const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        
+        xlsx.writeFile(workbook, `Zahialga_Tailan_${dateStr}.xlsx`);
     };
 
     // Build calendar grid (month view)
@@ -236,10 +392,16 @@ export default function BookingsPage() {
         return parseInt(parts[0], 10) || 0;
     };
 
+    // Filtered bookings (by service type when a filter is active)
+    const filteredBookings = useMemo(() => {
+        if (!activeTypeFilter) return activeBookings;
+        return activeBookings.filter(b => detectBookingType(b) === activeTypeFilter);
+    }, [activeBookings, activeTypeFilter]);
+
     // Bookings indexed by "YYYY-MM-DD" for efficient lookup
     const bookingsByDateKey = useMemo(() => {
         const map: Record<string, any[]> = {};
-        for (const b of activeBookings) {
+        for (const b of filteredBookings) {
             const type = detectBookingType(b);
             const items: any[] = b.items || [];
             if (items.length === 0) {
@@ -266,7 +428,7 @@ export default function BookingsPage() {
             }
         }
         return map;
-    }, [activeBookings]);
+    }, [filteredBookings]);
 
     // Helper to get bookings for a specific date
     const getBookingsForDate = useCallback((date: Date) => {
@@ -420,6 +582,12 @@ export default function BookingsPage() {
                 {/* Actions & View toggle */}
                 <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
                     <button
+                        onClick={downloadExcel}
+                        className="border border-input bg-background hover:bg-muted text-foreground flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
+                    >
+                        <Download className="w-4 h-4" /> Excel татах
+                    </button>
+                    <button
                         onClick={() => setIsAddModalOpen(true)}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
                     >
@@ -436,14 +604,33 @@ export default function BookingsPage() {
                 </div>
             </div>
 
-            {/* Legend */}
-            <div className="flex flex-wrap gap-3 text-xs">
-                {Object.entries(TYPE_COLORS).map(([key, c]) => (
-                    <div key={key} className="flex items-center gap-1.5">
-                        <span className={`w-2.5 h-2.5 rounded-full ${c.dot}`} />
-                        <span className="text-muted-foreground">{c.label}</span>
-                    </div>
-                ))}
+            {/* Service type filter buttons */}
+            <div className="flex flex-wrap gap-2">
+                {Object.entries(TYPE_COLORS).map(([key, c]) => {
+                    const isActive = activeTypeFilter === key;
+                    return (
+                        <button
+                            key={key}
+                            onClick={() => setActiveTypeFilter(isActive ? null : key)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                                isActive
+                                    ? `${c.bg} ${c.text} border-transparent shadow-sm`
+                                    : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border bg-transparent'
+                            }`}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${c.dot}`} />
+                            {c.label}
+                        </button>
+                    );
+                })}
+                {activeTypeFilter && (
+                    <button
+                        onClick={() => setActiveTypeFilter(null)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border border-border/50 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        <X className="w-3 h-3" /> Бүгд
+                    </button>
+                )}
             </div>
 
             {/* Payment status tabs */}
@@ -938,32 +1125,73 @@ export default function BookingsPage() {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Төрөл</label>
-                                            <select className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.serviceType} onChange={e => setAddForm({ ...addForm, serviceType: e.target.value })}>
-                                                <option value="STUDIO">Студи</option>
-                                                <option value="PHOTOGRAPHER_SERVICE">Зурагчин</option>
-                                                <option value="EDIT_SERVICE">Эвлүүлэг</option>
+                                            <select
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                value={addForm.serviceType}
+                                                onChange={e => {
+                                                    setAddForm(f => ({ ...f, serviceType: e.target.value, serviceId: '' }));
+                                                    fetchServiceOptions(e.target.value);
+                                                }}
+                                            >
+                                                <option value="STUDIO">Студио</option>
+                                                <option value="PHOTOGRAPHER_SERVICE">Зураглаач</option>
+                                                <option value="EDIT_SERVICE">Эдит</option>
                                                 <option value="LIVE_SERVICE">Шууд дамжуулалт</option>
+                                                <option value="BUNDLE_SERVICE">Багц</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="text-xs text-gray-500 mb-1 block">ID дугаар</label>
-                                            <input required type="number" min="1" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.serviceId} onChange={e => setAddForm({ ...addForm, serviceId: e.target.value })} />
+                                            <label className="text-xs text-gray-500 mb-1 block">Үйлчилгээ</label>
+                                            <select
+                                                required
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
+                                                value={addForm.serviceId}
+                                                disabled={serviceOptionsLoading || serviceOptions.length === 0}
+                                                onChange={e => setAddForm(f => ({ ...f, serviceId: e.target.value }))}
+                                            >
+                                                {serviceOptionsLoading && <option value="">Уншиж байна...</option>}
+                                                {!serviceOptionsLoading && serviceOptions.length === 0 && <option value="">Үйлчилгээ алга</option>}
+                                                {serviceOptions.map(o => (
+                                                    <option key={o.id} value={o.id}>{o.name}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-3 gap-3">
                                         <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Огноо</label>
-                                            <input required type="date" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors [color-scheme:dark]" value={addForm.date} onChange={e => setAddForm({ ...addForm, date: e.target.value })} />
+                                            <input required type="date" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors [color-scheme:dark]" value={addForm.date} onChange={e => { setAddForm({ ...addForm, date: e.target.value }); setTimeConflict(null); }} />
                                         </div>
                                         <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Эхлэх</label>
-                                            <input required type="time" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors [color-scheme:dark]" value={addForm.startTime} onChange={e => setAddForm({ ...addForm, startTime: e.target.value })} />
+                                            <select
+                                                required
+                                                className="w-full bg-[#111] border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                value={addForm.startTime}
+                                                onChange={e => { setAddForm(f => ({ ...f, startTime: e.target.value })); setTimeConflict(null); }}
+                                            >
+                                                <option value="">— : —</option>
+                                                {TIME_SLOTS.filter(t => !adminBookedSlots.includes(t)).map(t => <option key={t} value={t}>{t}</option>)}
+                                            </select>
                                         </div>
                                         <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Дуусах</label>
-                                            <input required type="time" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors [color-scheme:dark]" value={addForm.endTime} onChange={e => setAddForm({ ...addForm, endTime: e.target.value })} />
+                                            <select
+                                                required
+                                                className="w-full bg-[#111] border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                value={addForm.endTime}
+                                                onChange={e => { setAddForm(f => ({ ...f, endTime: e.target.value })); setTimeConflict(null); }}
+                                            >
+                                                <option value="">— : —</option>
+                                                {TIME_SLOTS.filter(t => !adminBookedSlots.includes(t)).map(t => <option key={t} value={t}>{t}</option>)}
+                                            </select>
                                         </div>
                                     </div>
+                                    {timeConflict && (
+                                        <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2 mt-1">
+                                            ⚠️ {timeConflict}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Status & Price */}

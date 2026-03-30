@@ -32,6 +32,8 @@ export class PortfolioService {
         viewCount?: number;
         youtubeUrl?: string;
         facebookUrl?: string;
+        instagramUrl?: string;
+        tiktokUrl?: string;
     }) {
         return this.prisma.portfolioItem.create({ data });
     }
@@ -49,6 +51,8 @@ export class PortfolioService {
         viewCount?: number | null;
         youtubeUrl?: string | null;
         facebookUrl?: string | null;
+        instagramUrl?: string | null;
+        tiktokUrl?: string | null;
     }) {
         await this.findOne(id);
         return this.prisma.portfolioItem.update({ where: { id }, data });

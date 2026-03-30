@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Plus, Pencil, Trash2, X, ImageIcon, Eye, EyeOff, Youtube, Facebook } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ImageIcon, Eye, EyeOff, Youtube, Facebook, Instagram, Music } from "lucide-react";
 import { toast } from "sonner";
 import { fetchWithAuth } from "@/lib/auth";
 
@@ -21,6 +21,8 @@ interface PortfolioItem {
     viewCount?: number;
     youtubeUrl?: string;
     facebookUrl?: string;
+    instagramUrl?: string;
+    tiktokUrl?: string;
     createdAt: string;
 }
 
@@ -33,8 +35,8 @@ const TABS: { key: ServiceType; label: string }[] = [
     { key: "BUNDLE_SERVICE", label: "Багц үйлчилгээ" },
 ];
 
-const EMPTY_GENERIC = { title: "", description: "", images: [] as string[], tags: [] as string[], isPublished: true, sortOrder: 0, youtubeUrl: "", facebookUrl: "" };
-const EMPTY_LIVE = { title: "", description: "", image: "", viewCount: 0, liveDate: "", youtubeUrl: "", facebookUrl: "", isPublished: true };
+const EMPTY_GENERIC = { title: "", description: "", images: [] as string[], tags: [] as string[], isPublished: true, sortOrder: 0, youtubeUrl: "", facebookUrl: "", instagramUrl: "", tiktokUrl: "", viewCount: 0, liveDate: "" };
+const EMPTY_LIVE = { title: "", description: "", image: "", viewCount: 0, liveDate: "", youtubeUrl: "", facebookUrl: "", instagramUrl: "", tiktokUrl: "", isPublished: true };
 
 export default function PortfolioPage() {
     const [activeTab, setActiveTab] = useState<ServiceType>("STUDIO");
@@ -78,6 +80,8 @@ export default function PortfolioPage() {
                 liveDate: item.liveDate ? item.liveDate.slice(0, 10) : "",
                 youtubeUrl: item.youtubeUrl ?? "",
                 facebookUrl: item.facebookUrl ?? "",
+                instagramUrl: item.instagramUrl ?? "",
+                tiktokUrl: item.tiktokUrl ?? "",
                 isPublished: item.isPublished,
             } : { ...EMPTY_LIVE });
         } else {
@@ -90,6 +94,10 @@ export default function PortfolioPage() {
                 sortOrder: item.sortOrder,
                 youtubeUrl: item.youtubeUrl ?? "",
                 facebookUrl: item.facebookUrl ?? "",
+                instagramUrl: item.instagramUrl ?? "",
+                tiktokUrl: item.tiktokUrl ?? "",
+                viewCount: item.viewCount ?? 0,
+                liveDate: item.liveDate ? item.liveDate.slice(0, 10) : "",
             } : { ...EMPTY_GENERIC });
             setNewTag("");
             setNewImageUrl("");
@@ -159,6 +167,8 @@ export default function PortfolioPage() {
                 liveDate: liveForm.liveDate ? new Date(liveForm.liveDate).toISOString() : undefined,
                 youtubeUrl: liveForm.youtubeUrl.trim() || undefined,
                 facebookUrl: liveForm.facebookUrl.trim() || undefined,
+                instagramUrl: liveForm.instagramUrl.trim() || undefined,
+                tiktokUrl: liveForm.tiktokUrl.trim() || undefined,
             };
         } else {
             if (!genericForm.title.trim()) { toast.error("Гарчиг оруулна уу!"); setSaving(false); return; }
@@ -171,10 +181,12 @@ export default function PortfolioPage() {
                 tags: genericForm.tags.length > 0 ? genericForm.tags : undefined,
                 isPublished: genericForm.isPublished,
                 sortOrder: genericForm.sortOrder,
-                ...(activeTab === "VIDEO_EDIT" ? {
-                    youtubeUrl: genericForm.youtubeUrl.trim() || undefined,
-                    facebookUrl: genericForm.facebookUrl.trim() || undefined,
-                } : {}),
+                youtubeUrl: genericForm.youtubeUrl.trim() || undefined,
+                facebookUrl: genericForm.facebookUrl.trim() || undefined,
+                instagramUrl: genericForm.instagramUrl.trim() || undefined,
+                tiktokUrl: genericForm.tiktokUrl.trim() || undefined,
+                viewCount: genericForm.viewCount || 0,
+                liveDate: genericForm.liveDate ? new Date(genericForm.liveDate).toISOString() : undefined,
             };
         }
 
@@ -208,6 +220,60 @@ export default function PortfolioPage() {
         if (res.ok) {
             setItems(prev => prev.map(i => i.id === item.id ? { ...i, isPublished: !i.isPublished } : i));
             toast.success(item.isPublished ? "Нуугдлаа" : "Нийтлэгдлэ");
+        }
+    };
+
+    const extractYoutubeId = (url: string) => {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
+    const fetchYoutubeInfo = async (type: "LIVE" | "GENERIC") => {
+        const url = type === "LIVE" ? liveForm.youtubeUrl : genericForm.youtubeUrl;
+        const id = extractYoutubeId(url);
+        if (!id) {
+            toast.error("Зөв YouTube линк оруулна уу.");
+            return;
+        }
+        
+        const thumbUrl = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+        if (type === "LIVE") {
+            setLiveForm(prev => ({ ...prev, image: thumbUrl }));
+        } else {
+            setGenericForm(prev => {
+                if (!prev.images.includes(thumbUrl)) {
+                    return { ...prev, images: [...prev.images, thumbUrl] };
+                }
+                return prev;
+            });
+        }
+        toast.success("Thumbnail амжилттай татагдлаа.");
+
+        try {
+            const res = await fetch(`/api/youtube?id=${id}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.viewCount != null || data.date) {
+                    if (type === "LIVE") {
+                        setLiveForm(prev => ({ 
+                            ...prev, 
+                            viewCount: data.viewCount ?? prev.viewCount,
+                            liveDate: data.date ? data.date.slice(0, 10) : prev.liveDate 
+                        }));
+                    } else {
+                        setGenericForm(prev => ({ 
+                            ...prev, 
+                            viewCount: data.viewCount ?? prev.viewCount,
+                            liveDate: data.date ? data.date.slice(0, 10) : prev.liveDate 
+                        }));
+                    }
+                    toast.success("Үзэлт болон Огноо мэдээлэл шинэчлэгдлээ.");
+                }
+            }
+        } catch(e) {
+            console.error("YouTube fetch error", e);
         }
     };
 
@@ -249,15 +315,11 @@ export default function PortfolioPage() {
                                     <th className="px-4 py-3">Үзэлт</th>
                                     <th className="px-4 py-3">Links</th>
                                 </>
-                            ) : activeTab === "VIDEO_EDIT" ? (
-                                <>
-                                    <th className="px-4 py-3">Тайлбар</th>
-                                    <th className="px-4 py-3">Links</th>
-                                </>
                             ) : (
                                 <>
                                     <th className="px-4 py-3">Тайлбар</th>
                                     <th className="px-4 py-3">Шошго</th>
+                                    <th className="px-4 py-3">Links</th>
                                 </>
                             )}
                             <th className="px-4 py-3">Төлөв</th>
@@ -311,28 +373,17 @@ export default function PortfolioPage() {
                                                             <Facebook className="h-4 w-4" />
                                                         </a>
                                                     )}
-                                                    {!item.youtubeUrl && !item.facebookUrl && <span className="text-muted-foreground">—</span>}
-                                                </div>
-                                            </td>
-                                        </>
-                                    ) : activeTab === "VIDEO_EDIT" ? (
-                                        <>
-                                            <td className="px-4 py-3 text-muted-foreground max-w-[180px]">
-                                                <p className="truncate">{item.description || "—"}</p>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex gap-2">
-                                                    {item.youtubeUrl && (
-                                                        <a href={item.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600" title="YouTube">
-                                                            <Youtube className="h-4 w-4" />
+                                                    {item.instagramUrl && (
+                                                        <a href={item.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-600" title="Instagram">
+                                                            <Instagram className="h-4 w-4" />
                                                         </a>
                                                     )}
-                                                    {item.facebookUrl && (
-                                                        <a href={item.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600" title="Facebook">
-                                                            <Facebook className="h-4 w-4" />
+                                                    {item.tiktokUrl && (
+                                                        <a href={item.tiktokUrl} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white" title="TikTok">
+                                                            <Music className="h-4 w-4" />
                                                         </a>
                                                     )}
-                                                    {!item.youtubeUrl && !item.facebookUrl && <span className="text-muted-foreground">—</span>}
+                                                    {!item.youtubeUrl && !item.facebookUrl && !item.instagramUrl && !item.tiktokUrl && <span className="text-muted-foreground">—</span>}
                                                 </div>
                                             </td>
                                         </>
@@ -346,6 +397,31 @@ export default function PortfolioPage() {
                                                     {tags.length > 0 ? tags.map((t, i) => (
                                                         <span key={i} className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium">{t}</span>
                                                     )) : <span className="text-muted-foreground">—</span>}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex gap-2">
+                                                    {item.youtubeUrl && (
+                                                        <a href={item.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600" title="YouTube">
+                                                            <Youtube className="h-4 w-4" />
+                                                        </a>
+                                                    )}
+                                                    {item.facebookUrl && (
+                                                        <a href={item.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600" title="Facebook">
+                                                            <Facebook className="h-4 w-4" />
+                                                        </a>
+                                                    )}
+                                                    {item.instagramUrl && (
+                                                        <a href={item.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-600" title="Instagram">
+                                                            <Instagram className="h-4 w-4" />
+                                                        </a>
+                                                    )}
+                                                    {item.tiktokUrl && (
+                                                        <a href={item.tiktokUrl} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white" title="TikTok">
+                                                            <Music className="h-4 w-4" />
+                                                        </a>
+                                                    )}
+                                                    {!item.youtubeUrl && !item.facebookUrl && !item.instagramUrl && !item.tiktokUrl && <span className="text-muted-foreground">—</span>}
                                                 </div>
                                             </td>
                                         </>
@@ -446,17 +522,36 @@ export default function PortfolioPage() {
                                                 placeholder="Эсвэл зургийн URL..."
                                                 className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-xs text-white focus:outline-none focus:border-primary transition-colors" />
                                         </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Youtube className="h-4 w-4 text-red-500" /> YouTube Link</label>
-                                            <input type="url" value={liveForm.youtubeUrl} onChange={e => setLiveForm({ ...liveForm, youtubeUrl: e.target.value })}
-                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
-                                                placeholder="https://youtube.com/watch?v=..." />
+                                        <div className="flex gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <label className="text-xs text-gray-500 flex items-center gap-1.5 block"><Youtube className="h-4 w-4 text-red-500" /> YouTube Link</label>
+                                                    <button type="button" onClick={() => fetchYoutubeInfo("LIVE")} className="text-[10px] text-primary hover:underline">Мэдээлэл татах</button>
+                                                </div>
+                                                <input type="url" value={liveForm.youtubeUrl} onChange={e => setLiveForm({ ...liveForm, youtubeUrl: e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="https://youtube.com/watch?v=..." />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Facebook className="h-4 w-4 text-blue-500" /> Facebook Link</label>
+                                                <input type="url" value={liveForm.facebookUrl} onChange={e => setLiveForm({ ...liveForm, facebookUrl: e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="https://facebook.com/video/..." />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Facebook className="h-4 w-4 text-blue-500" /> Facebook Link</label>
-                                            <input type="url" value={liveForm.facebookUrl} onChange={e => setLiveForm({ ...liveForm, facebookUrl: e.target.value })}
-                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
-                                                placeholder="https://facebook.com/video/..." />
+                                        <div className="flex gap-4">
+                                            <div className="flex-1">
+                                                <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Instagram className="h-4 w-4 text-pink-500" /> Instagram Link</label>
+                                                <input type="url" value={liveForm.instagramUrl} onChange={e => setLiveForm({ ...liveForm, instagramUrl: e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="https://instagram.com/..." />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Music className="h-4 w-4 text-gray-400" /> TikTok Link</label>
+                                                <input type="url" value={liveForm.tiktokUrl} onChange={e => setLiveForm({ ...liveForm, tiktokUrl: e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="https://tiktok.com/..." />
+                                            </div>
                                         </div>
                                     </>
                                 ) : (
@@ -523,22 +618,50 @@ export default function PortfolioPage() {
                                                 <button type="button" onClick={addTag} className="px-3 py-2 text-xs rounded-md border border-white/10 hover:bg-white/5 text-gray-300 transition-colors">Нэмэх</button>
                                             </div>
                                         </div>
-                                        {activeTab === "VIDEO_EDIT" && (
-                                            <>
-                                                <div>
-                                                    <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Youtube className="h-4 w-4 text-red-500" /> YouTube Link</label>
-                                                    <input type="url" value={genericForm.youtubeUrl} onChange={e => setGenericForm({ ...genericForm, youtubeUrl: e.target.value })}
-                                                        className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
-                                                        placeholder="https://youtube.com/watch?v=..." />
+                                        <div className="flex gap-4">
+                                            <div className="flex-1">
+                                                <label className="text-xs text-gray-500 mb-1 block">Огноо</label>
+                                                <input type="date" value={genericForm.liveDate} onChange={e => setGenericForm({ ...genericForm, liveDate: e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="text-xs text-gray-500 mb-1 block">Үзсэн үзэлт</label>
+                                                <input type="number" min={0} value={genericForm.viewCount} onChange={e => setGenericForm({ ...genericForm, viewCount: +e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="0" />
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <label className="text-xs text-gray-500 flex items-center gap-1.5 block"><Youtube className="h-4 w-4 text-red-500" /> YouTube Link</label>
+                                                    <button type="button" onClick={() => fetchYoutubeInfo("GENERIC")} className="text-[10px] text-primary hover:underline">Мэдээлэл татах</button>
                                                 </div>
-                                                <div>
-                                                    <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Facebook className="h-4 w-4 text-blue-500" /> Facebook Link</label>
-                                                    <input type="url" value={genericForm.facebookUrl} onChange={e => setGenericForm({ ...genericForm, facebookUrl: e.target.value })}
-                                                        className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
-                                                        placeholder="https://facebook.com/video/..." />
-                                                </div>
-                                            </>
-                                        )}
+                                                <input type="url" value={genericForm.youtubeUrl} onChange={e => setGenericForm({ ...genericForm, youtubeUrl: e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="https://youtube.com/watch?v=..." />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Facebook className="h-4 w-4 text-blue-500" /> Facebook Link</label>
+                                                <input type="url" value={genericForm.facebookUrl} onChange={e => setGenericForm({ ...genericForm, facebookUrl: e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="https://facebook.com/video/..." />
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <div className="flex-1">
+                                                <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Instagram className="h-4 w-4 text-pink-500" /> Instagram Link</label>
+                                                <input type="url" value={genericForm.instagramUrl} onChange={e => setGenericForm({ ...genericForm, instagramUrl: e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="https://instagram.com/..." />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="text-xs text-gray-500 mb-1 flex items-center gap-1.5 block"><Music className="h-4 w-4 text-gray-400" /> TikTok Link</label>
+                                                <input type="url" value={genericForm.tiktokUrl} onChange={e => setGenericForm({ ...genericForm, tiktokUrl: e.target.value })}
+                                                    className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="https://tiktok.com/..." />
+                                            </div>
+                                        </div>
                                         <div className="flex items-center gap-5 pt-2">
                                             <div className="flex-1">
                                                 <label className="text-xs text-gray-500 mb-1 block">Эрэмбэ</label>

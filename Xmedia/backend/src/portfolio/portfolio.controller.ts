@@ -29,6 +29,12 @@ export class PortfolioController {
         tags?: string[];
         isPublished?: boolean;
         sortOrder?: number;
+        liveDate?: Date;
+        viewCount?: number;
+        youtubeUrl?: string;
+        facebookUrl?: string;
+        instagramUrl?: string;
+        tiktokUrl?: string;
     }) {
         return this.portfolioService.create(body);
     }
@@ -43,6 +49,12 @@ export class PortfolioController {
         tags?: string[];
         isPublished?: boolean;
         sortOrder?: number;
+        liveDate?: Date | null;
+        viewCount?: number | null;
+        youtubeUrl?: string | null;
+        facebookUrl?: string | null;
+        instagramUrl?: string | null;
+        tiktokUrl?: string | null;
     }) {
         return this.portfolioService.update(+id, body);
     }

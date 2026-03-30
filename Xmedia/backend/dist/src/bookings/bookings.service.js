@@ -523,16 +523,16 @@ let BookingsService = BookingsService_1 = class BookingsService {
             },
             select: { startTime: true, endTime: true },
         });
-        const ALL_TIMES = [
-            '09:00', '10:00', '11:00', '12:00', '13:00',
-            '14:00', '15:00', '16:00', '17:00', '18:00',
-            '19:00', '20:00', '21:00',
-        ];
+        const ALL_TIMES = Array.from({ length: 48 }, (_, i) => {
+            const h = Math.floor(i / 2);
+            const m = i % 2 === 0 ? '00' : '30';
+            return `${String(h).padStart(2, '0')}:${m}`;
+        });
         const bookedTimes = [];
         for (const time of ALL_TIMES) {
             const [h, m] = time.split(':').map(Number);
             const slotStart = h * 60 + m;
-            const slotEnd = slotStart + 60;
+            const slotEnd = slotStart + 30;
             const overlaps = items.some(item => {
                 if (!item.startTime || !item.endTime)
                     return false;

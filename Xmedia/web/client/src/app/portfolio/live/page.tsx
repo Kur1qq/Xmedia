@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Search, X, Youtube, Facebook, Play } from "lucide-react";
+import { ArrowLeft, Search, X, Youtube, Facebook, Play, Instagram, Music } from "lucide-react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -18,10 +18,12 @@ interface PortfolioItem {
     viewCount?: number;
     youtubeUrl?: string;
     facebookUrl?: string;
+    instagramUrl?: string;
+    tiktokUrl?: string;
 }
 
-// Convert YouTube/Facebook URL → embed URL
-function toEmbedUrl(youtubeUrl?: string, facebookUrl?: string): string | null {
+// Convert URLs → embed URL
+function toEmbedUrl(youtubeUrl?: string, facebookUrl?: string, tiktokUrl?: string): string | null {
     if (youtubeUrl) {
         const ytMatch = youtubeUrl.match(
             /(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
@@ -30,6 +32,10 @@ function toEmbedUrl(youtubeUrl?: string, facebookUrl?: string): string | null {
     }
     if (facebookUrl) {
         return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(facebookUrl)}&autoplay=1`;
+    }
+    if (tiktokUrl) {
+        const match = tiktokUrl.match(/video\/(\d+)/);
+        if (match) return `https://www.tiktok.com/embed/v2/${match[1]}`;
     }
     return null;
 }
@@ -62,7 +68,7 @@ export default function LivePortfolioPage() {
     const yLeft = useTransform(scrollYProgress, [0, 1], ["0%", "-8%"]);
     const yRight = useTransform(scrollYProgress, [0, 1], ["0%", "8%"]);
 
-    const embedUrl = active ? toEmbedUrl(active.youtubeUrl, active.facebookUrl) : null;
+    const embedUrl = active ? toEmbedUrl(active.youtubeUrl, active.facebookUrl, active.tiktokUrl) : null;
 
     return (
         <div ref={containerRef} className="h-screen overflow-y-scroll bg-black text-white">
@@ -181,7 +187,7 @@ export default function LivePortfolioPage() {
                                     </div>
                                 </div>
                                 {/* Platform links */}
-                                <div className="flex gap-2 shrink-0">
+                                <div className="flex gap-2 shrink-0 flex-wrap">
                                     {active.youtubeUrl && (
                                         <a href={active.youtubeUrl} target="_blank" rel="noopener noreferrer"
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600/90/10 border border-rose-600/90/30 text-rose-600 text-xs hover:bg-rose-600/90/20 transition-colors">
@@ -192,6 +198,18 @@ export default function LivePortfolioPage() {
                                         <a href={active.facebookUrl} target="_blank" rel="noopener noreferrer"
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-600/10 border border-blue-600/30 text-blue-400 text-xs hover:bg-blue-600/20 transition-colors">
                                             <Facebook className="w-3.5 h-3.5" /> Facebook
+                                        </a>
+                                    )}
+                                    {active.instagramUrl && (
+                                        <a href={active.instagramUrl} target="_blank" rel="noopener noreferrer"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-600/10 border border-pink-600/30 text-pink-400 text-xs hover:bg-pink-600/20 transition-colors">
+                                            <Instagram className="w-3.5 h-3.5" /> Instagram
+                                        </a>
+                                    )}
+                                    {active.tiktokUrl && (
+                                        <a href={active.tiktokUrl} target="_blank" rel="noopener noreferrer"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-600/10 border border-gray-600/30 text-gray-300 text-xs hover:bg-gray-600/20 transition-colors">
+                                            <Music className="w-3.5 h-3.5" /> TikTok
                                         </a>
                                     )}
                                 </div>
@@ -206,7 +224,7 @@ export default function LivePortfolioPage() {
 
 function LiveCard({ item, index, onClick }: { item: PortfolioItem; index: number; onClick: () => void }) {
     const img = Array.isArray(item.images) ? item.images[0] : null;
-    const hasVideo = !!(item.youtubeUrl || item.facebookUrl);
+    const hasVideo = !!(item.youtubeUrl || item.facebookUrl || item.instagramUrl || item.tiktokUrl);
 
     return (
         <motion.div
@@ -243,6 +261,8 @@ function LiveCard({ item, index, onClick }: { item: PortfolioItem; index: number
             <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 {item.youtubeUrl && <div className="w-7 h-7 rounded-full bg-rose-600/90 flex items-center justify-center"><Youtube className="w-3.5 h-3.5 text-white" /></div>}
                 {item.facebookUrl && <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center"><Facebook className="w-3.5 h-3.5 text-white" /></div>}
+                {item.instagramUrl && <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center"><Instagram className="w-3.5 h-3.5 text-white" /></div>}
+                {item.tiktokUrl && <div className="w-7 h-7 rounded-full bg-black border border-white/20 flex items-center justify-center"><Music className="w-3.5 h-3.5 text-white" /></div>}
             </div>
 
             {/* Text */}

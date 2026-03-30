@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import { Users, CalendarDays, Camera, CreditCard, FileText } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Mic2, MonitorPlay, Scissors, Blocks, Camera as CameraIcon, Filter, Calendar as CalendarIcon, Clock, Download } from "lucide-react";
+import { format, subDays, subMonths, subYears } from "date-fns";
+import * as xlsx from "xlsx";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
@@ -13,9 +21,119 @@ export default function DashboardPage() {
     activeEquipment: 0,
     pendingInvoiceUsers: 0,
     revenueChart: [] as { label: string, amount: number }[],
-    weeklyRevenueChart: [] as { label: string, amount: number }[]
+    weeklyRevenueChart: [] as { label: string, amount: number }[],
+    breakdown: {
+      studioRevenue: 0,
+      liveRevenue: 0,
+      editRevenue: 0,
+      bundleRevenue: 0,
+      photographerRevenue: 0
+    }
   });
   const [loading, setLoading] = useState(true);
+
+  // Custom filter states
+  const [timeOption, setTimeOption] = useState("today");
+  const [singleDate, setSingleDate] = useState<Date | undefined>(new Date());
+  const [serviceType, setServiceType] = useState("ALL");
+  const [customRevenue, setCustomRevenue] = useState<number | null>(null);
+  const [customRevenueDetails, setCustomRevenueDetails] = useState<any[]>([]);
+  const [searchedDates, setSearchedDates] = useState({ start: "", end: "" });
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const handleCustomSearch = async () => {
+    setSearchLoading(true);
+    try {
+      const queryParams = new URLSearchParams();
+      let start: Date | undefined;
+      let end: Date | undefined = new Date();
+
+      switch (timeOption) {
+        case "today": start = new Date(); break;
+        case "7days": start = subDays(new Date(), 7); break;
+        case "1month": start = subMonths(new Date(), 1); break;
+        case "2months": start = subMonths(new Date(), 2); break;
+        case "3months": start = subMonths(new Date(), 3); break;
+        case "4months": start = subMonths(new Date(), 4); break;
+        case "5months": start = subMonths(new Date(), 5); break;
+        case "6months": start = subMonths(new Date(), 6); break;
+        case "7months": start = subMonths(new Date(), 7); break;
+        case "8months": start = subMonths(new Date(), 8); break;
+        case "9months": start = subMonths(new Date(), 9); break;
+        case "10months": start = subMonths(new Date(), 10); break;
+        case "11months": start = subMonths(new Date(), 11); break;
+        case "1year": start = subYears(new Date(), 1); break;
+        case "custom_day": 
+          start = singleDate;
+          end = singleDate;
+          break;
+      }
+
+      const startStr = start ? format(start, "yyyy-MM-dd") : "";
+      const endStr = end ? format(end, "yyyy-MM-dd") : "";
+
+      if (startStr) queryParams.append("startDate", startStr);
+      if (endStr) queryParams.append("endDate", endStr);
+      if (serviceType) queryParams.append("serviceType", serviceType);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/dashboard/custom-revenue?${queryParams.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomRevenue(data.customRevenue);
+        setCustomRevenueDetails(data.details || []);
+        setSearchedDates({ start: startStr, end: endStr });
+      }
+    } catch (error) {
+      console.error("Failed to fetch custom revenue", error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const downloadExcel = () => {
+    if (!customRevenueDetails || customRevenueDetails.length === 0) return;
+
+    const excelData = customRevenueDetails.map((item, index) => ({
+      "№": index + 1,
+      "Үйлчилгээ": item.serviceType === "STUDIO" ? "Студио" :
+                   item.serviceType === "LIVE_SERVICE" ? "Шууд дамжуулалт" :
+                   item.serviceType === "EDIT_SERVICE" ? "Эдит" :
+                   item.serviceType === "BUNDLE_SERVICE" ? "Багц үйлчилгээ" :
+                   item.serviceType === "PHOTOGRAPHER_SERVICE" ? "Зурагчин, Зураглаач" : 
+                   item.serviceType === "SERVICE" ? "Зурагчин, Зураглаач" : item.serviceType,
+      "Төлсөн дүн": `${Number(item.totalPrice).toLocaleString()}`,
+      "Хэрэглэгч": item.userName,
+      "Утас": item.userPhone,
+      "Огноо": format(new Date(item.date), "yyyy-MM-dd HH:mm")
+    }));
+
+    const totalAmount = customRevenueDetails.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+
+    excelData.push({
+      "№": "НИЙТ ОРЛОГО:",
+      "Үйлчилгээ": "",
+      "Төлсөн дүн": `${totalAmount.toLocaleString()}`,
+      "Хэрэглэгч": "",
+      "Утас": "",
+      "Огноо": ""
+    } as any);
+
+    const startStr = searchedDates.start || "Бүх хугацаа";
+    const endStr = searchedDates.end || "Бүх хугацаа";
+    const dateRangeLabel = startStr === endStr ? `Хугацаа: ${startStr}` : `Хугацаа: ${startStr} -аас ${endStr} хүртэлх`;
+
+    const worksheet = xlsx.utils.aoa_to_sheet([
+      ["ОРЛОГЫН ТАЙЛАН"],
+      [dateRangeLabel],
+      [""]
+    ]);
+    
+    xlsx.utils.sheet_add_json(worksheet, excelData, { origin: "A4", skipHeader: false });
+
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Орлогын тайлан");
+    xlsx.writeFile(workbook, `Орлого_Тайлан_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+  };
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -100,7 +218,164 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5 mt-6">
+        <div className="bg-card hover:bg-muted/50 transition-colors cursor-default border-border p-5 rounded-xl border shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground line-clamp-1">Студио</span>
+            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+              <Mic2 size={16} />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline">
+            <span className="text-xl font-bold">{loading ? "..." : `${Number(stats.breakdown?.studioRevenue || 0).toLocaleString()} ₮`}</span>
+          </div>
+        </div>
+
+        <div className="bg-card hover:bg-muted/50 transition-colors cursor-default border-border p-5 rounded-xl border shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground line-clamp-1">Шууд дамжуулалт</span>
+            <div className="p-1.5 rounded-lg bg-red-500/10 text-red-500">
+              <MonitorPlay size={16} />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline">
+            <span className="text-xl font-bold">{loading ? "..." : `${Number(stats.breakdown?.liveRevenue || 0).toLocaleString()} ₮`}</span>
+          </div>
+        </div>
+
+        <div className="bg-card hover:bg-muted/50 transition-colors cursor-default border-border p-5 rounded-xl border shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground line-clamp-1">Эдит</span>
+            <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-500">
+              <Scissors size={16} />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline">
+            <span className="text-xl font-bold">{loading ? "..." : `${Number(stats.breakdown?.editRevenue || 0).toLocaleString()} ₮`}</span>
+          </div>
+        </div>
+
+        <div className="bg-card hover:bg-muted/50 transition-colors cursor-default border-border p-5 rounded-xl border shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground line-clamp-1">Багц үйлчилгээ</span>
+            <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
+              <Blocks size={16} />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline">
+            <span className="text-xl font-bold">{loading ? "..." : `${Number(stats.breakdown?.bundleRevenue || 0).toLocaleString()} ₮`}</span>
+          </div>
+        </div>
+
+        <div className="bg-card hover:bg-muted/50 transition-colors cursor-default border-border p-5 rounded-xl border shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground line-clamp-1">Зурагчин, Зураглаач</span>
+            <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500">
+              <CameraIcon size={16} />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline">
+            <span className="text-xl font-bold">{loading ? "..." : `${Number(stats.breakdown?.photographerRevenue || 0).toLocaleString()} ₮`}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Custom Filter Section - Simplified Inline UI */}
+      <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3 mt-6 bg-card p-3 rounded-xl border border-border shadow-sm">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Filter size={16} className="text-muted-foreground hidden sm:block" />
+          <select 
+            value={serviceType}
+            onChange={(e) => setServiceType(e.target.value)}
+            className="h-9 w-full sm:w-[180px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="ALL">Бүх үйлчилгээ</option>
+            <option value="STUDIO">Студио</option>
+            <option value="LIVE_SERVICE">Шууд дамжуулалт</option>
+            <option value="EDIT_SERVICE">Эдит</option>
+            <option value="BUNDLE_SERVICE">Багц үйлчилгээ</option>
+            <option value="PHOTOGRAPHER_SERVICE">Зурагчин, Зураглаач</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Clock size={16} className="text-muted-foreground hidden sm:block" />
+          <select 
+            value={timeOption}
+            onChange={(e) => setTimeOption(e.target.value)}
+            className="h-9 w-full sm:w-[160px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="today">Өнөөдөр</option>
+            <option value="7days">Сүүлийн 7 хоног</option>
+            <option value="1month">Сүүлийн 1 сар</option>
+            <option value="2months">Сүүлийн 2 сар</option>
+            <option value="3months">Сүүлийн 3 сар</option>
+            <option value="4months">Сүүлийн 4 сар</option>
+            <option value="5months">Сүүлийн 5 сар</option>
+            <option value="6months">Сүүлийн 6 сар</option>
+            <option value="7months">Сүүлийн 7 сар</option>
+            <option value="8months">Сүүлийн 8 сар</option>
+            <option value="9months">Сүүлийн 9 сар</option>
+            <option value="10months">Сүүлийн 10 сар</option>
+            <option value="11months">Сүүлийн 11 сар</option>
+            <option value="1year">Сүүлийн 1 жил</option>
+            <option value="custom_day">Өдрөөр хайх</option>
+          </select>
+        </div>
+
+        {timeOption === "custom_day" && (
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={"outline"}
+                  className={cn(
+                    "w-[160px] justify-start text-left font-normal h-9",
+                    !singleDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {singleDate ? format(singleDate, "yyyy-MM-dd") : <span>Огноо сонгох</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="single"
+                  defaultMonth={singleDate}
+                  selected={singleDate}
+                  onSelect={setSingleDate}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+
+        <button 
+          onClick={handleCustomSearch}
+          disabled={searchLoading}
+          className="h-9 px-4 rounded-md bg-primary/10 text-primary hover:bg-primary/20 font-medium transition-colors disabled:opacity-50 text-sm w-full sm:w-auto"
+        >
+          {searchLoading ? "Уншиж байна..." : "Шүүж харах"}
+        </button>
+
+        {customRevenue !== null && (
+          <div className="flex items-center gap-3 sm:ml-auto w-full sm:w-auto">
+            <div className="text-center sm:text-right px-4 py-1.5 rounded-md bg-primary/20 text-primary font-bold text-sm shadow-sm flex-1 sm:flex-none">
+              Үр дүн: {Number(customRevenue).toLocaleString()} ₮
+            </div>
+            {customRevenueDetails.length > 0 && (
+              <Button onClick={downloadExcel} variant="outline" className="h-9 w-full sm:w-auto text-sm border-primary/30 hover:bg-primary/10 transition-colors">
+                <Download className="mr-2 h-4 w-4" />
+                Excel татах
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2 mt-6">
         {/* Monthly Chart */}
         <div className="bg-background border-border p-6 rounded-xl border shadow-sm min-h-[300px] flex flex-col">
           <h2 className="text-lg font-semibold mb-4 text-accent-foreground">Орлогын мэдээлэл (Сүүлийн 6 сар)</h2>

@@ -210,7 +210,7 @@ export default function Home() {
       )}
 
       {/* Services Section - Overlaps exactly half of its height over the image */}
-      <section className="relative z-20 flex items-center -mt-[98px] sm:-mt-[103px]">
+      <section className="relative z-20 flex items-center mt-0 sm:-mt-[98px]">
         <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[2560px] mx-auto pb-16 sm:pb-8 lg:pb-12 xl:pb-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

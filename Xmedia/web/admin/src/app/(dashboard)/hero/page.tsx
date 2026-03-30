@@ -15,6 +15,9 @@ export default function HeroPage() {
     const [headerNav, setHeaderNav] = useState<any[]>([]);
     const [homeCards, setHomeCards] = useState<any[]>([]);
     const [isSavingSettings, setIsSavingSettings] = useState(false);
+    const [logoUrl, setLogoUrl] = useState("");
+    const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+    const logoInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -54,6 +57,7 @@ export default function HeroPage() {
                     setSnowEffect(!!d.snowEffect);
                     setHeaderNav(d.headerNav || []);
                     setHomeCards(d.homeCards || []);
+                    setLogoUrl(d.logoUrl || "");
                 }
             })
             .catch(console.error);
@@ -189,7 +193,7 @@ export default function HeroPage() {
                     'Content-Type': 'application/json',
                     ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
                 },
-                body: JSON.stringify({ snowEffect, headerNav, homeCards }),
+                body: JSON.stringify({ snowEffect, headerNav, homeCards, logoUrl }),
             });
             if (res.ok) {
                 toast.success("Сайтын тохиргоо хадгалагдлаа!");
@@ -201,6 +205,27 @@ export default function HeroPage() {
         } finally {
             setIsSavingSettings(false);
         }
+    };
+
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsUploadingLogo(true);
+        const fd = new FormData();
+        fd.append('file', file);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/upload`, {
+                method: 'POST',
+                headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+                body: fd,
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setLogoUrl(data.url);
+                toast.success("Лого амжилттай хуулагдлаа! Хадгалахыг дарна уу.");
+            } else { toast.error("Лого хуулахад алдаа гарлаа."); }
+        } catch { toast.error("Сервертэй холбогдоход алдаа гарлаа."); }
+        finally { setIsUploadingLogo(false); if (logoInputRef.current) logoInputRef.current.value = ''; }
     };
 
     return (
@@ -247,6 +272,40 @@ export default function HeroPage() {
                                 }`}
                         />
                     </button>
+                </div>
+
+                {/* Logo Upload Card */}
+                <div className="flex items-center justify-between rounded-xl border border-border/50 bg-muted/10 px-5 py-4 gap-4">
+                    <div className="flex items-center gap-4 flex-1">
+                        <div className="w-24 h-10 rounded-lg bg-muted/30 border border-border/50 flex items-center justify-center overflow-hidden shrink-0">
+                            {logoUrl
+                                ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={logoUrl} alt="Site Logo" className="h-full w-auto object-contain" />
+                                : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">Сайтын Навбарын Лого</p>
+                            <p className="text-xs text-muted-foreground">Хэрэглэгчийн сайтын дээд хэсэгт харагдах лого зургийг сольж болно</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {logoUrl && (
+                            <button
+                                type="button"
+                                onClick={() => setLogoUrl("")}
+                                className="text-xs text-red-500 hover:underline"
+                            >Устгах</button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => logoInputRef.current?.click()}
+                            disabled={isUploadingLogo}
+                            className="inline-flex items-center gap-2 rounded-md border border-border/50 bg-background px-3 py-2 text-xs font-medium hover:bg-muted transition-colors disabled:opacity-50"
+                        >
+                            <UploadCloud className="w-3.5 h-3.5" />
+                            {isUploadingLogo ? "Хуулж байна..." : "Лого солих"}
+                        </button>
+                        <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
