@@ -167,7 +167,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (dto.serviceType === 'PHOTOGRAPHER_SERVICE')
             itemData.photographerServiceId = dto.serviceId;
         if (dto.serviceType === 'EDIT_SERVICE')
-            itemData.serviceId = dto.serviceId;
+            itemData.editServiceId = dto.serviceId;
         const booking = await this.prisma.booking.create({
             data: {
                 userId: user.id,
@@ -415,7 +415,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (dto.serviceType === 'PHOTOGRAPHER_SERVICE')
             itemData.photographerServiceId = dto.serviceId;
         if (dto.serviceType === 'EDIT_SERVICE')
-            itemData.serviceId = dto.serviceId;
+            itemData.editServiceId = dto.serviceId;
         const booking = await this.prisma.booking.create({
             data: {
                 userId: user.id,
@@ -513,7 +513,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (serviceType === 'PHOTOGRAPHER_SERVICE')
             serviceWhere.photographerServiceId = serviceId;
         if (serviceType === 'EDIT_SERVICE')
-            serviceWhere.serviceId = serviceId;
+            serviceWhere.editServiceId = serviceId;
         const items = await this.prisma.bookingItem.findMany({
             where: {
                 ...serviceWhere,

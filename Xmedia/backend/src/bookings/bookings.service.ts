@@ -201,7 +201,7 @@ export class BookingsService {
         if (dto.serviceType === 'STUDIO') itemData.studioId = dto.serviceId;
         if (dto.serviceType === 'LIVE_SERVICE') itemData.liveServiceId = dto.serviceId;
         if (dto.serviceType === 'PHOTOGRAPHER_SERVICE') itemData.photographerServiceId = dto.serviceId;
-        if (dto.serviceType === 'EDIT_SERVICE') itemData.serviceId = dto.serviceId;
+        if (dto.serviceType === 'EDIT_SERVICE') itemData.editServiceId = dto.serviceId;
 
         const booking = await this.prisma.booking.create({
             data: {
@@ -546,7 +546,7 @@ export class BookingsService {
         if (dto.serviceType === 'STUDIO') itemData.studioId = dto.serviceId;
         if (dto.serviceType === 'LIVE_SERVICE') itemData.liveServiceId = dto.serviceId;
         if (dto.serviceType === 'PHOTOGRAPHER_SERVICE') itemData.photographerServiceId = dto.serviceId;
-        if (dto.serviceType === 'EDIT_SERVICE') itemData.serviceId = dto.serviceId;
+        if (dto.serviceType === 'EDIT_SERVICE') itemData.editServiceId = dto.serviceId;
 
         const booking = await this.prisma.booking.create({
             data: {
@@ -691,7 +691,7 @@ export class BookingsService {
         if (serviceType === 'STUDIO') serviceWhere.studioId = serviceId;
         if (serviceType === 'LIVE_SERVICE') serviceWhere.liveServiceId = serviceId;
         if (serviceType === 'PHOTOGRAPHER_SERVICE') serviceWhere.photographerServiceId = serviceId;
-        if (serviceType === 'EDIT_SERVICE') serviceWhere.serviceId = serviceId;
+        if (serviceType === 'EDIT_SERVICE') serviceWhere.editServiceId = serviceId;
 
         const items = await this.prisma.bookingItem.findMany({
             where: {

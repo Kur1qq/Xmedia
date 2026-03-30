@@ -253,16 +253,17 @@ export function CartDrawer() {
                         </Button>
                     </div>
                 </SheetFooter>
+
+                {/* Payment modal rendered INSIDE the sheet portal to fix mobile z-index stacking */}
+                <PaymentMethodModal
+                    open={showPaymentModal}
+                    onClose={() => setShowPaymentModal(false)}
+                    onSelectQpay={() => handleCheckout("qpay")}
+                    onSelectInvoice={() => handleCheckout("invoice")}
+                    loading={loading}
+                    amount={getTotalPrice()}
+                />
             </SheetContent>
         </Sheet>
-
-        <PaymentMethodModal
-            open={showPaymentModal}
-            onClose={() => setShowPaymentModal(false)}
-            onSelectQpay={() => handleCheckout("qpay")}
-            onSelectInvoice={() => handleCheckout("invoice")}
-            loading={loading}
-            amount={getTotalPrice()}
-        />
     </>);
 }
