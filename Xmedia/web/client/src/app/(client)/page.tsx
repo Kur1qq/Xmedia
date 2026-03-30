@@ -105,7 +105,7 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="flex-1 flex flex-col pt-0 bg-[#f5f5f5] sm:h-screen sm:overflow-hidden">
+    <div className="flex-1 flex flex-col pt-0 bg-[#f5f5f5] h-[100dvh] overflow-hidden">
       <SnowEffect enabled={snowEffect} />
       {/* Hero Section */}
       {slidesLoading ? (
