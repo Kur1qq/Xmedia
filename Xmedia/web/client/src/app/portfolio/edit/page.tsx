@@ -113,8 +113,8 @@ export default function EditPortfolioPage() {
                 </div>
             </div>
 
-            {/* Column labels — sticky below top bar */}
-            <div className="sticky top-14 z-40 flex gap-1 px-1 pb-2 bg-gradient-to-b from-black via-black to-transparent">
+            {/* Column labels */}
+            <div className="flex gap-1 px-1 pb-2 bg-gradient-to-b from-black via-black to-transparent">
                 <div className="flex-1 flex items-center justify-center gap-2 py-3">
                     <ImageIcon className="w-4 h-4 text-rose-600" />
                     <span className="text-sm font-bold tracking-widest uppercase text-white/70">Зураг эдит</span>
@@ -283,7 +283,7 @@ function PhotoCard({ item, index, onClick }: { item: PortfolioItem; index: numbe
             transition={{ duration: 0.5, delay: index * 0.05 }}
             onClick={onClick}
             className="relative w-full overflow-hidden cursor-pointer group"
-            style={{ aspectRatio: "903/620" }}
+            style={{ height: "40vh" }}
         >
             {img ? (
                 <img src={img} alt={item.title}
@@ -328,7 +328,7 @@ function VideoCard({ item, index, onClick }: { item: PortfolioItem; index: numbe
             transition={{ duration: 0.5, delay: index * 0.05 }}
             onClick={onClick}
             className="relative w-full overflow-hidden cursor-pointer group"
-            style={{ aspectRatio: "903/620" }}
+            style={{ height: "40vh" }}
         >
             {img ? (
                 <img src={img} alt={item.title}

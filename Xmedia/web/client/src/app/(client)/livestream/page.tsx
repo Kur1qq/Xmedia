@@ -252,8 +252,18 @@ export default function LivestreamPage() {
         return Math.min(...svc.priceTiers.map(t => Number(t.price)));
     };
 
+    // Parse "1-4" → { min: 1, max: 4 }; "4-8" → { min: 4, max: 8 }; "4" → { min: 1, max: 4 }
+    const parseRange = (label: string): { min: number; max: number } => {
+        const rangeMatch = label.match(/(\d+)-(\d+)/);
+        if (rangeMatch) return { min: parseInt(rangeMatch[1], 10), max: parseInt(rangeMatch[2], 10) };
+        const singleMatch = label.match(/(\d+)/);
+        const n = singleMatch ? parseInt(singleMatch[1], 10) : 0;
+        return { min: 1, max: n };
+    };
+
     const uniqueLabels = activeService?.priceTiers
-        ? Array.from(new Set(activeService.priceTiers.map(t => t.label?.trim()).filter(Boolean))) as string[]
+        ? Array.from(new Set(activeService.priceTiers.map(t => t.label?.trim()).filter(Boolean)))
+            .sort((a, b) => parseRange(a as string).min - parseRange(b as string).min) as string[]
         : [];
 
     useEffect(() => {
@@ -267,14 +277,7 @@ export default function LivestreamPage() {
         }
     }, [uniqueLabels, tierRange, activeService]);
 
-    // Parse "1-4" → { min: 1, max: 4 }; "4-8" → { min: 4, max: 8 }; "4" → { min: 1, max: 4 }
-    const parseRange = (label: string): { min: number; max: number } => {
-        const rangeMatch = label.match(/(\d+)-(\d+)/);
-        if (rangeMatch) return { min: parseInt(rangeMatch[1], 10), max: parseInt(rangeMatch[2], 10) };
-        const singleMatch = label.match(/(\d+)/);
-        const n = singleMatch ? parseInt(singleMatch[1], 10) : 0;
-        return { min: 1, max: n };
-    };
+
 
     const matchingTiers = activeService?.priceTiers
         ?.filter(t => (t.label?.trim() || "") === tierRange)
@@ -579,13 +582,13 @@ export default function LivestreamPage() {
                                                                                     let candidateMins = th * 60 + tm;
                                                                                     if (candidateMins <= startMins) candidateMins += 24 * 60;
 
-                                                                                    const { min: minH, max: maxH } = parseRange(tierRange);
+                                                                                    const { max: maxH } = parseRange(tierRange);
 
-                                                                                    // Candidate must be whole-hour intervals within [start+min, start+max]
+                                                                                    // Candidate must be whole-hour intervals within [start+1, start+max]
                                                                                     const diffMins = candidateMins - startMins;
                                                                                     if (diffMins % 60 !== 0) return false; // only whole hours
                                                                                     const diffHrs = diffMins / 60;
-                                                                                    if (diffHrs < minH || diffHrs > maxH) return false;
+                                                                                    if (diffHrs < 1 || diffHrs > maxH) return false;
 
                                                                                     // Check if any booked slot falls between start and this candidate end
                                                                                     for (let m = startMins; m < startMins + diffMins; m += 30) {
