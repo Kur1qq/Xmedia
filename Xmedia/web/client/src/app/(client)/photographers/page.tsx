@@ -117,8 +117,9 @@ export default function PhotographersPage() {
         if (cTypes.length > 0) activeSubTypeId = cTypes[0].id;
     }
 
-    const isDroneBattery = activeService?.name === 'Дрон' &&
-        activeService?.packages?.find(p => p.subTypeId === activeSubTypeId)?.subType?.name === 'Батерэй';
+    const subTypeName = activeService?.packages?.find(p => p.subTypeId === activeSubTypeId)?.subType?.name?.toLowerCase() || '';
+    const isDroneBattery = activeService?.name === 'Дрон' && 
+        (subTypeName.includes('батерэй') || subTypeName.includes('батарей'));
 
     useEffect(() => {
         if (!form.date || !activeService || !isBooking) { setBookedTimes([]); return; }
@@ -387,7 +388,7 @@ export default function PhotographersPage() {
                                                                                             {ct.name}
                                                                                         </button>
 
-                                                                                        {activeService.name === 'Дрон' && ct.name === 'Батерэй' && isSelected && (
+                                                                                        {activeService.name === 'Дрон' && (ct.name.toLowerCase().includes('батерэй') || ct.name.toLowerCase().includes('батарей')) && isSelected && (
                                                                                             <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-2 py-1">
                                                                                                 <button
                                                                                                     onClick={() => setBatteryCount(Math.max(1, batteryCount - 1))}
