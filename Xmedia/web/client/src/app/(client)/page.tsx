@@ -164,6 +164,7 @@ export default function Home() {
                     alt={slides[currentSlide].title || "slide"}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear"
                     style={{ transform: "scale(1.01)" }}
+                    fetchPriority={currentSlide === 0 ? "high" : "auto"}
                   />
                 )}
                 {/* Subtle overlay to make text readable */}
