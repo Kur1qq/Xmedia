@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Radio, Image, Film, Package, Mic, MonitorPlay, Video } from "lucide-react";
@@ -25,6 +25,7 @@ interface Slide {
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<Slide[]>([]);
+  const touchStartX = useRef<number | null>(null);
   const [slidesLoading, setSlidesLoading] = useState(true);
   const [snowEffect, setSnowEffect] = useState(false);
   const [homeCards, setHomeCards] = useState<any[]>([]);
@@ -118,7 +119,26 @@ export default function Home() {
       ) : slides.length > 0 && (
         <div className="flex flex-col relative px-4 sm:px-6 lg:px-8 pt-20 pb-0 max-w-[2560px] mx-auto w-full h-[300px] sm:h-auto sm:flex-1">
           {/* Background Slider Container */}
-          <div className="absolute inset-x-4 top-20 bottom-0 sm:bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-2xl">
+          <div 
+            className="absolute inset-x-4 top-20 bottom-0 sm:bottom-12 sm:inset-x-6 lg:inset-x-8 z-0 rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-2xl touch-pan-y select-none"
+            onTouchStart={(e) => { touchStartX.current = e.targetTouches[0].clientX; }}
+            onTouchEnd={(e) => {
+              if (touchStartX.current === null) return;
+              const distance = touchStartX.current - e.changedTouches[0].clientX;
+              if (distance > 50) setCurrentSlide((prev) => (prev + 1) % slides.length);
+              else if (distance < -50) setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+              touchStartX.current = null;
+            }}
+            onMouseDown={(e) => { touchStartX.current = e.clientX; }}
+            onMouseUp={(e) => {
+              if (touchStartX.current === null) return;
+              const distance = touchStartX.current - e.clientX;
+              if (distance > 50) setCurrentSlide((prev) => (prev + 1) % slides.length);
+              else if (distance < -50) setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+              touchStartX.current = null;
+            }}
+            onMouseLeave={() => { touchStartX.current = null; }}
+          >
             <AnimatePresence mode="popLayout">
               <motion.div
                 key={slides[currentSlide].id}
@@ -211,7 +231,7 @@ export default function Home() {
 
       {/* Services Section - Overlaps exactly half of its height over the image */}
       <section className="relative z-20 flex items-center mt-3 sm:-mt-[98px]">
-        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[2560px] mx-auto pb-16 sm:pb-8 lg:pb-12 xl:pb-16">
+        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[2560px] mx-auto pb-28 sm:pb-8 lg:pb-12 xl:pb-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
