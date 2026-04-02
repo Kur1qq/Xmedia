@@ -149,6 +149,7 @@ export class BookingsController {
         return result;
     }
 
+    @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN'))
     @Delete(':id')
     async deleteBooking(
         @Param('id', ParseIntPipe) id: number,

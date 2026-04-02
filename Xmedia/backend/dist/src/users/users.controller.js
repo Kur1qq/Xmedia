@@ -53,7 +53,7 @@ let UsersController = class UsersController {
         return this.usersService.update(+id, body);
     }
     remove(id) {
-        return this.usersService.remove(+id);
+        throw new common_1.ForbiddenException('Хэрэглэгчийг устгах боломжгүй.');
     }
 };
 exports.UsersController = UsersController;
