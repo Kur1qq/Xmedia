@@ -217,7 +217,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "updateBooking", null);
 __decorate([
-    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN')),
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Req)()),
