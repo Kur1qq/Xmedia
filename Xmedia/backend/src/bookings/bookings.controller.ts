@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Patch, Body, ParseIntPipe, Req, Headers, RawBodyRequest, Logger, HttpCode, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Patch, Body, ParseIntPipe, Req, Headers, RawBodyRequest, Logger, HttpCode, Query, UseGuards, Delete } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { BookingStatus } from '@prisma/client';
 import { AdminLogService } from '../admin/admin-log.service';
@@ -135,5 +135,28 @@ export class BookingsController {
         const result = await this.bookingsService.updatePaymentStatus(id, paymentStatus as any);
         this.log.log(req.user?.id ?? 0, 'BOOKING_PAYMENT_UPDATE', 'Booking', id, `paymentStatus=${paymentStatus}`, req.ip).catch(() => { });
         return result;
+    }
+
+    @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN'))
+    @Patch('admin/:id')
+    async updateBooking(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: any,
+        @Req() req: any,
+    ) {
+        const result = await this.bookingsService.updateBookingDetails(id, dto);
+        this.log.log(req.user?.id ?? 0, 'BOOKING_EDIT', 'Booking', id, `Edited booking details`, req.ip).catch(() => { });
+        return result;
+    }
+
+    @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN'))
+    @Delete(':id')
+    async deleteBooking(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: any,
+    ) {
+        const result = await this.bookingsService.deleteBooking(id);
+        this.log.log(req.user?.id ?? 0, 'BOOKING_DELETE', 'Booking', id, `Deleted booking`, req.ip).catch(() => { });
+        return { success: true, id };
     }
 }

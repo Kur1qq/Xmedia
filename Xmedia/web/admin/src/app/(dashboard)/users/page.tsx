@@ -93,6 +93,26 @@ export default function UsersPage() {
 
     const openAddModal = () => { setAddForm({ ...EMPTY_FORM }); setIsAddUserModalOpen(true); };
 
+    const handleDeleteUser = async (id: string, username: string) => {
+        if (!window.confirm(`Та "${username}" хэрэглэгчийг устгахдаа итгэлтэй байна уу?`)) return;
+        
+        try {
+            const res = await fetchWithAuth(`/users/${id}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                setUsers(prev => prev.filter(u => u.id !== id));
+                toast.success('Хэрэглэгч амжилттай устгагдлаа!');
+                setSelectedUserIds(prev => prev.filter(userId => userId !== id));
+            } else {
+                const err = await res.json().catch(() => ({}));
+                toast.error(err?.message || 'Хэрэглэгч устгахад алдаа гарлаа.');
+            }
+        } catch {
+            toast.error('Сервертэй холбогдоход алдаа гарлаа.');
+        }
+    };
+
     // Close export menu when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -393,6 +413,14 @@ export default function UsersPage() {
                                                     >
                                                         <History size={14} />
                                                         Түүх
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteUser(user.id, user.username)}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 hover:text-white hover:bg-red-600 rounded-md border border-red-500/20 transition-colors"
+                                                        title="Устгах"
+                                                    >
+                                                        <X size={14} />
+                                                        Устгах
                                                     </button>
                                                 </div>
                                             </td>

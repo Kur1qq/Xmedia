@@ -828,4 +828,88 @@ export class BookingsService {
 
         return updated;
     }
+
+    // Admin update booking
+    async updateBookingDetails(id: number, dto: any) {
+        const booking = await this.prisma.booking.findUnique({
+            where: { id },
+            include: { user: true, items: true }
+        });
+
+        if (!booking) {
+            throw new NotFoundException(`Booking with ID ${id} not found`);
+        }
+
+        // Update user if provided
+        if (dto.name !== undefined || dto.phone !== undefined || dto.email !== undefined) {
+            await this.prisma.user.update({
+                where: { id: booking.userId },
+                data: {
+                    username: dto.name !== undefined ? dto.name : booking.user.username,
+                    phone: dto.phone !== undefined ? dto.phone : booking.user.phone,
+                    email: dto.email !== undefined ? dto.email : booking.user.email,
+                }
+            });
+        }
+
+        const date = dto.date ? dto.date.slice(0, 10) : undefined;
+        let durationHours = 1;
+
+        if (dto.startTime && dto.endTime) {
+            const start = new Date(`1970-01-01T${dto.startTime}:00`);
+            const end = new Date(`1970-01-01T${dto.endTime}:00`);
+            durationHours = (end.getTime() - start.getTime()) / 3600000;
+        }
+
+        const unitPrice = dto.totalAmount ? dto.totalAmount / (durationHours || 1) : undefined;
+
+        // Update the primary order item
+        if (booking.items.length > 0) {
+            const itemMap: any = {};
+            if (date) itemMap.bookingDate = date;
+            if (dto.startTime) itemMap.startTime = dto.startTime.length === 5 ? `${dto.startTime}:00` : dto.startTime;
+            if (dto.endTime) itemMap.endTime = dto.endTime.length === 5 ? `${dto.endTime}:00` : dto.endTime;
+            if (unitPrice !== undefined) itemMap.unitPrice = unitPrice;
+            if (dto.totalAmount !== undefined) itemMap.totalPrice = dto.totalAmount;
+            if (dto.startTime && dto.endTime) itemMap.quantity = durationHours;
+
+            if (dto.serviceType) itemMap.itemType = dto.serviceType as ItemType;
+
+            if (dto.serviceType === 'STUDIO') { itemMap.studioId = Number(dto.serviceId); itemMap.liveServiceId = null; itemMap.photographerServiceId = null; itemMap.editServiceId = null; itemMap.bundleServiceId = null; }
+            else if (dto.serviceType === 'LIVE_SERVICE') { itemMap.liveServiceId = Number(dto.serviceId); itemMap.studioId = null; itemMap.photographerServiceId = null; itemMap.editServiceId = null; itemMap.bundleServiceId = null; }
+            else if (dto.serviceType === 'PHOTOGRAPHER_SERVICE') { itemMap.photographerServiceId = Number(dto.serviceId); itemMap.studioId = null; itemMap.liveServiceId = null; itemMap.editServiceId = null; itemMap.bundleServiceId = null; }
+            else if (dto.serviceType === 'EDIT_SERVICE') { itemMap.editServiceId = Number(dto.serviceId); itemMap.studioId = null; itemMap.liveServiceId = null; itemMap.photographerServiceId = null; itemMap.bundleServiceId = null; }
+            else if (dto.serviceType === 'BUNDLE_SERVICE') { itemMap.bundleServiceId = Number(dto.serviceId); itemMap.studioId = null; itemMap.liveServiceId = null; itemMap.photographerServiceId = null; itemMap.editServiceId = null; }
+
+            if (Object.keys(itemMap).length > 0) {
+                await this.prisma.bookingItem.update({
+                    where: { id: booking.items[0].id },
+                    data: itemMap
+                });
+            }
+        }
+
+        // Update the booking itself
+        const updated = await this.prisma.booking.update({
+            where: { id },
+            data: {
+                totalAmount: dto.totalAmount !== undefined ? dto.totalAmount : booking.totalAmount,
+                notes: dto.notes !== undefined ? dto.notes : booking.notes,
+                status: dto.status !== undefined ? dto.status : booking.status,
+                paymentStatus: dto.paymentStatus !== undefined ? dto.paymentStatus as any : booking.paymentStatus,
+            },
+            include: { user: true, items: true }
+        });
+
+        return updated;
+    }
+
+    // Delete booking completely (Admin hard delete)
+    async deleteBooking(id: number) {
+        const booking = await this.prisma.booking.findUnique({ where: { id } });
+        if (!booking) {
+            throw new NotFoundException(`Booking with ID ${id} not found`);
+        }
+        return this.prisma.booking.delete({ where: { id } });
+    }
 }

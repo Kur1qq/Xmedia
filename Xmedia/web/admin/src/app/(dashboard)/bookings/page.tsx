@@ -83,8 +83,10 @@ export default function BookingsPage() {
     const [newNoteText, setNewNoteText] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
-    // Add Manual Booking state
+    // Add / Edit Manual Booking state
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+    const [editBookingId, setEditBookingId] = useState<number | null>(null);
     const [addForm, setAddForm] = useState({
         name: '', phone: '', email: '',
         date: shortDate(new Date()) ? new Date().toISOString().split('T')[0] : '',
@@ -281,6 +283,7 @@ export default function BookingsPage() {
             const dayBookings = bookingsByDateKey[dateKey] || [];
             const studioId = String(addForm.serviceId);
             const conflicts = dayBookings.filter(b => {
+                if (modalMode === 'edit' && b.id === editBookingId) return false;
                 const bItem = b._item;
                 if (!bItem || b._type !== 'studio') return false;
                 if (String(bItem.studioId ?? bItem.studio?.id) !== studioId) return false;
@@ -299,6 +302,35 @@ export default function BookingsPage() {
             }
         }
 
+        if (modalMode === 'edit' && editBookingId) {
+            setIsSaving(true);
+            try {
+                const token = localStorage.getItem('admin_token');
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/bookings/admin/${editBookingId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify(addForm),
+                });
+                if (res.ok) {
+                    toast.success("Амжилттай шинэчлэгдлээ");
+                    await fetchBookings();
+                    setIsAddModalOpen(false);
+                } else {
+                    const err = await res.json();
+                    toast.error(`Алдаа гарлаа: ${err.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error(error);
+                toast.error("Холболтын алдаа гарлаа.");
+            } finally {
+                setIsSaving(false);
+            }
+            return;
+        }
+
         setIsSaving(true);
         try {
             const token = localStorage.getItem('admin_token');
@@ -311,6 +343,7 @@ export default function BookingsPage() {
                 body: JSON.stringify(addForm),
             });
             if (res.ok) {
+                toast.success("Амжилттай нэмэгдлээ");
                 await fetchBookings();
                 setIsAddModalOpen(false);
             } else {
@@ -323,6 +356,68 @@ export default function BookingsPage() {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const deleteSelectedBooking = async () => {
+        if (!selectedBooking) return;
+        if (!confirm(`Tа #${selectedBooking.id} захиалгыг бүр мөсөн устгахдаа итгэлтэй байна уу?`)) return;
+        
+        setIsSaving(true);
+        try {
+            const token = localStorage.getItem('admin_token');
+            const res = await fetch(`${API}/bookings/${selectedBooking.id}`, {
+                method: 'DELETE',
+                headers: {
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                }
+            });
+            if (res.ok) {
+                toast.success("Амжилттай устгагдлаа");
+                setSelectedBooking(null);
+                await fetchBookings();
+            } else {
+                toast.error("Устгахад алдаа гарлаа");
+            }
+        } catch (e) {
+            console.error(e);
+            toast.error("Холболтын алдаа гарлаа.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const openEditModal = () => {
+        if (!selectedBooking) return;
+        const b = selectedBooking;
+        const item = b.items?.[0] || {};
+        
+        let sType = 'STUDIO';
+        let sId = '';
+        if (item.studioId) { sType = 'STUDIO'; sId = String(item.studioId); }
+        else if (item.liveServiceId) { sType = 'LIVE_SERVICE'; sId = String(item.liveServiceId); }
+        else if (item.photographerServiceId) { sType = 'PHOTOGRAPHER_SERVICE'; sId = String(item.photographerServiceId); }
+        else if (item.editServiceId) { sType = 'EDIT_SERVICE'; sId = String(item.editServiceId); }
+        else if (item.bundleServiceId) { sType = 'BUNDLE_SERVICE'; sId = String(item.bundleServiceId); }
+        
+        setAddForm({
+            name: b.user?.username || '',
+            phone: b.user?.phone || '',
+            email: b.user?.email || '',
+            date: item.bookingDate || shortDate(new Date()) ? new Date().toISOString().split('T')[0] : '',
+            startTime: item.startTime ? item.startTime.slice(0,5) : '10:00',
+            endTime: item.endTime ? item.endTime.slice(0,5) : '12:00',
+            serviceType: sType,
+            serviceId: sId,
+            totalAmount: Number(b.totalAmount) || 0,
+            status: b.status || 'PENDING',
+            paymentStatus: b.paymentStatus || 'UNPAID',
+            notes: b.notes || '',
+        });
+        
+        setModalMode('edit');
+        setEditBookingId(b.id);
+        setIsAddModalOpen(true);
+        setSelectedBooking(null);
     };
 
     const downloadExcel = () => {
@@ -588,7 +683,17 @@ export default function BookingsPage() {
                         <Download className="w-4 h-4" /> Excel татах
                     </button>
                     <button
-                        onClick={() => setIsAddModalOpen(true)}
+                        onClick={() => {
+                            setModalMode('add');
+                            setAddForm({
+                                name: '', phone: '', email: '',
+                                date: shortDate(new Date()) ? new Date().toISOString().split('T')[0] : '',
+                                startTime: '10:00', endTime: '12:00',
+                                serviceType: 'STUDIO', serviceId: '',
+                                totalAmount: 100000, status: 'CONFIRMED', paymentStatus: 'PAID', notes: ''
+                            });
+                            setIsAddModalOpen(true);
+                        }}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
                     >
                         + Захиалга нэмэх
@@ -945,10 +1050,10 @@ export default function BookingsPage() {
                     >
                         {/* Top Actions */}
                         <div className="flex justify-end items-center gap-1.5 px-3 py-2 text-gray-400">
-                            <button className="p-2 rounded-full hover:bg-white/10 hover:text-white transition-colors">
+                            <button onClick={openEditModal} className="p-2 rounded-full hover:bg-white/10 hover:text-white transition-colors">
                                 <Edit2 className="w-4 h-4" />
                             </button>
-                            <button className="p-2 rounded-full hover:bg-white/10 hover:text-white transition-colors">
+                            <button onClick={deleteSelectedBooking} className="p-2 rounded-full hover:bg-red-500/10 hover:text-red-500 transition-colors">
                                 <Trash2 className="w-4 h-4" />
                             </button>
                             <button className="p-2 rounded-full hover:bg-white/10 hover:text-white transition-colors">
@@ -974,7 +1079,11 @@ export default function BookingsPage() {
                                     </h2>
                                     <div className="text-[13px] text-gray-300 tracking-wide mt-1.5">
                                         {selectedBooking.items?.[0]?.bookingDate
-                                            ? new Date(selectedBooking.items[0].bookingDate + 'T00:00:00').toLocaleDateString('mn-MN', { weekday: 'long', month: 'long', day: 'numeric' })
+                                            ? (() => {
+                                                const d = new Date(selectedBooking.items[0].bookingDate + 'T00:00:00');
+                                                const days = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
+                                                return `${d.getMonth() + 1}-р сарын ${d.getDate()}, ${days[d.getDay()]} гараг`;
+                                              })()
                                             : ''}
                                         {selectedBooking.items?.[0]?.startTime && (
                                             <span>
@@ -1092,7 +1201,9 @@ export default function BookingsPage() {
                     <div className="absolute inset-0 bg-black/60" onClick={() => !isSaving && setIsAddModalOpen(false)}></div>
                     <div className="bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl z-10 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between p-4 border-b border-white/5">
-                            <h2 className="text-lg font-semibold tracking-tight">Захиалга нэмэх</h2>
+                            <h2 className="text-lg font-semibold tracking-tight">
+                                {modalMode === 'add' ? 'Захиалга нэмэх' : 'Захиалга засах'}
+                            </h2>
                             <button onClick={() => !isSaving && setIsAddModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
@@ -1200,7 +1311,20 @@ export default function BookingsPage() {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Нийт дүн (₮)</label>
-                                            <input required type="number" min="0" step="1000" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.totalAmount} onChange={e => setAddForm({ ...addForm, totalAmount: Number(e.target.value) })} />
+                                            <input 
+                                                required 
+                                                type="text" 
+                                                className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" 
+                                                value={(addForm.totalAmount as any) !== "" && addForm.totalAmount !== undefined ? Number(addForm.totalAmount).toLocaleString('en-US') : ''} 
+                                                onChange={e => {
+                                                    const rawValue = e.target.value.replace(/,/g, '');
+                                                    if (rawValue === '') {
+                                                        setAddForm({ ...addForm, totalAmount: "" as any });
+                                                    } else if (!isNaN(Number(rawValue))) {
+                                                        setAddForm({ ...addForm, totalAmount: Number(rawValue) });
+                                                    }
+                                                }} 
+                                            />
                                         </div>
                                         <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Төлбөрийн төлөв</label>

@@ -93,6 +93,16 @@ let BookingsController = BookingsController_1 = class BookingsController {
         this.log.log(req.user?.id ?? 0, 'BOOKING_PAYMENT_UPDATE', 'Booking', id, `paymentStatus=${paymentStatus}`, req.ip).catch(() => { });
         return result;
     }
+    async updateBooking(id, dto, req) {
+        const result = await this.bookingsService.updateBookingDetails(id, dto);
+        this.log.log(req.user?.id ?? 0, 'BOOKING_EDIT', 'Booking', id, `Edited booking details`, req.ip).catch(() => { });
+        return result;
+    }
+    async deleteBooking(id, req) {
+        const result = await this.bookingsService.deleteBooking(id);
+        this.log.log(req.user?.id ?? 0, 'BOOKING_DELETE', 'Booking', id, `Deleted booking`, req.ip).catch(() => { });
+        return { success: true, id };
+    }
 };
 exports.BookingsController = BookingsController;
 __decorate([
@@ -196,6 +206,25 @@ __decorate([
     __metadata("design:paramtypes", [Number, String, Object]),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "updatePaymentStatus", null);
+__decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN')),
+    (0, common_1.Patch)('admin/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "updateBooking", null);
+__decorate([
+    (0, common_1.UseGuards)((0, jwt_auth_guard_1.RolesGuard)('SUPER_ADMIN', 'ADMIN')),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "deleteBooking", null);
 exports.BookingsController = BookingsController = BookingsController_1 = __decorate([
     (0, common_1.Controller)('bookings'),
     __metadata("design:paramtypes", [bookings_service_1.BookingsService,

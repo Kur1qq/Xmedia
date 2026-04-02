@@ -185,6 +185,12 @@ export default function PhotographersPage() {
 
         let timePayload = form.time;
 
+        if (!isDroneBattery && form.time && form.endTime) {
+            const actualDur = calcDuration(form.time, form.endTime);
+            totalAmount = (totalAmount / duration) * actualDur;
+            duration = actualDur;
+        }
+
         // Special case for Drone Battery
         if (isDroneBattery) {
             duration = 1; // logical duration per battery or fixed
@@ -221,6 +227,12 @@ export default function PhotographersPage() {
             let serviceName = activeService.name;
 
             let timePayload = form.time;
+
+            if (!isDroneBattery && form.time && form.endTime) {
+                const actualDur = calcDuration(form.time, form.endTime);
+                totalAmount = (totalAmount / duration) * actualDur;
+                duration = actualDur;
+            }
 
             // Special case for Drone Battery
             if (isDroneBattery) {
@@ -498,25 +510,29 @@ export default function PhotographersPage() {
                                                                                 value={form.time}
                                                                                 onChange={e => {
                                                                                     const t = e.target.value;
-                                                                                    let et = form.endTime;
-                                                                                    let dur = calcDuration(t, et);
-
-                                                                                    if (currentPackage && currentPackage.duration && t) {
-                                                                                        const autoDur = Number(currentPackage.duration);
-                                                                                        const [sh, sm] = t.split(":").map(Number);
-                                                                                        const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
-                                                                                        const endH = Math.floor(exactEndMins / 60);
-                                                                                        const endM = exactEndMins % 60;
-                                                                                        et = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
-                                                                                        dur = autoDur;
-                                                                                    }
-
-                                                                                    setForm({ ...form, time: t, endTime: et, duration: dur.toString() });
+                                                                                    setForm({ ...form, time: t, endTime: "", duration: "1" });
                                                                                 }}
                                                                                 className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
                                                                             >
                                                                                 <option value="">-- : --</option>
-                                                                                {HALF_HOURLY_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
+                                                                                {HALF_HOURLY_TIMES.filter(t => {
+                                                                                    if (bookedTimes.includes(t)) return false;
+                                                                                    const dur = isDroneBattery ? 1 : (currentPackage?.duration || 0);
+                                                                                    if (dur > 0) {
+                                                                                        const [sh, sm] = t.split(":").map(Number);
+                                                                                        const startMins = sh * 60 + sm;
+                                                                                        // Here we check if the minimum 1 hr is available
+                                                                                        const durMins = 60; // Just check if at least 1 hour is available
+                                                                                        let endMins = startMins + durMins;
+                                                                                        for (let m = startMins; m < endMins; m += 30) {
+                                                                                            const checkH = Math.floor(m / 60) % 24;
+                                                                                            const checkM = m % 60;
+                                                                                            const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                            if (bookedTimes.includes(checkStr)) return false;
+                                                                                        }
+                                                                                    }
+                                                                                    return true;
+                                                                                }).map(t => (
                                                                                     <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
                                                                                 ))}
                                                                             </select>
@@ -539,21 +555,19 @@ export default function PhotographersPage() {
                                                                                         if (!form.time) return false;
                                                                                         const [sh, sm] = form.time.split(":").map(Number);
                                                                                         const [th, tm] = t.split(":").map(Number);
-                                                                                        if (th === sh && tm === sm) return false;
+                                                                                        const startMins = sh * 60 + sm;
+                                                                                        let candidateMins = th * 60 + tm;
+                                                                                        if (candidateMins <= startMins) candidateMins += 24 * 60; // Overnight
 
                                                                                         if (currentPackage && currentPackage.duration) {
-                                                                                            const autoDur = Number(currentPackage.duration);
-                                                                                            const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
-                                                                                            const thMins = th * 60 + tm;
-                                                                                            return thMins === exactEndMins;
+                                                                                            const diffMins = candidateMins - startMins;
+                                                                                            if (diffMins % 60 !== 0) return false; // зөвхөн бүхэл цагууд
+                                                                                            const diffHrs = diffMins / 60;
+                                                                                            if (diffHrs < 1 || diffHrs > currentPackage.duration) return false;
                                                                                         }
 
-                                                                                        const startMins = sh * 60 + sm;
-                                                                                        let endMins = th * 60 + tm;
-                                                                                        if (endMins < startMins) endMins += 24 * 60; // Overnight
-
                                                                                         // Check if any booked slot falls between start and end
-                                                                                        for (let m = startMins; m < endMins; m += 30) {
+                                                                                        for (let m = startMins; m < candidateMins; m += 30) {
                                                                                             const checkH = Math.floor(m / 60) % 24;
                                                                                             const checkM = m % 60;
                                                                                             const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
@@ -567,6 +581,36 @@ export default function PhotographersPage() {
                                                                             </div>
                                                                         )}
                                                                     </div>
+                                                                    {(() => {
+                                                                        if (isDroneBattery || !form.time || !currentPackage || !currentPackage.duration) return null;
+                                                                        const maxHrs = Number(currentPackage.duration);
+                                                                        const [sh, sm] = form.time.split(":").map(Number);
+                                                                        const startMins = sh * 60 + sm;
+                                                                        let maxAvailable = maxHrs;
+                                                                        let hitConflict = false;
+                                                                        for (let hrs = 1; hrs <= maxHrs; hrs++) {
+                                                                            const candidateMins = startMins + hrs * 60;
+                                                                            for (let m = startMins; m < candidateMins; m += 30) {
+                                                                                const checkH = Math.floor(m / 60) % 24;
+                                                                                const checkM = m % 60;
+                                                                                const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                if (bookedTimes.includes(checkStr)) {
+                                                                                    hitConflict = true;
+                                                                                    maxAvailable = hrs - 1;
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                            if (hitConflict) break;
+                                                                        }
+                                                                        if (maxAvailable > 0 && maxAvailable < maxHrs) {
+                                                                            return (
+                                                                                <p className="text-xs text-rose-500 mt-2 bg-rose-500/10 p-2 rounded border border-rose-500/20">
+                                                                                    ⚠️ Тухайн цагт давхардсан захиалга байгаа тул та хамгийн ихдээ {maxAvailable} цаг сонгох боломжтой байна.
+                                                                                </p>
+                                                                            );
+                                                                        }
+                                                                        return null;
+                                                                    })()}
                                                                     {!isDroneBattery && form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
                                                                         <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
                                                                     )}
@@ -585,6 +629,10 @@ export default function PhotographersPage() {
                                                                     }
                                                                     const thePkg = currentPackage;
                                                                     if (!thePkg) return "0₮";
+                                                                    if (form.time && form.endTime) {
+                                                                        const durationHrs = calcDuration(form.time, form.endTime);
+                                                                        return `${((Number(thePkg.price) / thePkg.duration) * durationHrs).toLocaleString()}₮`;
+                                                                    }
                                                                     return `${Number(thePkg.price || 0).toLocaleString()}₮`;
                                                                 })()}
                                                             </span>

@@ -178,7 +178,7 @@ export default function StudiosPage() {
             serviceName: activeStudio.name,
             date: format(form.date!, "yyyy-MM-dd"),
             time: form.time,
-            duration: currentPackage.hours,
+            duration: (form.time && form.endTime) ? calcDuration(form.time, form.endTime) : currentPackage.hours,
             unitPrice: Number(currentPackage.price) / currentPackage.hours, // hourly rate
         });
         toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү." });
@@ -199,7 +199,7 @@ export default function StudiosPage() {
                 phone: form.phone,
                 email: form.email,
                 date: format(form.date!, "yyyy-MM-dd"), time: form.time,
-                duration: currentPackage.hours,
+                duration: (form.time && form.endTime) ? calcDuration(form.time, form.endTime) : currentPackage.hours,
                 serviceType: "STUDIO", serviceId: activeStudio.id,
                 unitPrice: Number(currentPackage.price) / currentPackage.hours,
                 serviceName: activeStudio.name,
@@ -425,25 +425,28 @@ export default function StudiosPage() {
                                                                                 value={form.time}
                                                                                 onChange={e => {
                                                                                     const t = e.target.value;
-                                                                                    let et = form.endTime;
-
-                                                                                    if (currentPackage && currentPackage.hours && t) {
-                                                                                        const autoDur = Number(currentPackage.hours);
-                                                                                        const [sh, sm] = t.split(":").map(Number);
-                                                                                        const exactEndMins = (sh * 60 + sm + autoDur * 60) % (24 * 60);
-                                                                                        const endH = Math.floor(exactEndMins / 60);
-                                                                                        const endM = exactEndMins % 60;
-                                                                                        et = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
-                                                                                    } else if (!t) {
-                                                                                        et = "";
-                                                                                    }
-
-                                                                                    setForm(prev => ({ ...prev, time: t, endTime: et }));
+                                                                                    setForm(prev => ({ ...prev, time: t, endTime: "" }));
                                                                                 }}
                                                                                 className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
                                                                             >
                                                                                 <option value="">-- : --</option>
-                                                                                {HALF_HOURLY_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
+                                                                                {HALF_HOURLY_TIMES.filter(t => {
+                                                                                    if (bookedTimes.includes(t)) return false;
+                                                                                    if (currentPackage && currentPackage.hours) {
+                                                                                        const [sh, sm] = t.split(":").map(Number);
+                                                                                        const startMins = sh * 60 + sm;
+                                                                                        // Here we check if the minimum 1 hr is available
+                                                                                        const durMins = 60; // Just check if at least 1 hour is available
+                                                                                        let endMins = startMins + durMins;
+                                                                                        for (let m = startMins; m < endMins; m += 30) {
+                                                                                            const checkH = Math.floor(m / 60) % 24;
+                                                                                            const checkM = m % 60;
+                                                                                            const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                            if (bookedTimes.includes(checkStr)) return false;
+                                                                                        }
+                                                                                    }
+                                                                                    return true;
+                                                                                }).map(t => (
                                                                                     <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
                                                                                 ))}
                                                                             </select>
@@ -461,19 +464,19 @@ export default function StudiosPage() {
                                                                                     if (!form.time) return false;
                                                                                     const [sh, sm] = form.time.split(":").map(Number);
                                                                                     const [th, tm] = t.split(":").map(Number);
-                                                                                    if (th === sh && tm === sm) return false;
-                                                                                    // If a package is selected, only show the exact end time = start + package.hours
-                                                                                    if (currentPackage) {
-                                                                                        const exactEndMins = (sh * 60 + sm + currentPackage.hours * 60) % (24 * 60);
-                                                                                        const thMins = th * 60 + tm;
-                                                                                        return thMins === exactEndMins;
-                                                                                    }
-                                                                                    // No package: show all times after start, filtering booked slots
+                                                                                    
                                                                                     const startMins = sh * 60 + sm;
-                                                                                    let endMins = th * 60 + tm;
-                                                                                    if (endMins < startMins) endMins += 24 * 60; // Overnight
+                                                                                    let candidateMins = th * 60 + tm;
+                                                                                    if (candidateMins <= startMins) candidateMins += 24 * 60; // Overnight
 
-                                                                                    for (let m = startMins; m < endMins; m += 30) {
+                                                                                    if (currentPackage) {
+                                                                                        const diffMins = candidateMins - startMins;
+                                                                                        if (diffMins % 60 !== 0) return false; // зөвхөн бүхэл цагууд
+                                                                                        const diffHrs = diffMins / 60;
+                                                                                        if (diffHrs < 1 || diffHrs > currentPackage.hours) return false;
+                                                                                    }
+
+                                                                                    for (let m = startMins; m < candidateMins; m += 30) {
                                                                                         const checkH = Math.floor(m / 60) % 24;
                                                                                         const checkM = m % 60;
                                                                                         const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
@@ -486,6 +489,35 @@ export default function StudiosPage() {
                                                                             </select>
                                                                         </div>
                                                                     </div>
+                                                                    {(() => {
+                                                                        if (!form.time || !currentPackage) return null;
+                                                                        const [sh, sm] = form.time.split(":").map(Number);
+                                                                        const startMins = sh * 60 + sm;
+                                                                        let maxAvailable = currentPackage.hours;
+                                                                        let hitConflict = false;
+                                                                        for (let hrs = 1; hrs <= currentPackage.hours; hrs++) {
+                                                                            const candidateMins = startMins + hrs * 60;
+                                                                            for (let m = startMins; m < candidateMins; m += 30) {
+                                                                                const checkH = Math.floor(m / 60) % 24;
+                                                                                const checkM = m % 60;
+                                                                                const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                if (bookedTimes.includes(checkStr)) {
+                                                                                    hitConflict = true;
+                                                                                    maxAvailable = hrs - 1;
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                            if (hitConflict) break;
+                                                                        }
+                                                                        if (maxAvailable > 0 && maxAvailable < currentPackage.hours) {
+                                                                            return (
+                                                                                <p className="text-xs text-rose-500 mt-2 bg-rose-500/10 p-2 rounded border border-rose-500/20">
+                                                                                    ⚠️ Тухайн цагт давхардсан захиалга байгаа тул та хамгийн ихдээ {maxAvailable} цаг сонгох боломжтой байна.
+                                                                                </p>
+                                                                            );
+                                                                        }
+                                                                        return null;
+                                                                    })()}
                                                                     {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
                                                                         <p className="text-xs text-gray-500 mt-1.5">
                                                                             Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span>
@@ -497,7 +529,13 @@ export default function StudiosPage() {
 
                                                         <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
                                                             <span className="text-gray-400 text-sm">Нийт үнэ:</span>
-                                                            <span className="text-xl font-bold text-white">{currentPackage ? Number(currentPackage.price).toLocaleString() : 0}₮</span>
+                                                            <span className="text-xl font-bold text-white">
+                                                                {currentPackage ? (
+                                                                    form.time && form.endTime 
+                                                                        ? ((Number(currentPackage.price) / currentPackage.hours) * calcDuration(form.time, form.endTime)).toLocaleString() 
+                                                                        : Number(currentPackage.price).toLocaleString()
+                                                                ) : 0}₮
+                                                            </span>
                                                         </div>
                                                         <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                                             <Button type="button" onClick={handleAddToCart} disabled={submitting} variant="outline" className="flex-1 h-11 bg-white/5 border-white/10 text-white hover:bg-white/10 font-semibold gap-2">

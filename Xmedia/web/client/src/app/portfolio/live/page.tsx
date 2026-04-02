@@ -26,7 +26,7 @@ interface PortfolioItem {
 function toEmbedUrl(youtubeUrl?: string, facebookUrl?: string, tiktokUrl?: string): string | null {
     if (youtubeUrl) {
         const ytMatch = youtubeUrl.match(
-            /(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+            /(?:youtube\.com\/(?:watch\?v=|live\/|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
         );
         if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1`;
     }
@@ -69,6 +69,15 @@ export default function LivePortfolioPage() {
     const yRight = useTransform(scrollYProgress, [0, 1], ["0%", "8%"]);
 
     const embedUrl = active ? toEmbedUrl(active.youtubeUrl, active.facebookUrl, active.tiktokUrl) : null;
+
+    let isVertical = false;
+    if (active) {
+        if (active.youtubeUrl) {
+            isVertical = false;
+        } else if (active.facebookUrl) {
+            isVertical = /\/(?:reel|reels)\//i.test(active.facebookUrl);
+        }
+    }
 
     return (
         <div ref={containerRef} className="h-screen overflow-y-scroll bg-black text-white">
@@ -144,7 +153,12 @@ export default function LivePortfolioPage() {
                         >
                             {/* Video embed */}
                             {embedUrl ? (
-                                <div className="relative w-full overflow-hidden rounded-2xl bg-black" style={{ aspectRatio: "16/9" }}>
+                                <div className="relative w-full mx-auto overflow-hidden rounded-2xl bg-black/50" 
+                                     style={{ 
+                                         aspectRatio: isVertical ? "9/16" : "16/9", 
+                                         maxWidth: isVertical ? "calc(75vh * (9/16))" : "100%",
+                                         maxHeight: "80vh"
+                                     }}>
                                     <iframe
                                         src={embedUrl}
                                         className="absolute inset-0 w-full h-full"
@@ -155,7 +169,12 @@ export default function LivePortfolioPage() {
                                 </div>
                             ) : (
                                 // No video link — show large image
-                                <div className="relative w-full rounded-2xl overflow-hidden bg-zinc-900" style={{ aspectRatio: "16/9" }}>
+                                <div className="relative w-full mx-auto rounded-2xl overflow-hidden bg-zinc-900"
+                                     style={{ 
+                                         aspectRatio: isVertical ? "9/16" : "16/9", 
+                                         maxWidth: isVertical ? "calc(75vh * (9/16))" : "100%",
+                                         maxHeight: "80vh"
+                                     }}>
                                     {active.images[0]
                                         ? <img src={active.images[0]} alt={active.title} className="w-full h-full object-cover" />
                                         : <div className="w-full h-full flex items-center justify-center text-white/20 text-sm">Линк байхгүй</div>

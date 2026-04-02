@@ -556,7 +556,24 @@ export default function LivestreamPage() {
                                                                                 className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
                                                                             >
                                                                                 <option value="">-- : --</option>
-                                                                                {HALF_HOURLY_TIMES.filter(t => !bookedTimes.includes(t)).map(t => (
+                                                                                {HALF_HOURLY_TIMES.filter(t => {
+                                                                                    if (bookedTimes.includes(t)) return false;
+                                                                                    let minHrs = 1;
+                                                                                    if (tierRange) {
+                                                                                        minHrs = parseRange(tierRange).min || 1;
+                                                                                    }
+                                                                                    const [sh, sm] = t.split(":").map(Number);
+                                                                                    const startMins = sh * 60 + sm;
+                                                                                    const durMins = minHrs * 60;
+                                                                                    let endMins = startMins + durMins;
+                                                                                    for (let m = startMins; m < endMins; m += 30) {
+                                                                                        const checkH = Math.floor(m / 60) % 24;
+                                                                                        const checkM = m % 60;
+                                                                                        const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                        if (bookedTimes.includes(checkStr)) return false;
+                                                                                    }
+                                                                                    return true;
+                                                                                }).map(t => (
                                                                                     <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
                                                                                 ))}
                                                                             </select>
@@ -604,6 +621,36 @@ export default function LivestreamPage() {
                                                                             </select>
                                                                         </div>
                                                                     </div>
+                                                                    {(() => {
+                                                                        if (!form.time || !tierRange) return null;
+                                                                        const { max: maxHrs } = parseRange(tierRange);
+                                                                        const [sh, sm] = form.time.split(":").map(Number);
+                                                                        const startMins = sh * 60 + sm;
+                                                                        let maxAvailable = maxHrs;
+                                                                        let hitConflict = false;
+                                                                        for (let hrs = 1; hrs <= maxHrs; hrs++) {
+                                                                            const candidateMins = startMins + hrs * 60;
+                                                                            for (let m = startMins; m < candidateMins; m += 30) {
+                                                                                const checkH = Math.floor(m / 60) % 24;
+                                                                                const checkM = m % 60;
+                                                                                const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+                                                                                if (bookedTimes.includes(checkStr)) {
+                                                                                    hitConflict = true;
+                                                                                    maxAvailable = hrs - 1;
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                            if (hitConflict) break;
+                                                                        }
+                                                                        if (maxAvailable > 0 && maxAvailable < maxHrs) {
+                                                                            return (
+                                                                                <p className="text-xs text-rose-500 mt-2 bg-rose-500/10 p-2 rounded border border-rose-500/20">
+                                                                                    ⚠️ Тухайн цагт давхардсан захиалга байгаа тул та хамгийн ихдээ {maxAvailable} цаг сонгох боломжтой байна.
+                                                                                </p>
+                                                                            );
+                                                                        }
+                                                                        return null;
+                                                                    })()}
                                                                     {form.time && form.endTime && calcDuration(form.time, form.endTime) > 0 && (
                                                                         <p className="text-xs text-gray-500 mt-1.5">Нийт хугацаа: <span className="text-white font-medium">{calcDuration(form.time, form.endTime)} цаг</span></p>
                                                                     )}
