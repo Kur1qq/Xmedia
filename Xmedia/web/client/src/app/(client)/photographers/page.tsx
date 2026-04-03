@@ -122,6 +122,8 @@ export default function PhotographersPage() {
     const isDroneBattery = activeService?.name === 'Дрон' && 
         (subTypeName.includes('батерэй') || subTypeName.includes('батарей'));
     const isPhotographer = activeService?.name === 'Зурагчин';
+    const isVideographer = activeService?.name === 'Зураглаач';
+    const isPersonService = isPhotographer || isVideographer;
 
     useEffect(() => {
         if (!form.date || !activeService || !isBooking) { setBookedTimes([]); return; }
@@ -149,6 +151,7 @@ export default function PhotographersPage() {
         setActiveServiceId(id);
         setIsBooking(false);
         setForm(prev => ({ ...prev, date: undefined, time: "", duration: "1" }));
+        setPhotographerCount(1);
     };
 
     const validateForm = (isBuyNow: boolean = false) => {
@@ -187,7 +190,7 @@ export default function PhotographersPage() {
 
         let timePayload = form.time;
 
-        if (!isDroneBattery && !isPhotographer && form.time && form.endTime) {
+        if (!isDroneBattery && !isPersonService && form.time && form.endTime) {
             const actualDur = calcDuration(form.time, form.endTime);
             totalAmount = (totalAmount / duration) * actualDur;
             duration = actualDur;
@@ -201,8 +204,8 @@ export default function PhotographersPage() {
             timePayload = form.time;
         }
 
-        // Special case for Photographer count
-        if (isPhotographer) {
+        // Special case for Person count (Photographer / Videographer)
+        if (isPersonService) {
             if (form.time && form.endTime) {
                 const actualDur = calcDuration(form.time, form.endTime);
                 totalAmount = (totalAmount / duration) * actualDur * photographerCount;
@@ -210,7 +213,7 @@ export default function PhotographersPage() {
             } else {
                 totalAmount = totalAmount * photographerCount;
             }
-            serviceName = `Зурагчин${photographerCount > 1 ? ` (${photographerCount}ш)` : ''}`;
+            serviceName = `${activeService.name}${photographerCount > 1 ? ` (${photographerCount}ш)` : ''}`;
         }
 
         addItem({
@@ -242,7 +245,7 @@ export default function PhotographersPage() {
 
             let timePayload = form.time;
 
-            if (!isDroneBattery && !isPhotographer && form.time && form.endTime) {
+            if (!isDroneBattery && !isPersonService && form.time && form.endTime) {
                 const actualDur = calcDuration(form.time, form.endTime);
                 totalAmount = (totalAmount / duration) * actualDur;
                 duration = actualDur;
@@ -256,8 +259,8 @@ export default function PhotographersPage() {
                 timePayload = form.time;
             }
 
-            // Special case for Photographer count
-            if (isPhotographer) {
+            // Special case for Person count (Photographer / Videographer)
+            if (isPersonService) {
                 if (form.time && form.endTime) {
                     const actualDur = calcDuration(form.time, form.endTime);
                     totalAmount = (totalAmount / duration) * actualDur * photographerCount;
@@ -265,7 +268,7 @@ export default function PhotographersPage() {
                 } else {
                     totalAmount = totalAmount * photographerCount;
                 }
-                serviceName = `Зурагчин${photographerCount > 1 ? ` (${photographerCount}ш)` : ''}`;
+                serviceName = `${activeService.name}${photographerCount > 1 ? ` (${photographerCount}ш)` : ''}`;
             }
 
             const payload: Record<string, unknown> = {
@@ -487,12 +490,12 @@ export default function PhotographersPage() {
                                                                         const thePkg = currentPackage || (activeService.packages && activeService.packages[0]);
                                                                         if (!thePkg) return "Сонгоно уу";
                                                                         const basePrice = Number(thePkg.price || 0);
-                                                                        const multiplier = isPhotographer ? photographerCount : 1;
+                                                                        const multiplier = isPersonService ? photographerCount : 1;
                                                                         return `${(basePrice * multiplier).toLocaleString()}₮`;
                                                                     })()}
                                                                 </p>
                                                             </div>
-                                                            {isPhotographer && (
+                                                            {isPersonService && (
                                                                 <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-2 py-1">
                                                                     <button
                                                                         onClick={() => setPhotographerCount(Math.max(1, photographerCount - 1))}
@@ -673,7 +676,7 @@ export default function PhotographersPage() {
                                                                     }
                                                                     const thePkg = currentPackage;
                                                                     if (!thePkg) return "0₮";
-                                                                    if (isPhotographer) {
+                                                                    if (isPersonService) {
                                                                         if (form.time && form.endTime) {
                                                                             const durationHrs = calcDuration(form.time, form.endTime);
                                                                             return `${((Number(thePkg.price) / thePkg.duration) * durationHrs * photographerCount).toLocaleString()}₮`;
@@ -735,7 +738,7 @@ export default function PhotographersPage() {
                     }
                     const thePkg = currentPackage;
                     if (!thePkg) return undefined;
-                    if (isPhotographer) {
+                    if (isPersonService) {
                         if (form.time && form.endTime) {
                             const durationHrs = calcDuration(form.time, form.endTime);
                             return (Number(thePkg.price) / thePkg.duration) * durationHrs * photographerCount;
