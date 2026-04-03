@@ -15,7 +15,7 @@ export class MailService {
 
             const data = JSON.stringify({
                 sender: {
-                    name: process.env.COMPANY_NAME || "Xmedia",
+                    name: process.env.COMPANY_NAME || "XTUDIO",
                     email: senderEmail
                 },
                 to: [{ email: to }],
@@ -82,10 +82,10 @@ export class MailService {
 
     async sendOrderConfirmationEmail(to: string, bookingId: number, buyerName: string, totalAmount: number, itemsCount: number) {
         try {
-            const subject = `Захиалга баталгаажлаа #${String(bookingId).padStart(5, '0')} — Xmedia`;
+            const subject = `Захиалга баталгаажлаа #${String(bookingId).padStart(5, '0')} — XTUDIO`;
             const html = `
             <div style="font-family:Arial,sans-serif;color:#222;max-width:620px;margin:0 auto;border:1px solid #eaeaea;padding:24px;border-radius:12px;">
-                <h2 style="color:#e11d48;margin-top:0;">Xmedia — Захиалга баталгаажлаа 🎉</h2>
+                <h2 style="color:#e11d48;margin-top:0;">XTUDIO — Захиалга баталгаажлаа 🎉</h2>
                 <p>Сайн байна уу, <b>${buyerName}</b>!</p>
                 <p>Таны <b>#${String(bookingId).padStart(5, '0')}</b> дугаартай захиалга амжилттай баталгаажлаа.</p>
                 

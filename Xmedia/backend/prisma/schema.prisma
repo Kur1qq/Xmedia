@@ -753,14 +753,15 @@ model HeroSlide {
 // --------------------------------------------------------------------------
 
 model SiteSettings {
-  id            Int      @id @default(autoincrement())
-  snowEffect    Boolean  @default(false) @map("snow_effect")
-  headerNav     Json?    @map("header_nav")
-  homeCards     Json?    @map("home_cards")
-  contactInfo   Json?    @map("contact_info")
+  id              Int      @id @default(autoincrement())
+  snowEffect      Boolean  @default(false) @map("snow_effect")
+  headerNav       Json?    @map("header_nav")
+  homeCards       Json?    @map("home_cards")
+  contactInfo     Json?    @map("contact_info")
   presentationUrl String?
-  logoUrl       String?  @map("logo_url")
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  logoUrl         String?  @map("logo_url")
+  footerData      Json?    @map("footer_data")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
   @@map("site_settings")
 }

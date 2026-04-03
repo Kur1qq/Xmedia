@@ -172,7 +172,7 @@ export class BookingsService {
             user = await this.prisma.user.create({
                 data: {
                     username: dto.name,
-                    email: dto.email || `guest_${dto.phone}@xmedia.guest`,
+                    email: dto.email || `guest_${dto.phone}@xtudio.guest`,
                     phone: dto.phone,
                     passwordHash: 'GUEST',
                 }
@@ -222,6 +222,13 @@ export class BookingsService {
                 { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone },
             ).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
 
+            // Notify admin: new invoice request
+            this.adminNotificationService.createNotification(
+                'NEW_INVOICE_REQUEST',
+                `Шинэ нэхэмжлэх хүсэлт: ${dto.name} — ${dto.serviceName || dto.serviceType} (${total.toLocaleString()}₮)`,
+                booking.id,
+            ).catch(() => {});
+
             return { ...booking, checkoutUrl: null };
         }
 
@@ -248,6 +255,13 @@ export class BookingsService {
                     status: 'UNPAID',
                 }
             });
+
+            // Notify admin: new order created
+            this.adminNotificationService.createNotification(
+                'NEW_ORDER',
+                `Шинэ захиалга: ${dto.name} — ${dto.serviceName || dto.serviceType} (${total.toLocaleString()}₮)`,
+                booking.id,
+            ).catch(() => {});
 
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
         } catch (error) {
@@ -296,7 +310,7 @@ export class BookingsService {
             user = await this.prisma.user.create({
                 data: {
                     username: dto.name,
-                    email: dto.email || `guest_${dto.phone}@xmedia.guest`,
+                    email: dto.email || `guest_${dto.phone}@xtudio.guest`,
                     phone: dto.phone,
                     passwordHash: 'GUEST',
                 }
@@ -372,6 +386,14 @@ export class BookingsService {
                 invoiceItems, new Date().toISOString().slice(0, 10),
             ).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
 
+            // Notify admin: new invoice request (cart)
+            const serviceList = createdBookings.map(b => b.item.serviceName || b.item.serviceType).join(', ');
+            this.adminNotificationService.createNotification(
+                'NEW_INVOICE_REQUEST',
+                `Шинэ нэхэмжлэх хүсэлт: ${dto.name} — ${serviceList} (${totalAmount.toLocaleString()}₮)`,
+                firstBooking.id,
+            ).catch(() => {});
+
             return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
 
@@ -380,7 +402,7 @@ export class BookingsService {
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: firstBooking.id,
                 amount: totalAmount,
-                serviceName: `Xmedia багц (${createdBookings.length} үйлчилгээ)`,
+                serviceName: `XTUDIO багц (${createdBookings.length} үйлчилгээ)`,
                 items: createdBookings.map(b => ({
                     name: b.item.serviceName || b.item.serviceType,
                     amount: b.total,
@@ -403,6 +425,14 @@ export class BookingsService {
                     linkedBookingIds: otherBookingIds.length > 0 ? JSON.stringify(otherBookingIds) : null,
                 }
             });
+
+            // Notify admin: new cart order
+            const serviceList = createdBookings.map(b => b.item.serviceName || b.item.serviceType).join(', ');
+            this.adminNotificationService.createNotification(
+                'NEW_ORDER',
+                `Шинэ захиалга: ${dto.name} — ${serviceList} (${totalAmount.toLocaleString()}₮)`,
+                firstBooking.id,
+            ).catch(() => {});
 
             return { ...firstBooking, checkoutUrl: checkout.checkoutUrl, bookingIds: createdBookings.map(b => b.booking.id) };
         } catch (error) {
@@ -460,12 +490,12 @@ export class BookingsService {
         };
 
         const total = items.reduce((s, i) => s + i.totalPrice, 0);
-        const subject = `Нэхэмжлэх #${invoiceData.invoiceNumber} — Xmedia`;
+        const subject = `Нэхэмжлэх #${invoiceData.invoiceNumber} — XTUDIO`;
 
         // Build HTML body (always available)
         const htmlBody = `
             <div style="font-family:Arial,sans-serif;color:#222;max-width:620px;margin:0 auto">
-                <h2 style="color:#e11d48">Xmedia — Нэхэмжлэх</h2>
+                <h2 style="color:#e11d48">XTUDIO — Нэхэмжлэх</h2>
                 <p>Сайн байна уу, <b>${buyerName}</b>!</p>
                 <p>Таны <b>₮${total.toLocaleString()}</b> дүнтэй нэхэмжлэхийг хавсаргав (PDF хавсарлаасаа харна уу).</p>
                 <p>Нэхэмжлэхийн дугаар: <b>#${invoiceData.invoiceNumber}</b></p>
@@ -518,7 +548,7 @@ export class BookingsService {
             user = await this.prisma.user.create({
                 data: {
                     username: dto.name,
-                    email: dto.email || `guest_${dto.phone}@xmedia.guest`,
+                    email: dto.email || `guest_${dto.phone}@xtudio.guest`,
                     phone: dto.phone,
                     passwordHash: 'GUEST',
                 }
@@ -628,6 +658,15 @@ export class BookingsService {
                 Number(updatedBooking.totalAmount),
                 updatedBooking.items.length
             ).catch(err => this.logger.error(`Async email failed: ${err.message}`));
+        }
+
+        // Notify admin: payment confirmed
+        if (!wasAlreadyPaid) {
+            this.adminNotificationService.createNotification(
+                'PAYMENT_CONFIRMED',
+                `Төлбөр амжилттай: Захиалга #ORD-${payment.bookingId.toString().padStart(4, '0')} (${Number(payment.amount).toLocaleString()}₮)`,
+                payment.bookingId,
+            ).catch(() => {});
         }
 
         return { success: true, bookingId: payment.bookingId };

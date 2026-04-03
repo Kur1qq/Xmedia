@@ -11,6 +11,7 @@ export declare class SettingsController {
         contactInfo: import("@prisma/client/runtime/library").JsonValue | null;
         presentationUrl: string | null;
         logoUrl: string | null;
+        footerData: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     update(body: {
         snowEffect?: boolean;
@@ -27,5 +28,6 @@ export declare class SettingsController {
         contactInfo: import("@prisma/client/runtime/library").JsonValue | null;
         presentationUrl: string | null;
         logoUrl: string | null;
+        footerData: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
 }

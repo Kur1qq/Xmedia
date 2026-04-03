@@ -51,6 +51,7 @@ export default function PhotographersPage() {
     const [selectedSubTypes, setSelectedSubTypes] = useState<Record<number, number>>({});
     const [selectedPackages, setSelectedPackages] = useState<Record<number, PhotographerServicePackage>>({});
     const [batteryCount, setBatteryCount] = useState<number>(1);
+    const [photographerCount, setPhotographerCount] = useState<number>(1);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", endTime: "", duration: "1", name: "", phone: "", email: "" });
 
@@ -120,6 +121,7 @@ export default function PhotographersPage() {
     const subTypeName = activeService?.packages?.find(p => p.subTypeId === activeSubTypeId)?.subType?.name?.toLowerCase() || '';
     const isDroneBattery = activeService?.name === 'Дрон' && 
         (subTypeName.includes('батерэй') || subTypeName.includes('батарей'));
+    const isPhotographer = activeService?.name === 'Зурагчин';
 
     useEffect(() => {
         if (!form.date || !activeService || !isBooking) { setBookedTimes([]); return; }
@@ -185,7 +187,7 @@ export default function PhotographersPage() {
 
         let timePayload = form.time;
 
-        if (!isDroneBattery && form.time && form.endTime) {
+        if (!isDroneBattery && !isPhotographer && form.time && form.endTime) {
             const actualDur = calcDuration(form.time, form.endTime);
             totalAmount = (totalAmount / duration) * actualDur;
             duration = actualDur;
@@ -197,6 +199,18 @@ export default function PhotographersPage() {
             totalAmount = 150000 * batteryCount;
             serviceName = `Дрон (Батерэй ${batteryCount}ш)`;
             timePayload = form.time;
+        }
+
+        // Special case for Photographer count
+        if (isPhotographer) {
+            if (form.time && form.endTime) {
+                const actualDur = calcDuration(form.time, form.endTime);
+                totalAmount = (totalAmount / duration) * actualDur * photographerCount;
+                duration = actualDur;
+            } else {
+                totalAmount = totalAmount * photographerCount;
+            }
+            serviceName = `Зурагчин${photographerCount > 1 ? ` (${photographerCount}ш)` : ''}`;
         }
 
         addItem({
@@ -228,7 +242,7 @@ export default function PhotographersPage() {
 
             let timePayload = form.time;
 
-            if (!isDroneBattery && form.time && form.endTime) {
+            if (!isDroneBattery && !isPhotographer && form.time && form.endTime) {
                 const actualDur = calcDuration(form.time, form.endTime);
                 totalAmount = (totalAmount / duration) * actualDur;
                 duration = actualDur;
@@ -240,6 +254,18 @@ export default function PhotographersPage() {
                 totalAmount = 150000 * batteryCount;
                 serviceName = `Дрон (Батерэй ${batteryCount}ш)`;
                 timePayload = form.time;
+            }
+
+            // Special case for Photographer count
+            if (isPhotographer) {
+                if (form.time && form.endTime) {
+                    const actualDur = calcDuration(form.time, form.endTime);
+                    totalAmount = (totalAmount / duration) * actualDur * photographerCount;
+                    duration = actualDur;
+                } else {
+                    totalAmount = totalAmount * photographerCount;
+                }
+                serviceName = `Зурагчин${photographerCount > 1 ? ` (${photographerCount}ш)` : ''}`;
             }
 
             const payload: Record<string, unknown> = {
@@ -380,11 +406,12 @@ export default function PhotographersPage() {
 
                                                         return (
                                                             <div className="mb-6 w-full mt-auto pt-4 space-y-6">
+
                                                                 {contentTypes.length > 0 && activeService.name !== 'Зурагчин' && (
                                                                     <div>
                                                                         <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm max-w-[80%] leading-relaxed">
                                                                             {activeService.name === 'Дрон'
-                                                                                ? "1 ширхэг батерэй 20 минут ажиллана та өөрийн хэрэгцээнд тааруулан батерэйний тоогоо сонгоно уу"
+                                                                                ? "1 ширхэг батарей 20 минут нисгэхэд ашиглагдана та өөрийн хэрэгцээнд тааруулан батарейн тоогоо сонгоно уу"
                                                                                 : "Контентийн төрөл сонгох"}
                                                                         </h4>
                                                                         <div className="flex flex-wrap gap-2">
@@ -448,19 +475,36 @@ export default function PhotographersPage() {
                                                     })()}
 
                                                     <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
-                                                        <div className="flex flex-col items-start md:items-center">
-                                                            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Нийт үнэ</p>
-                                                            <p className="text-2xl font-bold">
-                                                                {(() => {
-                                                                    if (isDroneBattery) {
-                                                                        return `${(150000 * batteryCount).toLocaleString()}₮`;
-                                                                    }
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="flex flex-col items-start">
+                                                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Нийт үнэ</p>
+                                                                <p className="text-2xl font-bold">
+                                                                    {(() => {
+                                                                        if (isDroneBattery) {
+                                                                            return `${(150000 * batteryCount).toLocaleString()}₮`;
+                                                                        }
 
-                                                                    const thePkg = currentPackage || (activeService.packages && activeService.packages[0]);
-                                                                    if (!thePkg) return "Сонгоно уу";
-                                                                    return `${Number(thePkg.price || 0).toLocaleString()}₮`;
-                                                                })()}
-                                                            </p>
+                                                                        const thePkg = currentPackage || (activeService.packages && activeService.packages[0]);
+                                                                        if (!thePkg) return "Сонгоно уу";
+                                                                        const basePrice = Number(thePkg.price || 0);
+                                                                        const multiplier = isPhotographer ? photographerCount : 1;
+                                                                        return `${(basePrice * multiplier).toLocaleString()}₮`;
+                                                                    })()}
+                                                                </p>
+                                                            </div>
+                                                            {isPhotographer && (
+                                                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-2 py-1">
+                                                                    <button
+                                                                        onClick={() => setPhotographerCount(Math.max(1, photographerCount - 1))}
+                                                                        className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-all text-lg font-medium"
+                                                                    >-</button>
+                                                                    <span className="w-7 text-center font-bold text-sm">{photographerCount}ш</span>
+                                                                    <button
+                                                                        onClick={() => setPhotographerCount(photographerCount + 1)}
+                                                                        className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-all text-lg font-medium"
+                                                                    >+</button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <Button onClick={() => {
                                                             if (activeService.packages && activeService.packages.length > 0 && !selectedPackages[activeService.id]) {
@@ -629,6 +673,13 @@ export default function PhotographersPage() {
                                                                     }
                                                                     const thePkg = currentPackage;
                                                                     if (!thePkg) return "0₮";
+                                                                    if (isPhotographer) {
+                                                                        if (form.time && form.endTime) {
+                                                                            const durationHrs = calcDuration(form.time, form.endTime);
+                                                                            return `${((Number(thePkg.price) / thePkg.duration) * durationHrs * photographerCount).toLocaleString()}₮`;
+                                                                        }
+                                                                        return `${(Number(thePkg.price || 0) * photographerCount).toLocaleString()}₮`;
+                                                                    }
                                                                     if (form.time && form.endTime) {
                                                                         const durationHrs = calcDuration(form.time, form.endTime);
                                                                         return `${((Number(thePkg.price) / thePkg.duration) * durationHrs).toLocaleString()}₮`;
@@ -684,6 +735,13 @@ export default function PhotographersPage() {
                     }
                     const thePkg = currentPackage;
                     if (!thePkg) return undefined;
+                    if (isPhotographer) {
+                        if (form.time && form.endTime) {
+                            const durationHrs = calcDuration(form.time, form.endTime);
+                            return (Number(thePkg.price) / thePkg.duration) * durationHrs * photographerCount;
+                        }
+                        return Number(thePkg.price || 0) * photographerCount;
+                    }
                     return Number(thePkg.price || 0);
                 })()}
             />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Plus, X, Pencil, Trash2, Image as ImageIcon, UploadCloud, Snowflake } from "lucide-react";
+import { Plus, X, Pencil, Trash2, Image as ImageIcon, UploadCloud, Snowflake, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { getToken } from "@/lib/auth";
 
@@ -18,6 +18,15 @@ export default function HeroPage() {
     const [logoUrl, setLogoUrl] = useState("");
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const logoInputRef = useRef<HTMLInputElement>(null);
+    const [footerData, setFooterData] = useState<{
+        isActive: boolean;
+        name: string;
+        link: string;
+    }>({
+        isActive: true,
+        name: "",
+        link: "",
+    });
 
     const [formData, setFormData] = useState({
         title: "",
@@ -58,6 +67,13 @@ export default function HeroPage() {
                     setHeaderNav(d.headerNav || []);
                     setHomeCards(d.homeCards || []);
                     setLogoUrl(d.logoUrl || "");
+                    if (d.footerData) {
+                        setFooterData({
+                            isActive: d.footerData.isActive !== false,
+                            name: d.footerData.name || "",
+                            link: d.footerData.link || "",
+                        });
+                    }
                 }
             })
             .catch(console.error);
@@ -193,7 +209,7 @@ export default function HeroPage() {
                     'Content-Type': 'application/json',
                     ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
                 },
-                body: JSON.stringify({ snowEffect, headerNav, homeCards, logoUrl }),
+                body: JSON.stringify({ snowEffect, headerNav, homeCards, logoUrl, footerData }),
             });
             if (res.ok) {
                 toast.success("Сайтын тохиргоо хадгалагдлаа!");
@@ -205,6 +221,14 @@ export default function HeroPage() {
         } finally {
             setIsSavingSettings(false);
         }
+    };
+
+    const moveItem = <T,>(arr: T[], from: number, to: number): T[] => {
+        if (to < 0 || to >= arr.length) return arr;
+        const next = [...arr];
+        const [item] = next.splice(from, 1);
+        next.splice(to, 0, item);
+        return next;
     };
 
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -324,6 +348,21 @@ export default function HeroPage() {
                         <div className="space-y-3">
                             {headerNav.map((nav, i) => (
                                 <div key={i} className="flex gap-2 items-start bg-background p-3 rounded border border-border/50 shadow-sm relative group">
+                                    {/* Order buttons */}
+                                    <div className="flex flex-col gap-0.5 shrink-0 mt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setHeaderNav(moveItem(headerNav, i, i - 1))}
+                                            disabled={i === 0}
+                                            className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+                                        ><ChevronUp className="w-3.5 h-3.5" /></button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setHeaderNav(moveItem(headerNav, i, i + 1))}
+                                            disabled={i === headerNav.length - 1}
+                                            className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+                                        ><ChevronDown className="w-3.5 h-3.5" /></button>
+                                    </div>
                                     <div className="flex-1 space-y-2">
                                         <div>
                                             <label className="text-[10px] uppercase text-muted-foreground mb-1 block">Нэр</label>
@@ -378,6 +417,21 @@ export default function HeroPage() {
                         <div className="space-y-3">
                             {homeCards.map((card, i) => (
                                 <div key={i} className="flex gap-2 items-start bg-background p-3 rounded border border-border/50 shadow-sm">
+                                    {/* Order buttons */}
+                                    <div className="flex flex-col gap-0.5 shrink-0 mt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setHomeCards(moveItem(homeCards, i, i - 1))}
+                                            disabled={i === 0}
+                                            className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+                                        ><ChevronUp className="w-3.5 h-3.5" /></button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setHomeCards(moveItem(homeCards, i, i + 1))}
+                                            disabled={i === homeCards.length - 1}
+                                            className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+                                        ><ChevronDown className="w-3.5 h-3.5" /></button>
+                                    </div>
                                     <div className="flex-1 space-y-3">
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
@@ -451,6 +505,48 @@ export default function HeroPage() {
                             ))}
                         </div>
                     </div>
+                </div>
+
+                {/* Footer Setup */}
+                <div className="space-y-4 border border-border/50 p-4 rounded-lg bg-muted/10">
+                    <h3 className="font-semibold">Footer тохиргоо (Сайтын хамгийн доор гарах бичиг)</h3>
+                    
+                    <div className="flex items-center justify-between bg-background p-3 rounded border border-border/50">
+                        <div>
+                            <p className="text-sm font-medium">Сайт дээр харуулах эсэх</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Унтраавал нийтийн хуудсанд Footer хэсэг харагдахгүй</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setFooterData(p => ({ ...p, isActive: !p.isActive }))}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${footerData.isActive ? 'bg-primary' : 'bg-muted-foreground'} shrink-0`}
+                        >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${footerData.isActive ? 'translate-x-4' : 'translate-x-1'}`} />
+                        </button>
+                    </div>
+
+                    {footerData.isActive && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div>
+                                <label className="text-[10px] uppercase text-muted-foreground mb-1 block">Footer Нэр (Жнь: ORGIL MEDIA)</label>
+                                <input
+                                    value={footerData.name}
+                                    onChange={e => setFooterData(p => ({ ...p, name: e.target.value }))}
+                                    placeholder="ORGIL MEDIA"
+                                    className="w-full text-sm bg-background border border-border/50 rounded-md px-3 py-2 focus:outline-none focus:border-primary"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] uppercase text-muted-foreground mb-1 block">Холбох Линк (Жнь: https://www.orgilmedia.mn)</label>
+                                <input
+                                    value={footerData.link}
+                                    onChange={e => setFooterData(p => ({ ...p, link: e.target.value }))}
+                                    placeholder="https://..."
+                                    className="w-full text-sm bg-background border border-border/50 rounded-md px-3 py-2 focus:outline-none focus:border-primary text-blue-400"
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

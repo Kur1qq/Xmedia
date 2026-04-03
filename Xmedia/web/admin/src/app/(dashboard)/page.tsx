@@ -33,8 +33,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   // Custom filter states
-  const [timeOption, setTimeOption] = useState("today");
-  const [singleDate, setSingleDate] = useState<Date | undefined>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [serviceType, setServiceType] = useState("ALL");
   const [customRevenue, setCustomRevenue] = useState<number | null>(null);
   const [customRevenueDetails, setCustomRevenueDetails] = useState<any[]>([]);
@@ -45,32 +45,8 @@ export default function DashboardPage() {
     setSearchLoading(true);
     try {
       const queryParams = new URLSearchParams();
-      let start: Date | undefined;
-      let end: Date | undefined = new Date();
-
-      switch (timeOption) {
-        case "today": start = new Date(); break;
-        case "7days": start = subDays(new Date(), 7); break;
-        case "1month": start = subMonths(new Date(), 1); break;
-        case "2months": start = subMonths(new Date(), 2); break;
-        case "3months": start = subMonths(new Date(), 3); break;
-        case "4months": start = subMonths(new Date(), 4); break;
-        case "5months": start = subMonths(new Date(), 5); break;
-        case "6months": start = subMonths(new Date(), 6); break;
-        case "7months": start = subMonths(new Date(), 7); break;
-        case "8months": start = subMonths(new Date(), 8); break;
-        case "9months": start = subMonths(new Date(), 9); break;
-        case "10months": start = subMonths(new Date(), 10); break;
-        case "11months": start = subMonths(new Date(), 11); break;
-        case "1year": start = subYears(new Date(), 1); break;
-        case "custom_day": 
-          start = singleDate;
-          end = singleDate;
-          break;
-      }
-
-      const startStr = start ? format(start, "yyyy-MM-dd") : "";
-      const endStr = end ? format(end, "yyyy-MM-dd") : "";
+      const startStr = startDate ? format(startDate, "yyyy-MM-dd") : "";
+      const endStr = endDate ? format(endDate, "yyyy-MM-dd") : "";
 
       if (startStr) queryParams.append("startDate", startStr);
       if (endStr) queryParams.append("endDate", endStr);
@@ -298,59 +274,39 @@ export default function DashboardPage() {
           </select>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Clock size={16} className="text-muted-foreground hidden sm:block" />
-          <select 
-            value={timeOption}
-            onChange={(e) => setTimeOption(e.target.value)}
-            className="h-9 w-full sm:w-[160px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <option value="today">Өнөөдөр</option>
-            <option value="7days">Сүүлийн 7 хоног</option>
-            <option value="1month">Сүүлийн 1 сар</option>
-            <option value="2months">Сүүлийн 2 сар</option>
-            <option value="3months">Сүүлийн 3 сар</option>
-            <option value="4months">Сүүлийн 4 сар</option>
-            <option value="5months">Сүүлийн 5 сар</option>
-            <option value="6months">Сүүлийн 6 сар</option>
-            <option value="7months">Сүүлийн 7 сар</option>
-            <option value="8months">Сүүлийн 8 сар</option>
-            <option value="9months">Сүүлийн 9 сар</option>
-            <option value="10months">Сүүлийн 10 сар</option>
-            <option value="11months">Сүүлийн 11 сар</option>
-            <option value="1year">Сүүлийн 1 жил</option>
-            <option value="custom_day">Өдрөөр хайх</option>
-          </select>
-        </div>
+        <div className="flex items-center flex-wrap gap-2 w-full sm:w-auto">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn("w-full sm:w-[140px] justify-start text-left font-normal h-9", !startDate && "text-muted-foreground")}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                {startDate ? format(startDate, "yyyy-MM-dd") : <span>Эхлэх огноо</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar initialFocus mode="single" defaultMonth={startDate} selected={startDate} onSelect={setStartDate} />
+            </PopoverContent>
+          </Popover>
 
-        {timeOption === "custom_day" && (
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-[160px] justify-start text-left font-normal h-9",
-                    !singleDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {singleDate ? format(singleDate, "yyyy-MM-dd") : <span>Огноо сонгох</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="single"
-                  defaultMonth={singleDate}
-                  selected={singleDate}
-                  onSelect={setSingleDate}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        )}
+          <span className="text-muted-foreground hidden sm:inline">-</span>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn("w-full sm:w-[140px] justify-start text-left font-normal h-9", !endDate && "text-muted-foreground")}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                {endDate ? format(endDate, "yyyy-MM-dd") : <span>Дуусах огноо</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar initialFocus mode="single" defaultMonth={endDate} selected={endDate} onSelect={setEndDate} />
+            </PopoverContent>
+          </Popover>
+        </div>
 
         <button 
           onClick={handleCustomSearch}

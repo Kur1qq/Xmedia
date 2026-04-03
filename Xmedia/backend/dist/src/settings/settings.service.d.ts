@@ -12,6 +12,7 @@ export declare class SettingsService {
         contactInfo: import("@prisma/client/runtime/library").JsonValue | null;
         presentationUrl: string | null;
         logoUrl: string | null;
+        footerData: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     updateSettings(data: {
         snowEffect?: boolean;
@@ -20,6 +21,7 @@ export declare class SettingsService {
         contactInfo?: any;
         presentationUrl?: string;
         logoUrl?: string;
+        footerData?: any;
     }): Promise<{
         id: number;
         updatedAt: Date;
@@ -29,5 +31,6 @@ export declare class SettingsService {
         contactInfo: import("@prisma/client/runtime/library").JsonValue | null;
         presentationUrl: string | null;
         logoUrl: string | null;
+        footerData: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
 }

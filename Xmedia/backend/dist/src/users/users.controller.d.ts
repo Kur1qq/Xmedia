@@ -8,11 +8,11 @@ export declare class UsersController {
         phone?: string;
         passwordHash: string;
     }): Promise<{
+        id: number;
         username: string;
         email: string;
         phone: string | null;
         createdAt: Date;
-        id: number;
     }>;
     checkEmail(body: {
         email: string;
@@ -29,28 +29,28 @@ export declare class UsersController {
         email: string;
         passwordHash: string;
     }): Promise<{
+        id: number;
         username: string;
         email: string;
         phone: string | null;
         createdAt: Date;
         updatedAt: Date;
-        id: number;
     }>;
     findAll(): Promise<{
+        id: number;
         username: string;
         email: string;
         phone: string | null;
         createdAt: Date;
         updatedAt: Date;
-        id: number;
     }[]>;
     findOne(id: string): Promise<{
+        id: number;
         username: string;
         email: string;
         phone: string | null;
         createdAt: Date;
         updatedAt: Date;
-        id: number;
     }>;
     update(id: string, body: {
         username?: string;
@@ -58,11 +58,11 @@ export declare class UsersController {
         phone?: string;
         passwordHash?: string;
     }): Promise<{
+        id: number;
         username: string;
         email: string;
         phone: string | null;
         updatedAt: Date;
-        id: number;
     }>;
     remove(id: string): void;
 }
