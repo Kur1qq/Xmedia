@@ -180,6 +180,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (dto.paymentType === 'invoice') {
             this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: 1, unitPrice: total, totalPrice: total }], new Date().toISOString().slice(0, 10), { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone }).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             this.adminNotificationService.createNotification('NEW_INVOICE_REQUEST', `Шинэ нэхэмжлэх хүсэлт: ${dto.name} — ${dto.serviceName || dto.serviceType} (${total.toLocaleString()}₮)`, booking.id).catch(() => { });
+            this.mailService.sendNewOrderNotificationToAdmin(booking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${dto.serviceName || dto.serviceType}`, total).catch(() => { });
             return { ...booking, checkoutUrl: null };
         }
         try {
@@ -202,6 +203,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 }
             });
             this.adminNotificationService.createNotification('NEW_ORDER', `Шинэ захиалга: ${dto.name} — ${dto.serviceName || dto.serviceType} (${total.toLocaleString()}₮)`, booking.id).catch(() => { });
+            this.mailService.sendNewOrderNotificationToAdmin(booking.id, dto.name, dto.phone, dto.serviceName || dto.serviceType, total).catch(() => { });
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
         }
         catch (error) {
@@ -287,6 +289,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             this.sendInvoiceForBooking(firstBooking.id, dto.name, dto.email, dto.phone, invoiceItems, new Date().toISOString().slice(0, 10)).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             const serviceList = createdBookings.map(b => b.item.serviceName || b.item.serviceType).join(', ');
             this.adminNotificationService.createNotification('NEW_INVOICE_REQUEST', `Шинэ нэхэмжлэх хүсэлт: ${dto.name} — ${serviceList} (${totalAmount.toLocaleString()}₮)`, firstBooking.id).catch(() => { });
+            this.mailService.sendNewOrderNotificationToAdmin(firstBooking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${serviceList}`, totalAmount).catch(() => { });
             return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
         try {
@@ -316,6 +319,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             });
             const serviceList = createdBookings.map(b => b.item.serviceName || b.item.serviceType).join(', ');
             this.adminNotificationService.createNotification('NEW_ORDER', `Шинэ захиалга: ${dto.name} — ${serviceList} (${totalAmount.toLocaleString()}₮)`, firstBooking.id).catch(() => { });
+            this.mailService.sendNewOrderNotificationToAdmin(firstBooking.id, dto.name, dto.phone, serviceList, totalAmount).catch(() => { });
             return { ...firstBooking, checkoutUrl: checkout.checkoutUrl, bookingIds: createdBookings.map(b => b.booking.id) };
         }
         catch (error) {
@@ -574,6 +578,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         });
         if (status === 'CANCELLED') {
             await this.adminNotificationService.createNotification('ORDER_CANCELLED', `Захиалга ORD-${id.toString().padStart(4, '0')} цуцлагдлаа`, id);
+            this.mailService.sendOrderCancelledEmail(id, updated.user?.username || 'Хэрэглэгч', Number(updated.totalAmount ?? 0)).catch(() => { });
         }
         if (status === 'CONFIRMED' && booking.status !== 'CONFIRMED' && updated.user?.email) {
             await this.mailService.sendOrderConfirmationEmail(updated.user.email, updated.id, updated.user.username, Number(updated.totalAmount), updated.items.length);

@@ -229,6 +229,11 @@ export class BookingsService {
                 booking.id,
             ).catch(() => {});
 
+            // Email admin: new invoice request
+            this.mailService.sendNewOrderNotificationToAdmin(
+                booking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${dto.serviceName || dto.serviceType}`, total,
+            ).catch(() => {});
+
             return { ...booking, checkoutUrl: null };
         }
 
@@ -261,6 +266,11 @@ export class BookingsService {
                 'NEW_ORDER',
                 `Шинэ захиалга: ${dto.name} — ${dto.serviceName || dto.serviceType} (${total.toLocaleString()}₮)`,
                 booking.id,
+            ).catch(() => {});
+
+            // Email admin: new order
+            this.mailService.sendNewOrderNotificationToAdmin(
+                booking.id, dto.name, dto.phone, dto.serviceName || dto.serviceType, total,
             ).catch(() => {});
 
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
@@ -394,6 +404,11 @@ export class BookingsService {
                 firstBooking.id,
             ).catch(() => {});
 
+            // Email admin: cart invoice
+            this.mailService.sendNewOrderNotificationToAdmin(
+                firstBooking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${serviceList}`, totalAmount,
+            ).catch(() => {});
+
             return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
 
@@ -432,6 +447,11 @@ export class BookingsService {
                 'NEW_ORDER',
                 `Шинэ захиалга: ${dto.name} — ${serviceList} (${totalAmount.toLocaleString()}₮)`,
                 firstBooking.id,
+            ).catch(() => {});
+
+            // Email admin: cart order
+            this.mailService.sendNewOrderNotificationToAdmin(
+                firstBooking.id, dto.name, dto.phone, serviceList, totalAmount,
             ).catch(() => {});
 
             return { ...firstBooking, checkoutUrl: checkout.checkoutUrl, bookingIds: createdBookings.map(b => b.booking.id) };
@@ -800,6 +820,13 @@ export class BookingsService {
                 `Захиалга ORD-${id.toString().padStart(4, '0')} цуцлагдлаа`,
                 id
             );
+
+            // Email admin: order cancelled
+            this.mailService.sendOrderCancelledEmail(
+                id,
+                updated.user?.username || 'Хэрэглэгч',
+                Number(updated.totalAmount ?? 0),
+            ).catch(() => {});
         }
 
         // Send confirmation email when status is set to CONFIRMED
