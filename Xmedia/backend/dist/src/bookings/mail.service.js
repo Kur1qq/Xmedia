@@ -45,7 +45,7 @@ const common_1 = require("@nestjs/common");
 const https = __importStar(require("https"));
 let MailService = MailService_1 = class MailService {
     logger = new common_1.Logger(MailService_1.name);
-    ADMIN_EMAIL = 'gnbkk14@gmail.com';
+    ADMIN_EMAIL = 'xtudiomn@gmail.com';
     async sendViaBrevoApi(to, subject, htmlContent, attachments = [], skipCC = false) {
         return new Promise((resolve, reject) => {
             let senderEmail = process.env.EMAIL_FROM || 'gnbkk13@gmail.com';

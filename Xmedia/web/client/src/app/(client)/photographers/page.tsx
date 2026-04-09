@@ -190,10 +190,9 @@ export default function PhotographersPage() {
 
         let timePayload = form.time;
 
-        if (!isDroneBattery && !isPersonService && form.time && form.endTime) {
-            const actualDur = calcDuration(form.time, form.endTime);
-            totalAmount = (totalAmount / duration) * actualDur;
-            duration = actualDur;
+        if (!isDroneBattery && !isPersonService) {
+            // duration stays as package duration, price stays as package price
+            duration = parseInt(currentPackage?.duration?.toString() || "1", 10);
         }
 
         // Special case for Drone Battery
@@ -206,13 +205,7 @@ export default function PhotographersPage() {
 
         // Special case for Person count (Photographer / Videographer)
         if (isPersonService) {
-            if (form.time && form.endTime) {
-                const actualDur = calcDuration(form.time, form.endTime);
-                totalAmount = (totalAmount / duration) * actualDur * photographerCount;
-                duration = actualDur;
-            } else {
-                totalAmount = totalAmount * photographerCount;
-            }
+            totalAmount = totalAmount * photographerCount;
             serviceName = `${activeService.name}${photographerCount > 1 ? ` (${photographerCount}ш)` : ''}`;
         }
 
@@ -245,10 +238,9 @@ export default function PhotographersPage() {
 
             let timePayload = form.time;
 
-            if (!isDroneBattery && !isPersonService && form.time && form.endTime) {
-                const actualDur = calcDuration(form.time, form.endTime);
-                totalAmount = (totalAmount / duration) * actualDur;
-                duration = actualDur;
+            if (!isDroneBattery && !isPersonService) {
+                // duration stays as package duration, price stays as package price
+                duration = parseInt(currentPackage?.duration?.toString() || "1", 10);
             }
 
             // Special case for Drone Battery
@@ -261,13 +253,7 @@ export default function PhotographersPage() {
 
             // Special case for Person count (Photographer / Videographer)
             if (isPersonService) {
-                if (form.time && form.endTime) {
-                    const actualDur = calcDuration(form.time, form.endTime);
-                    totalAmount = (totalAmount / duration) * actualDur * photographerCount;
-                    duration = actualDur;
-                } else {
-                    totalAmount = totalAmount * photographerCount;
-                }
+                totalAmount = totalAmount * photographerCount;
                 serviceName = `${activeService.name}${photographerCount > 1 ? ` (${photographerCount}ш)` : ''}`;
             }
 
@@ -676,18 +662,8 @@ export default function PhotographersPage() {
                                                                     }
                                                                     const thePkg = currentPackage;
                                                                     if (!thePkg) return "0₮";
-                                                                    if (isPersonService) {
-                                                                        if (form.time && form.endTime) {
-                                                                            const durationHrs = calcDuration(form.time, form.endTime);
-                                                                            return `${((Number(thePkg.price) / thePkg.duration) * durationHrs * photographerCount).toLocaleString()}₮`;
-                                                                        }
-                                                                        return `${(Number(thePkg.price || 0) * photographerCount).toLocaleString()}₮`;
-                                                                    }
-                                                                    if (form.time && form.endTime) {
-                                                                        const durationHrs = calcDuration(form.time, form.endTime);
-                                                                        return `${((Number(thePkg.price) / thePkg.duration) * durationHrs).toLocaleString()}₮`;
-                                                                    }
-                                                                    return `${Number(thePkg.price || 0).toLocaleString()}₮`;
+                                                                    const multiplier = isPersonService ? photographerCount : 1;
+                                                                    return `${(Number(thePkg.price || 0) * multiplier).toLocaleString()}₮`;
                                                                 })()}
                                                             </span>
                                                         </div>

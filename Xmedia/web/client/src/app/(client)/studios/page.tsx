@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, MapPin, Mic2, MonitorPlay, Check, Users, Square, Info, ArrowLeft, Calendar as CalendarIcon, Loader2, Sparkles, Star, Shield, ArrowRight, HelpCircle, ChevronDown, ChevronUp, GalleryVerticalEnd } from "lucide-react";
+import { Camera, MapPin, Check, Info, ArrowLeft, Calendar as CalendarIcon, Loader2, GalleryVerticalEnd } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCartStore } from "@/lib/store/cart";
-import { fetchBookedSlots, HALF_HOURLY_TIMES, isTimeDisabled } from "@/lib/booking-slots";
+import { fetchBookedSlots, HALF_HOURLY_TIMES } from "@/lib/booking-slots";
 import { PaymentMethodModal } from "@/components/PaymentMethodModal";
 import { useAuthStore } from "@/lib/store/auth";
 import { useRouter } from "next/navigation";
@@ -57,6 +57,7 @@ export default function StudiosPage() {
         const adjustedDiff = diff > 0 ? diff : diff + 24 * 60;
         return adjustedDiff > 0 ? Math.round(adjustedDiff / 60 * 10) / 10 : 1;
     };
+
     const [bookedTimes, setBookedTimes] = useState<string[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -71,7 +72,6 @@ export default function StudiosPage() {
                 setStudios(fetchedStudios);
                 if (fetchedStudios.length > 0) {
                     setActiveServiceId(fetchedStudios[0].id);
-                    // Auto-select first package for each studio
                     const initial: Record<number, StudioPackage> = {};
                     fetchedStudios.forEach((s: Studio) => {
                         if (s.packages && s.packages.length > 0) {
@@ -100,7 +100,6 @@ export default function StudiosPage() {
         } else {
             const info = loadCustomerInfo();
             if (info) {
-                // eslint-disable-next-line react-hooks/exhaustive-deps
                 setForm(prev => ({ ...prev, name: info.name || prev.name, phone: info.phone || prev.phone, email: info.email || prev.email }));
             }
         }
@@ -135,7 +134,6 @@ export default function StudiosPage() {
 
     const handlePackageSelect = (studioId: number, pkg: StudioPackage) => {
         setSelectedPackages(prev => ({ ...prev, [studioId]: pkg }));
-        // If booking form is open and package changes to one with different duration, clear chosen time
         if (isBooking) {
             setForm(prev => ({ ...prev, time: "" }));
         }
@@ -150,18 +148,10 @@ export default function StudiosPage() {
     const validateForm = (isBuyNow: boolean = false) => {
         if (isBuyNow) {
             if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) { toast.error("Мэдээллээ бүрэн оруулна уу (Нэр, Утас, Имэйл)."); return false; }
-
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(form.email.trim())) {
-                toast.error("Имэйл хаягаа зөв оруулна уу.");
-                return false;
-            }
-
+            if (!emailRegex.test(form.email.trim())) { toast.error("Имэйл хаягаа зөв оруулна уу."); return false; }
             const phoneRegex = /^[0-9]{8}$/;
-            if (!phoneRegex.test(form.phone.trim())) {
-                toast.error("Утасны дугаар 8 оронтой тоо байх ёстой.");
-                return false;
-            }
+            if (!phoneRegex.test(form.phone.trim())) { toast.error("Утасны дугаар 8 оронтой тоо байх ёстой."); return false; }
         }
         if (!form.time) { toast.error("Цагаа сонгоно уу."); return false; }
         if (!form.date) { toast.error("Огноогоо сонгоно уу."); return false; }
@@ -171,15 +161,14 @@ export default function StudiosPage() {
 
     const handleAddToCart = () => {
         if (!validateForm() || !activeStudio || !currentPackage) return;
-
         addItem({
             serviceType: "STUDIO",
             serviceId: activeStudio.id,
             serviceName: activeStudio.name,
             date: format(form.date!, "yyyy-MM-dd"),
             time: form.time,
-            duration: (form.time && form.endTime) ? calcDuration(form.time, form.endTime) : currentPackage.hours,
-            unitPrice: Number(currentPackage.price) / currentPackage.hours, // hourly rate
+            duration: currentPackage.hours,
+            unitPrice: Number(currentPackage.price) / currentPackage.hours,
         });
         toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү." });
         closeBooking();
@@ -187,33 +176,24 @@ export default function StudiosPage() {
 
     const handleBuyNow = async (paymentType: "qpay" | "invoice") => {
         if (!validateForm(true) || !activeStudio || !currentPackage) return;
-
-        if (!user) {
-            saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email });
-        }
-
+        if (!user) { saveCustomerInfo({ name: form.name, phone: form.phone, email: form.email }); }
         setSubmitting(true);
         try {
             const payload: Record<string, unknown> = {
-                name: form.name,
-                phone: form.phone,
-                email: form.email,
+                name: form.name, phone: form.phone, email: form.email,
                 date: format(form.date!, "yyyy-MM-dd"), time: form.time,
-                duration: (form.time && form.endTime) ? calcDuration(form.time, form.endTime) : currentPackage.hours,
+                duration: currentPackage.hours,
                 serviceType: "STUDIO", serviceId: activeStudio.id,
                 unitPrice: Number(currentPackage.price) / currentPackage.hours,
-                serviceName: activeStudio.name,
-                paymentType,
+                serviceName: activeStudio.name, paymentType,
             };
             if (user && user.id) payload.userId = parseInt(user.id, 10);
-
             const res = await fetch(`${API}/bookings`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
             if (!res.ok) throw new Error();
-
             const data = await res.json();
             setShowPaymentModal(false);
             if (paymentType === "qpay" && data.checkoutUrl) {
@@ -232,6 +212,21 @@ export default function StudiosPage() {
     };
 
     const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "" })); };
+
+    // Helper: check if a start time slot is unavailable (booked or no room for 1hr)
+    const isStartTimeDisabled = (t: string): boolean => {
+        if (bookedTimes.includes(t)) return true;
+        if (!currentPackage || !currentPackage.hours) return false;
+        const [sh, sm] = t.split(":").map(Number);
+        const startMins = sh * 60 + sm;
+        for (let m = startMins; m < startMins + 60; m += 30) {
+            const checkH = Math.floor(m / 60) % 24;
+            const checkM = m % 60;
+            const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
+            if (bookedTimes.includes(checkStr)) return true;
+        }
+        return false;
+    };
 
     return (
         <div className="h-screen bg-black text-white relative overflow-hidden flex flex-col">
@@ -289,9 +284,7 @@ export default function StudiosPage() {
                                                     </div>
                                                     <Link
                                                         href="https://www.google.com/maps/place/XTUDIO/@48.0082871,106.9214316,671m/data=!3m1!1e3!4m6!3m5!1s0x694d69c46d9c5945:0xc9e3c9408887d71f!8m2!3d48.0082871!4d106.9240065!16s%2Fg%2F11ww0jglbw!5m1!1e1?entry=ttu&g_ep=EgoyMDI2MDMwNC4xIKXMDSoASAFQAw%3D%3D"
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="w-fit mb-4 block"
+                                                        target="_blank" rel="noopener noreferrer" className="w-fit mb-4 block"
                                                     >
                                                         <div className="flex items-center gap-2 text-gray-300 text-sm hover:text-rose-600 transition-colors">
                                                             <MapPin className="w-4 h-4 text-rose-600 shrink-0" />
@@ -336,9 +329,7 @@ export default function StudiosPage() {
 
                                                     {activeStudio.packages && activeStudio.packages.length > 0 && (
                                                         <div className="mb-4 w-full mt-auto pt-4">
-                                                            <h4 className="text-white font-semibold mb-2 flex items-center gap-2 text-sm">
-                                                                Үнийн багцууд
-                                                            </h4>
+                                                            <h4 className="text-white font-semibold mb-2 flex items-center gap-2 text-sm">Үнийн багцууд</h4>
                                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                                                 {activeStudio.packages.map((pkg) => {
                                                                     const isSelected = selectedPackages[activeStudio.id]?.id === pkg.id;
@@ -365,9 +356,7 @@ export default function StudiosPage() {
                                                                 {selectedPackages[activeStudio.id] ? `${Number(selectedPackages[activeStudio.id].price).toLocaleString()}₮` : 'Багц сонгоно уу'}
                                                             </p>
                                                         </div>
-                                                        <Button onClick={() => {
-                                                            setIsBooking(true);
-                                                        }} disabled={activeStudio.packages?.length > 0 && !selectedPackages[activeStudio.id]} className="w-full md:w-auto px-8 h-12 bg-rose-600 hover:bg-rose-600/90 font-semibold rounded-lg transition-all text-white">Захиалга өгөх</Button>
+                                                        <Button onClick={() => { setIsBooking(true); }} disabled={activeStudio.packages?.length > 0 && !selectedPackages[activeStudio.id]} className="w-full md:w-auto px-8 h-12 bg-rose-600 hover:bg-rose-600/90 font-semibold rounded-lg transition-all text-white">Захиалга өгөх</Button>
                                                     </div>
                                                 </motion.div>
                                             ) : (
@@ -409,6 +398,7 @@ export default function StudiosPage() {
                                                                 <Calendar mode="single" selected={form.date} onSelect={d => { setForm({ ...form, date: d }); setCalendarOpen(false); }} className="bg-[#111] text-white" />
                                                             </PopoverContent>
                                                         </Popover>
+
                                                         <div>
                                                             <div className="flex items-center justify-between mb-2">
                                                                 <p className="text-sm text-gray-400">Цаг сонгох</p>
@@ -425,30 +415,26 @@ export default function StudiosPage() {
                                                                                 value={form.time}
                                                                                 onChange={e => {
                                                                                     const t = e.target.value;
-                                                                                    setForm(prev => ({ ...prev, time: t, endTime: "" }));
+                                                                                    if (!isStartTimeDisabled(t)) {
+                                                                                        setForm(prev => ({ ...prev, time: t, endTime: "" }));
+                                                                                    }
                                                                                 }}
                                                                                 className="w-full bg-[#1a1a1a] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-600 cursor-pointer"
                                                                             >
                                                                                 <option value="">-- : --</option>
-                                                                                {HALF_HOURLY_TIMES.filter(t => {
-                                                                                    if (bookedTimes.includes(t)) return false;
-                                                                                    if (currentPackage && currentPackage.hours) {
-                                                                                        const [sh, sm] = t.split(":").map(Number);
-                                                                                        const startMins = sh * 60 + sm;
-                                                                                        // Here we check if the minimum 1 hr is available
-                                                                                        const durMins = 60; // Just check if at least 1 hour is available
-                                                                                        let endMins = startMins + durMins;
-                                                                                        for (let m = startMins; m < endMins; m += 30) {
-                                                                                            const checkH = Math.floor(m / 60) % 24;
-                                                                                            const checkM = m % 60;
-                                                                                            const checkStr = `${String(checkH).padStart(2, "0")}:${checkM === 0 ? "00" : "30"}`;
-                                                                                            if (bookedTimes.includes(checkStr)) return false;
-                                                                                        }
-                                                                                    }
-                                                                                    return true;
-                                                                                }).map(t => (
-                                                                                    <option key={t} value={t} className="bg-[#1a1a1a]">{t}</option>
-                                                                                ))}
+                                                                                {HALF_HOURLY_TIMES.map(t => {
+                                                                                    const disabled = isStartTimeDisabled(t);
+                                                                                    return (
+                                                                                        <option
+                                                                                            key={t}
+                                                                                            value={t}
+                                                                                            disabled={disabled}
+                                                                                            className={disabled ? "bg-[#1a1a1a] text-gray-600" : "bg-[#1a1a1a] text-white"}
+                                                                                        >
+                                                                                            {disabled ? `${t} — Захиалгатай` : t}
+                                                                                        </option>
+                                                                                    );
+                                                                                })}
                                                                             </select>
                                                                         </div>
                                                                         <div>
@@ -464,18 +450,15 @@ export default function StudiosPage() {
                                                                                     if (!form.time) return false;
                                                                                     const [sh, sm] = form.time.split(":").map(Number);
                                                                                     const [th, tm] = t.split(":").map(Number);
-                                                                                    
                                                                                     const startMins = sh * 60 + sm;
                                                                                     let candidateMins = th * 60 + tm;
-                                                                                    if (candidateMins <= startMins) candidateMins += 24 * 60; // Overnight
-
+                                                                                    if (candidateMins <= startMins) candidateMins += 24 * 60;
                                                                                     if (currentPackage) {
                                                                                         const diffMins = candidateMins - startMins;
-                                                                                        if (diffMins % 60 !== 0) return false; // зөвхөн бүхэл цагууд
+                                                                                        if (diffMins % 60 !== 0) return false;
                                                                                         const diffHrs = diffMins / 60;
                                                                                         if (diffHrs < 1 || diffHrs > currentPackage.hours) return false;
                                                                                     }
-
                                                                                     for (let m = startMins; m < candidateMins; m += 30) {
                                                                                         const checkH = Math.floor(m / 60) % 24;
                                                                                         const checkM = m % 60;
@@ -530,11 +513,7 @@ export default function StudiosPage() {
                                                         <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
                                                             <span className="text-gray-400 text-sm">Нийт үнэ:</span>
                                                             <span className="text-xl font-bold text-white">
-                                                                {currentPackage ? (
-                                                                    form.time && form.endTime 
-                                                                        ? ((Number(currentPackage.price) / currentPackage.hours) * calcDuration(form.time, form.endTime)).toLocaleString() 
-                                                                        : Number(currentPackage.price).toLocaleString()
-                                                                ) : 0}₮
+                                                                {currentPackage ? Number(currentPackage.price).toLocaleString() : 0}₮
                                                             </span>
                                                         </div>
                                                         <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -572,7 +551,6 @@ export default function StudiosPage() {
                 </div>
             </div>
 
-            {/* Payment Method Modal */}
             <PaymentMethodModal
                 open={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
