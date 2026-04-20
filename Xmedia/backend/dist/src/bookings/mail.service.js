@@ -181,7 +181,7 @@ let MailService = MailService_1 = class MailService {
             throw error;
         }
     }
-    async sendOrderConfirmationEmail(to, bookingId, buyerName, totalAmount, itemsCount) {
+    async sendOrderConfirmationEmail(to, bookingId, buyerName, totalAmount, serviceDetails) {
         try {
             const orderNum = String(bookingId).padStart(5, '0');
             const subject = `Захиалга баталгаажлаа #${orderNum} — XTUDIO`;
@@ -193,7 +193,7 @@ let MailService = MailService_1 = class MailService {
               </p>
               ${this.table(this.row('Захиалгын дугаар', `#${orderNum}`) +
                 this.row('Захиалагч', buyerName) +
-                this.row('Үйлчилгээний тоо', `${itemsCount} үйлчилгээ`) +
+                this.row('Үйлчилгээ', serviceDetails) +
                 this.row('Нийт дүн', `&#8366;${totalAmount.toLocaleString()}`), 'Захиалгын мэдээлэл')}
               <p style="font-size:13px;color:#6b7280;margin:0;line-height:1.6;">
                 Бид удахгүй тантай холбогдож дэлгэрэнгүй мэдээлэл өгөх болно.

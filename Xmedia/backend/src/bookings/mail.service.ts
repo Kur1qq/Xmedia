@@ -174,7 +174,7 @@ export class MailService {
         bookingId: number,
         buyerName: string,
         totalAmount: number,
-        itemsCount: number,
+        serviceDetails: string,
     ) {
         try {
             const orderNum = String(bookingId).padStart(5, '0');
@@ -189,7 +189,7 @@ export class MailService {
               ${this.table(
                   this.row('Захиалгын дугаар', `#${orderNum}`) +
                       this.row('Захиалагч', buyerName) +
-                      this.row('Үйлчилгээний тоо', `${itemsCount} үйлчилгээ`) +
+                      this.row('Үйлчилгээ', serviceDetails) +
                       this.row('Нийт дүн', `&#8366;${totalAmount.toLocaleString()}`),
                   'Захиалгын мэдээлэл',
               )}

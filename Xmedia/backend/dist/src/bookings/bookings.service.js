@@ -439,6 +439,34 @@ let BookingsService = BookingsService_1 = class BookingsService {
         });
         return booking;
     }
+    formatServiceDetails(items) {
+        if (!items || items.length === 0)
+            return 'Тодорхойгүй';
+        return items.map(item => {
+            let name = 'Үйлчилгээ';
+            if (item.itemType === 'STUDIO')
+                name = 'Студи';
+            else if (item.itemType === 'LIVE_SERVICE')
+                name = 'Шууд дамжуулалт';
+            else if (item.itemType === 'PHOTOGRAPHER_SERVICE')
+                name = 'Зурагчин';
+            else if (item.itemType === 'EDIT_SERVICE')
+                name = 'Видео эдит';
+            else if (item.itemType === 'BUNDLE_SERVICE')
+                name = 'Багц';
+            if (item.studio?.name)
+                name = item.studio.name;
+            else if (item.liveService?.name)
+                name = item.liveService.name;
+            else if (item.bundleService?.name)
+                name = item.bundleService.name;
+            let timeStr = item.bookingDate || '';
+            if (item.startTime && item.endTime) {
+                timeStr += ` ${item.startTime.substring(0, 5)}-${item.endTime.substring(0, 5)}`;
+            }
+            return `• ${name} (${timeStr})`;
+        }).join('<br/>');
+    }
     async confirmPayment(bylCheckoutId) {
         const payment = await this.prisma.payment.findUnique({
             where: { invoiceId: bylCheckoutId },
@@ -482,7 +510,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             }
         }
         if (!wasAlreadyPaid && updatedBooking.user?.email) {
-            this.mailService.sendOrderConfirmationEmail(updatedBooking.user.email, updatedBooking.id, updatedBooking.user.username, Number(updatedBooking.totalAmount), updatedBooking.items.length).catch(err => this.logger.error(`Async email failed: ${err.message}`));
+            this.mailService.sendOrderConfirmationEmail(updatedBooking.user.email, updatedBooking.id, updatedBooking.user.username, Number(updatedBooking.totalAmount), this.formatServiceDetails(updatedBooking.items)).catch(err => this.logger.error(`Async email failed: ${err.message}`));
         }
         if (!wasAlreadyPaid) {
             this.adminNotificationService.createNotification('PAYMENT_CONFIRMED', `Төлбөр амжилттай: Захиалга #ORD-${payment.bookingId.toString().padStart(4, '0')} (${Number(payment.amount).toLocaleString()}₮)`, payment.bookingId).catch(() => { });
@@ -500,7 +528,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (payment.status === 'PAID') {
             const booking = payment.booking;
             if (booking?.user?.email) {
-                await this.mailService.sendOrderConfirmationEmail(booking.user.email, bookingId, booking.user.username, Number(booking.totalAmount), booking.items?.length ?? 1).catch(err => this.logger.warn(`Email resend failed for booking #${bookingId}: ${err.message}`));
+                await this.mailService.sendOrderConfirmationEmail(booking.user.email, bookingId, booking.user.username, Number(booking.totalAmount), this.formatServiceDetails(booking.items || [])).catch(err => this.logger.warn(`Email resend failed for booking #${bookingId}: ${err.message}`));
             }
             return { success: true, bookingId, alreadyPaid: true };
         }
@@ -581,7 +609,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             this.mailService.sendOrderCancelledEmail(id, updated.user?.username || 'Хэрэглэгч', Number(updated.totalAmount ?? 0)).catch(() => { });
         }
         if (status === 'CONFIRMED' && booking.status !== 'CONFIRMED' && updated.user?.email) {
-            await this.mailService.sendOrderConfirmationEmail(updated.user.email, updated.id, updated.user.username, Number(updated.totalAmount), updated.items.length);
+            await this.mailService.sendOrderConfirmationEmail(updated.user.email, updated.id, updated.user.username, Number(updated.totalAmount), this.formatServiceDetails(updated.items));
         }
         return updated;
     }
@@ -615,7 +643,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         });
         if (paymentStatus === 'PAID' && booking.paymentStatus !== 'PAID') {
             if (updated.user?.email) {
-                await this.mailService.sendOrderConfirmationEmail(updated.user.email, updated.id, updated.user.username, Number(updated.totalAmount), updated.items.length);
+                await this.mailService.sendOrderConfirmationEmail(updated.user.email, updated.id, updated.user.username, Number(updated.totalAmount), this.formatServiceDetails(updated.items));
             }
         }
         return updated;

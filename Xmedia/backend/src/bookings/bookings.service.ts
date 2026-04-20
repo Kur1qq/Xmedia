@@ -616,6 +616,29 @@ export class BookingsService {
         return booking;
     }
 
+    private formatServiceDetails(items: any[]): string {
+        if (!items || items.length === 0) return 'Тодорхойгүй';
+        
+        return items.map(item => {
+            let name = 'Үйлчилгээ';
+            if (item.itemType === 'STUDIO') name = 'Студи';
+            else if (item.itemType === 'LIVE_SERVICE') name = 'Шууд дамжуулалт';
+            else if (item.itemType === 'PHOTOGRAPHER_SERVICE') name = 'Зурагчин';
+            else if (item.itemType === 'EDIT_SERVICE') name = 'Видео эдит';
+            else if (item.itemType === 'BUNDLE_SERVICE') name = 'Багц';
+            
+            if (item.studio?.name) name = item.studio.name;
+            else if (item.liveService?.name) name = item.liveService.name;
+            else if (item.bundleService?.name) name = item.bundleService.name;
+            
+            let timeStr = item.bookingDate || '';
+            if (item.startTime && item.endTime) {
+                timeStr += ` ${item.startTime.substring(0, 5)}-${item.endTime.substring(0, 5)}`;
+            }
+            return `• ${name} (${timeStr})`;
+        }).join('<br/>');
+    }
+
     // Confirm payment from webhook
     async confirmPayment(bylCheckoutId: string) {
         // Find payment by Byl checkout ID (stored as invoiceId)
@@ -676,7 +699,7 @@ export class BookingsService {
                 updatedBooking.id,
                 updatedBooking.user.username,
                 Number(updatedBooking.totalAmount),
-                updatedBooking.items.length
+                this.formatServiceDetails(updatedBooking.items)
             ).catch(err => this.logger.error(`Async email failed: ${err.message}`));
         }
 
@@ -714,7 +737,7 @@ export class BookingsService {
                     bookingId,
                     booking.user.username,
                     Number(booking.totalAmount),
-                    booking.items?.length ?? 1,
+                    this.formatServiceDetails(booking.items || []),
                 ).catch(err => this.logger.warn(`Email resend failed for booking #${bookingId}: ${err.message}`));
             }
             return { success: true, bookingId, alreadyPaid: true };
@@ -836,7 +859,7 @@ export class BookingsService {
                 updated.id,
                 updated.user.username,
                 Number(updated.totalAmount),
-                updated.items.length
+                this.formatServiceDetails(updated.items)
             );
         }
 
@@ -887,7 +910,7 @@ export class BookingsService {
                     updated.id,
                     updated.user.username,
                     Number(updated.totalAmount),
-                    updated.items.length
+                    this.formatServiceDetails(updated.items)
                 );
             }
         }

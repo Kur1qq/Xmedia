@@ -150,6 +150,13 @@ export default function Home() {
               >
                 {slides[currentSlide].image.match(/\.(mp4|webm|ogg|mov)$/i) ? (
                   <video
+                    ref={(el) => {
+                      if (el) {
+                        el.defaultMuted = true;
+                        el.muted = true;
+                        el.play().catch(() => {});
+                      }
+                    }}
                     src={slides[currentSlide].image}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear scale-100"
                     autoPlay
