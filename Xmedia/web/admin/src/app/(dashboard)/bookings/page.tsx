@@ -869,7 +869,10 @@ export default function BookingsPage() {
                                                     </div>
                                                     <div className="space-y-0.5">
                                                         {uniqueBookings.slice(0, 3).map((b, idx) => {
-                                                            const col = TYPE_COLORS[b._type] || TYPE_COLORS.photographer;
+                                                            const isCompleted = b.status === 'COMPLETED';
+                                                            const col = isCompleted
+                                                                ? { bg: 'bg-green-500/20', text: 'text-green-400', dot: 'bg-green-400' }
+                                                                : (TYPE_COLORS[b._type] || TYPE_COLORS.photographer);
                                                             return (
                                                                 <button key={idx} onClick={(e) => openBookingModal(b, e)} className={`w-full text-left rounded px-1.5 py-0.5 text-xs truncate ${col.bg} ${col.text} hover:opacity-80 transition-opacity`}>
                                                                     <span className={`inline-block w-1.5 h-1.5 rounded-full ${col.dot} mr-1 align-middle`} />
@@ -937,7 +940,10 @@ export default function BookingsPage() {
                                         >
                                             <div className="space-y-1">
                                                 {dayBookings.map((b, idx) => {
-                                                    const col = TYPE_COLORS[b._type] || TYPE_COLORS.photographer;
+                                                    const isCompleted = b.status === 'COMPLETED';
+                                                    const col = isCompleted
+                                                        ? { bg: 'bg-green-500/20', text: 'text-green-400', dot: 'bg-green-400' }
+                                                        : (TYPE_COLORS[b._type] || TYPE_COLORS.photographer);
                                                     const item = b._item;
                                                     // startTime is "HH:MM:SS" string — display first 5 chars
                                                     const timeStr = item?.startTime
@@ -1003,7 +1009,10 @@ export default function BookingsPage() {
                                             <div className="border-l border-border/30 flex-1 p-2">
                                                 <div className="space-y-1">
                                                     {hourBookings.map((b, idx) => {
-                                                        const col = TYPE_COLORS[b._type] || TYPE_COLORS.photographer;
+                                                        const isCompleted = b.status === 'COMPLETED';
+                                                        const col = isCompleted
+                                                            ? { bg: 'bg-green-500/20', text: 'text-green-400', dot: 'bg-green-400', label: 'Дууссан' }
+                                                            : (TYPE_COLORS[b._type] || TYPE_COLORS.photographer);
                                                         const item = b._item;
                                                         // startTime/endTime are "HH:MM:SS" strings
                                                         const startStr = item?.startTime ? item.startTime.slice(0, 5) : '';
