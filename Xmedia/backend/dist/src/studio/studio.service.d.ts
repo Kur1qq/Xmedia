@@ -40,6 +40,7 @@ export declare class StudioService {
         sizeSqm: import("@prisma/client/runtime/library").Decimal | null;
         capacity: number | null;
         isAvailable: boolean;
+        extraHourPrice: import("@prisma/client/runtime/library").Decimal | null;
     }>;
     findAll(): Promise<({
         equipment: ({
@@ -79,6 +80,7 @@ export declare class StudioService {
         sizeSqm: import("@prisma/client/runtime/library").Decimal | null;
         capacity: number | null;
         isAvailable: boolean;
+        extraHourPrice: import("@prisma/client/runtime/library").Decimal | null;
     })[]>;
     findOne(id: number): Promise<{
         equipment: ({
@@ -118,6 +120,7 @@ export declare class StudioService {
         sizeSqm: import("@prisma/client/runtime/library").Decimal | null;
         capacity: number | null;
         isAvailable: boolean;
+        extraHourPrice: import("@prisma/client/runtime/library").Decimal | null;
     }>;
     update(id: number, data: any): Promise<{
         equipment: ({
@@ -157,6 +160,7 @@ export declare class StudioService {
         sizeSqm: import("@prisma/client/runtime/library").Decimal | null;
         capacity: number | null;
         isAvailable: boolean;
+        extraHourPrice: import("@prisma/client/runtime/library").Decimal | null;
     }>;
     remove(id: number): Promise<{
         id: number;
@@ -170,5 +174,6 @@ export declare class StudioService {
         sizeSqm: import("@prisma/client/runtime/library").Decimal | null;
         capacity: number | null;
         isAvailable: boolean;
+        extraHourPrice: import("@prisma/client/runtime/library").Decimal | null;
     }>;
 }

@@ -36,6 +36,7 @@ interface Studio {
     amenities?: string[];
     equipment: { equipment: { name: string } }[];
     packages: StudioPackage[];
+    extraHourPrice?: string | number | null;
 }
 
 export default function StudiosPage() {
@@ -46,6 +47,7 @@ export default function StudiosPage() {
     const [activeServiceId, setActiveServiceId] = useState<number | null>(null);
     const [isBooking, setIsBooking] = useState(false);
     const [selectedPackages, setSelectedPackages] = useState<Record<number, StudioPackage>>({});
+    const [extraHoursChecked, setExtraHoursChecked] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ date: undefined as Date | undefined, time: "", endTime: "", name: "", phone: "", email: "" });
 
@@ -87,6 +89,11 @@ export default function StudiosPage() {
 
     const activeStudio = studios.find(s => s.id === activeServiceId);
     const currentPackage = activeStudio ? selectedPackages[activeStudio.id] : null;
+    const extraPrice = activeStudio?.extraHourPrice ? Number(activeStudio.extraHourPrice) : 0;
+    const hasExtraHourOption = extraPrice > 0;
+    
+    const currentDuration = currentPackage ? currentPackage.hours + (extraHoursChecked ? 1 : 0) : 0;
+    const currentTotalPrice = currentPackage ? Number(currentPackage.price) + (extraHoursChecked ? extraPrice : 0) : 0;
 
     useEffect(() => {
         if (user) {
@@ -134,6 +141,7 @@ export default function StudiosPage() {
 
     const handlePackageSelect = (studioId: number, pkg: StudioPackage) => {
         setSelectedPackages(prev => ({ ...prev, [studioId]: pkg }));
+        setExtraHoursChecked(false);
         if (isBooking) {
             setForm(prev => ({ ...prev, time: "" }));
         }
@@ -142,6 +150,7 @@ export default function StudiosPage() {
     const handleTabChange = (id: number) => {
         setActiveServiceId(id);
         setIsBooking(false);
+        setExtraHoursChecked(false);
         setForm(prev => ({ ...prev, date: undefined, time: "" }));
     };
 
@@ -164,11 +173,11 @@ export default function StudiosPage() {
         addItem({
             serviceType: "STUDIO",
             serviceId: activeStudio.id,
-            serviceName: activeStudio.name,
+            serviceName: activeStudio.name + (extraHoursChecked ? " (Нэмэлт 1 цаг)" : ""),
             date: format(form.date!, "yyyy-MM-dd"),
             time: form.time,
-            duration: currentPackage.hours,
-            unitPrice: Number(currentPackage.price) / currentPackage.hours,
+            duration: currentDuration,
+            unitPrice: currentTotalPrice / currentDuration,
         });
         toast.success("Сагсанд нэмэгдлээ!", { description: "Та сагс руугаа орж төлбөрөө төлнө үү." });
         closeBooking();
@@ -182,10 +191,10 @@ export default function StudiosPage() {
             const payload: Record<string, unknown> = {
                 name: form.name, phone: form.phone, email: form.email,
                 date: format(form.date!, "yyyy-MM-dd"), time: form.time,
-                duration: currentPackage.hours,
+                duration: currentDuration,
                 serviceType: "STUDIO", serviceId: activeStudio.id,
-                unitPrice: Number(currentPackage.price) / currentPackage.hours,
-                serviceName: activeStudio.name, paymentType,
+                unitPrice: currentTotalPrice / currentDuration,
+                serviceName: activeStudio.name + (extraHoursChecked ? " (Нэмэлт 1 цаг)" : ""), paymentType,
             };
             if (user && user.id) payload.userId = parseInt(user.id, 10);
             const res = await fetch(`${API}/bookings`, {
@@ -211,7 +220,7 @@ export default function StudiosPage() {
         } finally { setSubmitting(false); setShowPaymentModal(false); }
     };
 
-    const closeBooking = () => { setIsBooking(false); setForm(prev => ({ ...prev, date: undefined, time: "" })); };
+    const closeBooking = () => { setIsBooking(false); setExtraHoursChecked(false); setForm(prev => ({ ...prev, date: undefined, time: "" })); };
 
     // Helper: check if a start time slot is unavailable (booked or no room for 1hr)
     const isStartTimeDisabled = (t: string): boolean => {
@@ -386,6 +395,24 @@ export default function StudiosPage() {
                                                                 </div>
                                                             </div>
                                                         )}
+                                                        {hasExtraHourOption && currentPackage && (
+                                                            <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-3 rounded-lg mt-2">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    id="extraHourCheck" 
+                                                                    checked={extraHoursChecked} 
+                                                                    onChange={(e) => {
+                                                                        setExtraHoursChecked(e.target.checked);
+                                                                        setForm(prev => ({ ...prev, endTime: "" }));
+                                                                    }}
+                                                                    className="w-4 h-4 rounded border-gray-600 text-rose-600 focus:ring-rose-600 focus:ring-offset-gray-900 bg-gray-700 cursor-pointer"
+                                                                />
+                                                                <label htmlFor="extraHourCheck" className="text-sm text-gray-300 cursor-pointer flex-1 flex justify-between items-center select-none">
+                                                                    <span>Нэмэлт 1 цаг авах</span>
+                                                                    <span className="text-white font-semibold text-xs bg-rose-600/20 text-rose-500 px-2 py-1 rounded">+{extraPrice.toLocaleString()}₮</span>
+                                                                </label>
+                                                            </div>
+                                                        )}
 
                                                         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                                                             <PopoverTrigger asChild>
@@ -457,7 +484,7 @@ export default function StudiosPage() {
                                                                                         const diffMins = candidateMins - startMins;
                                                                                         if (diffMins % 60 !== 0) return false;
                                                                                         const diffHrs = diffMins / 60;
-                                                                                        if (diffHrs < 1 || diffHrs > currentPackage.hours) return false;
+                                                                                        if (diffHrs < 1 || diffHrs > currentDuration) return false;
                                                                                     }
                                                                                     for (let m = startMins; m < candidateMins; m += 30) {
                                                                                         const checkH = Math.floor(m / 60) % 24;
@@ -476,9 +503,9 @@ export default function StudiosPage() {
                                                                         if (!form.time || !currentPackage) return null;
                                                                         const [sh, sm] = form.time.split(":").map(Number);
                                                                         const startMins = sh * 60 + sm;
-                                                                        let maxAvailable = currentPackage.hours;
+                                                                        let maxAvailable = currentDuration;
                                                                         let hitConflict = false;
-                                                                        for (let hrs = 1; hrs <= currentPackage.hours; hrs++) {
+                                                                        for (let hrs = 1; hrs <= currentDuration; hrs++) {
                                                                             const candidateMins = startMins + hrs * 60;
                                                                             for (let m = startMins; m < candidateMins; m += 30) {
                                                                                 const checkH = Math.floor(m / 60) % 24;
@@ -492,7 +519,7 @@ export default function StudiosPage() {
                                                                             }
                                                                             if (hitConflict) break;
                                                                         }
-                                                                        if (maxAvailable > 0 && maxAvailable < currentPackage.hours) {
+                                                                        if (maxAvailable > 0 && maxAvailable < currentDuration) {
                                                                             return (
                                                                                 <p className="text-xs text-rose-500 mt-2 bg-rose-500/10 p-2 rounded border border-rose-500/20">
                                                                                     ⚠️ Тухайн цагт давхардсан захиалга байгаа тул та хамгийн ихдээ {maxAvailable} цаг сонгох боломжтой байна.
@@ -513,7 +540,7 @@ export default function StudiosPage() {
                                                         <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
                                                             <span className="text-gray-400 text-sm">Нийт үнэ:</span>
                                                             <span className="text-xl font-bold text-white">
-                                                                {currentPackage ? Number(currentPackage.price).toLocaleString() : 0}₮
+                                                                {currentTotalPrice.toLocaleString()}₮
                                                             </span>
                                                         </div>
                                                         <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -525,7 +552,7 @@ export default function StudiosPage() {
                                                                     if (validateForm(true)) {
                                                                         if (currentPackage && form.time && form.endTime) {
                                                                             const durationHrs = calcDuration(form.time, form.endTime);
-                                                                            const maxHrs = Number(currentPackage.hours);
+                                                                            const maxHrs = currentDuration;
                                                                             if (maxHrs > 0 && durationHrs > maxHrs) {
                                                                                 toast.error(`Сонгосон багц ${maxHrs} цагийн хязгаартай. ${durationHrs} цаг сонгох боломжгүй.`);
                                                                                 return;
@@ -557,7 +584,7 @@ export default function StudiosPage() {
                 onSelectQpay={() => { handleBuyNow("qpay"); }}
                 onSelectInvoice={() => { handleBuyNow("invoice"); }}
                 loading={submitting}
-                amount={currentPackage ? Number(currentPackage.price) : undefined}
+                amount={currentTotalPrice || undefined}
             />
         </div>
     );

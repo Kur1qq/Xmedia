@@ -65,7 +65,8 @@ model Studio {
   // FIX: equipmentIncluded Int? removed — StudioEquipment join table handles this
   amenities   Json? // FIX: was @db.Text, now proper JSON
   images      Json? // FIX: was @db.Text, now proper JSON
-  isAvailable Boolean  @default(true) @map("is_available")
+  isAvailable      Boolean  @default(true) @map("is_available")
+  extraHourPrice   Decimal? @map("extra_hour_price") @db.Decimal(12, 2)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 

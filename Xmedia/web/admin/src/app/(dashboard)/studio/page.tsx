@@ -20,6 +20,7 @@ export default function StudioPage() {
         images: "", isAvailable: true, equipmentIds: [] as number[],
         amenities: [] as string[],
         packages: [] as { id?: number, hours: number | '', price: number | '' }[],
+        extraHourPrice: "" as string,
     });
 
     // --- EQUIPMENT STATE ---
@@ -117,6 +118,7 @@ export default function StudioPage() {
                 equipmentIds: studio.equipment ? studio.equipment.map((e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => e.equipmentId) : [],
                 amenities: studio.amenities || [],
                 packages: studio.packages ? studio.packages.map((p: any) => ({ id: p.id, hours: p.hours, price: p.price })) : [],
+                extraHourPrice: studio.extraHourPrice !== null && studio.extraHourPrice !== undefined ? String(studio.extraHourPrice) : "",
             });
         } else {
             setEditingStudio(null);
@@ -124,6 +126,7 @@ export default function StudioPage() {
                 name: "", description: "", address: "", sizeSqm: "", capacity: "",
                 images: "", isAvailable: true, equipmentIds: [], amenities: [],
                 packages: [],
+                extraHourPrice: "",
             });
         }
         setIsStudioModalOpen(true);
@@ -151,6 +154,7 @@ export default function StudioPage() {
                     hours: Number(p.hours) || 0,
                     price: Number(p.price) || 0
                 })),
+                extraHourPrice: studioFormData.extraHourPrice ? parseFloat(studioFormData.extraHourPrice) : null,
             };
 
             const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -495,6 +499,27 @@ export default function StudioPage() {
                                             </p>
                                         )}
                                     </div>
+                                </div>
+                                {/* Extra Hour Price */}
+                                <div className="space-y-2 bg-black/10 p-4 rounded-xl border border-white/5">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="text-xs text-gray-400">Нэмэлт цагийн үнэ</label>
+                                        <span className="text-[10px] text-gray-600">Сонголттой</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={studioFormData.extraHourPrice}
+                                            onChange={e => setStudioFormData({ ...studioFormData, extraHourPrice: e.target.value })}
+                                            placeholder="Жнь: 150000"
+                                            className="flex-1 bg-white/5 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
+                                        />
+                                        <span className="text-gray-400 text-sm shrink-0">₮ / цаг</span>
+                                    </div>
+                                    <p className="text-[10px] text-gray-600 leading-relaxed">
+                                        Хэрэглэгч захиалга өгөх үед нэмэлт цаг сонгох боломжтой болно. 0 эсвэл хоосон бол нэмэлт цаг идэвхгүй.
+                                    </p>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs text-gray-400">Тайлбар</label>
