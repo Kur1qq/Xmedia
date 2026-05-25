@@ -18,20 +18,20 @@ export declare class BundleServiceController {
             createdAt: Date;
             updatedAt: Date;
             quantity: number;
-            equipmentId: number;
             bundleServiceId: number;
+            equipmentId: number;
         })[];
     } & {
         id: number;
+        image: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        image: string | null;
         includedServices: import("@prisma/client/runtime/library").JsonValue | null;
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
-        isActive: boolean;
     })[]>;
     findOne(id: number): Promise<{
         equipments: ({
@@ -49,20 +49,20 @@ export declare class BundleServiceController {
             createdAt: Date;
             updatedAt: Date;
             quantity: number;
-            equipmentId: number;
             bundleServiceId: number;
+            equipmentId: number;
         })[];
     } & {
         id: number;
+        image: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        image: string | null;
         includedServices: import("@prisma/client/runtime/library").JsonValue | null;
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
-        isActive: boolean;
     }>;
     create(data: any): Promise<{
         equipments: {
@@ -70,20 +70,20 @@ export declare class BundleServiceController {
             createdAt: Date;
             updatedAt: Date;
             quantity: number;
-            equipmentId: number;
             bundleServiceId: number;
+            equipmentId: number;
         }[];
     } & {
         id: number;
+        image: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        image: string | null;
         includedServices: import("@prisma/client/runtime/library").JsonValue | null;
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
-        isActive: boolean;
     }>;
     update(id: number, data: any): Promise<{
         equipments: ({
@@ -101,31 +101,31 @@ export declare class BundleServiceController {
             createdAt: Date;
             updatedAt: Date;
             quantity: number;
-            equipmentId: number;
             bundleServiceId: number;
+            equipmentId: number;
         })[];
     } & {
         id: number;
+        image: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        image: string | null;
         includedServices: import("@prisma/client/runtime/library").JsonValue | null;
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
-        isActive: boolean;
     }>;
     remove(id: number): Promise<{
         id: number;
+        image: string | null;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        image: string | null;
         includedServices: import("@prisma/client/runtime/library").JsonValue | null;
         amenities: import("@prisma/client/runtime/library").JsonValue | null;
-        isActive: boolean;
     }>;
 }

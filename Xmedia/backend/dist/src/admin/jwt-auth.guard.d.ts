@@ -1,9 +1,11 @@
 import { ExecutionContext } from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
 declare const JwtAuthGuard_base: import("@nestjs/passport").Type<import("@nestjs/passport").IAuthGuard>;
 export declare class JwtAuthGuard extends JwtAuthGuard_base {
 }
 export declare function RolesGuard(...allowedRoles: string[]): {
-    new (...args: any[]): {
+    new (prisma: PrismaService): {
+        prisma: PrismaService;
         canActivate(context: ExecutionContext): Promise<boolean>;
         logIn<TRequest extends {
             logIn: Function;

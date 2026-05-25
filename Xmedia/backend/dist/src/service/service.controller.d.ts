@@ -21,12 +21,12 @@ export declare class ServiceController {
         } | null;
     } & {
         id: number;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;
         portfolioImages: string | null;
@@ -52,12 +52,12 @@ export declare class ServiceController {
         } | null;
     } & {
         id: number;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;
         portfolioImages: string | null;
@@ -83,12 +83,12 @@ export declare class ServiceController {
         } | null;
     } & {
         id: number;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;
         portfolioImages: string | null;
@@ -114,12 +114,12 @@ export declare class ServiceController {
         } | null;
     } & {
         id: number;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;
         portfolioImages: string | null;
@@ -128,12 +128,12 @@ export declare class ServiceController {
     }>;
     remove(id: string): Promise<{
         id: number;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         name: string;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
-        isActive: boolean;
         priceUnit: string;
         durationMinutes: number | null;
         portfolioImages: string | null;

@@ -4,11 +4,11 @@ export declare class HeroController {
     constructor(heroService: HeroService);
     findAll(): Promise<{
         id: number;
+        image: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        image: string;
-        isActive: boolean;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -16,11 +16,11 @@ export declare class HeroController {
     }[]>;
     findActive(): Promise<{
         id: number;
+        image: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        image: string;
-        isActive: boolean;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -28,11 +28,11 @@ export declare class HeroController {
     }[]>;
     findOne(id: string): Promise<{
         id: number;
+        image: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        image: string;
-        isActive: boolean;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -40,11 +40,11 @@ export declare class HeroController {
     }>;
     create(createHeroDto: any): Promise<{
         id: number;
+        image: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        image: string;
-        isActive: boolean;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -52,11 +52,11 @@ export declare class HeroController {
     }>;
     update(id: string, updateHeroDto: any): Promise<{
         id: number;
+        image: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        image: string;
-        isActive: boolean;
         title: string;
         highlight: string | null;
         subTitle: string | null;
@@ -64,11 +64,11 @@ export declare class HeroController {
     }>;
     remove(id: string): Promise<{
         id: number;
+        image: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        image: string;
-        isActive: boolean;
         title: string;
         highlight: string | null;
         subTitle: string | null;
