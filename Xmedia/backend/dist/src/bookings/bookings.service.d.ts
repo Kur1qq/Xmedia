@@ -126,9 +126,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     })[]>;
@@ -246,9 +246,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     })[]>;
@@ -367,9 +367,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     })[]>;
@@ -487,9 +487,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     })[]>;
@@ -613,9 +613,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     })[]>;
@@ -661,9 +661,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     } | {
@@ -690,9 +690,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     }>;
@@ -760,9 +760,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     }>;
@@ -821,9 +821,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     }>;
@@ -860,9 +860,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     }>;
@@ -899,9 +899,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     }>;
@@ -938,9 +938,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     }>;
@@ -948,9 +948,9 @@ export declare class BookingsService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.BookingStatus;
         userId: number;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
-        status: import("@prisma/client").$Enums.BookingStatus;
         paymentStatus: import("@prisma/client").$Enums.PaymentStatus;
         notes: string | null;
     }>;

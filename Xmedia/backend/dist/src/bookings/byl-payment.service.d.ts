@@ -17,6 +17,7 @@ export declare class BylPaymentService {
             amount: number;
             quantity: number;
         }>;
+        description?: string;
     }): Promise<{
         checkoutId: number;
         checkoutUrl: string;

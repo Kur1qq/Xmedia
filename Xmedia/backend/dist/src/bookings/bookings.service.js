@@ -185,14 +185,17 @@ let BookingsService = BookingsService_1 = class BookingsService {
         }
         try {
             const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+            const serviceName = dto.serviceName || dto.serviceType;
+            const checkoutDescription = `${serviceName} | ${dto.phone} | ${dto.email || 'no-email'} | Захиалга #${booking.id}`;
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: total,
-                serviceName: dto.serviceName || dto.serviceType,
+                serviceName: checkoutDescription,
                 quantity: 1,
                 customerEmail: dto.email,
                 successUrl: `${clientBaseUrl}/booking/success?bookingId=${booking.id}`,
                 cancelUrl: `${clientBaseUrl}/booking/cancel`,
+                description: checkoutDescription,
             });
             await this.prisma.payment.create({
                 data: {
@@ -293,12 +296,14 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
         try {
+            const serviceList = createdBookings.map(b => b.item.serviceName || b.item.serviceType).join(', ');
+            const paymentDescription = `${serviceList} | ${dto.phone} | ${dto.email || 'no-email'} | Захиалга #${createdBookings.map(b => b.booking.id).join(',')}`;
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: firstBooking.id,
                 amount: totalAmount,
                 serviceName: `XTUDIO багц (${createdBookings.length} үйлчилгээ)`,
                 items: createdBookings.map(b => ({
-                    name: b.item.serviceName || b.item.serviceType,
+                    name: `${b.item.serviceName || b.item.serviceType} | ${dto.phone} | ${dto.email || 'no-email'} | Захиалга #${b.booking.id}`,
                     amount: b.total,
                     quantity: 1,
                 })),
@@ -306,6 +311,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 customerEmail: dto.email,
                 successUrl: `${clientBaseUrl}/booking/success?bookingId=${firstBooking.id}`,
                 cancelUrl: `${clientBaseUrl}/booking/cancel`,
+                description: paymentDescription,
             });
             const otherBookingIds = createdBookings.slice(1).map(b => b.booking.id);
             await this.prisma.payment.create({
@@ -317,7 +323,6 @@ let BookingsService = BookingsService_1 = class BookingsService {
                     linkedBookingIds: otherBookingIds.length > 0 ? JSON.stringify(otherBookingIds) : null,
                 }
             });
-            const serviceList = createdBookings.map(b => b.item.serviceName || b.item.serviceType).join(', ');
             this.adminNotificationService.createNotification('NEW_ORDER', `Шинэ захиалга: ${dto.name} — ${serviceList} (${totalAmount.toLocaleString()}₮)`, firstBooking.id).catch(() => { });
             this.mailService.sendNewOrderNotificationToAdmin(firstBooking.id, dto.name, dto.phone, serviceList, totalAmount).catch(() => { });
             return { ...firstBooking, checkoutUrl: checkout.checkoutUrl, bookingIds: createdBookings.map(b => b.booking.id) };

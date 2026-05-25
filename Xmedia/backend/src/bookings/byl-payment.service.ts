@@ -25,6 +25,7 @@ export class BylPaymentService {
         successUrl?: string;
         cancelUrl?: string;
         items?: Array<{ name: string; amount: number; quantity: number }>;
+        description?: string;
     }): Promise<{ checkoutId: number; checkoutUrl: string }> {
         // Strictly use CLIENT_URL or fallback to the explicit Vercel frontend app URL.
         // We do not parse CORS_ORIGINS here because it might contain the Admin panel URL instead of the Client.
@@ -37,6 +38,7 @@ export class BylPaymentService {
             cancel_url: params.cancelUrl || `${clientBaseUrl}/`,
             client_reference_id: String(params.bookingId),
             customer_email: params.customerEmail || undefined,
+            description: params.description || undefined,
             items: params.items?.map(item => ({
                 price_data: {
                     unit_amount: item.amount,

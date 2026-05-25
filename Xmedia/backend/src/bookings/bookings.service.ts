@@ -240,15 +240,18 @@ export class BookingsService {
         // QPay path — create Byl checkout
         try {
             const clientBaseUrl = process.env.CLIENT_URL || 'https://xtudio-six.vercel.app';
+            const serviceName = dto.serviceName || dto.serviceType;
+            const checkoutDescription = `${serviceName} | ${dto.phone} | ${dto.email || 'no-email'} | Захиалга #${booking.id}`;
 
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: booking.id,
                 amount: total,
-                serviceName: dto.serviceName || dto.serviceType,
+                serviceName: checkoutDescription,
                 quantity: 1,
                 customerEmail: dto.email,
                 successUrl: `${clientBaseUrl}/booking/success?bookingId=${booking.id}`,
                 cancelUrl: `${clientBaseUrl}/booking/cancel`,
+                description: checkoutDescription,
             });
 
             // Save checkout ID in payment record
@@ -414,12 +417,15 @@ export class BookingsService {
 
         // QPay path — create one Byl checkout for the combined amount
         try {
+            const serviceList = createdBookings.map(b => b.item.serviceName || b.item.serviceType).join(', ');
+            const paymentDescription = `${serviceList} | ${dto.phone} | ${dto.email || 'no-email'} | Захиалга #${createdBookings.map(b => b.booking.id).join(',')}`;
+
             const checkout = await this.bylPayment.createCheckout({
                 bookingId: firstBooking.id,
                 amount: totalAmount,
                 serviceName: `XTUDIO багц (${createdBookings.length} үйлчилгээ)`,
                 items: createdBookings.map(b => ({
-                    name: b.item.serviceName || b.item.serviceType,
+                    name: `${b.item.serviceName || b.item.serviceType} | ${dto.phone} | ${dto.email || 'no-email'} | Захиалга #${b.booking.id}`,
                     amount: b.total,
                     quantity: 1,
                 })),
@@ -427,6 +433,7 @@ export class BookingsService {
                 customerEmail: dto.email,
                 successUrl: `${clientBaseUrl}/booking/success?bookingId=${firstBooking.id}`,
                 cancelUrl: `${clientBaseUrl}/booking/cancel`,
+                description: paymentDescription,
             });
 
             // Save checkout ID — store other booking IDs for group confirmation
@@ -442,7 +449,6 @@ export class BookingsService {
             });
 
             // Notify admin: new cart order
-            const serviceList = createdBookings.map(b => b.item.serviceName || b.item.serviceType).join(', ');
             this.adminNotificationService.createNotification(
                 'NEW_ORDER',
                 `Шинэ захиалга: ${dto.name} — ${serviceList} (${totalAmount.toLocaleString()}₮)`,

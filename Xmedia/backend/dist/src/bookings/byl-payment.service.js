@@ -28,6 +28,7 @@ let BylPaymentService = BylPaymentService_1 = class BylPaymentService {
             cancel_url: params.cancelUrl || `${clientBaseUrl}/`,
             client_reference_id: String(params.bookingId),
             customer_email: params.customerEmail || undefined,
+            description: params.description || undefined,
             items: params.items?.map(item => ({
                 price_data: {
                     unit_amount: item.amount,
