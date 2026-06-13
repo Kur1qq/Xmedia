@@ -146,7 +146,7 @@ export default function BookingsPage() {
                 const data: any[] = await res.json();
                 const opts = data.map(s => ({ id: String(s.id), name: s.name || `#${s.id}` }));
                 setServiceOptions(opts);
-                setAddForm(f => ({ ...f, serviceId: opts[0]?.id || '' }));
+                setAddForm(f => ({ ...f, serviceId: f.serviceId || opts[0]?.id || '' }));
             }
         } catch (e) { console.error(e); setServiceOptions([]); }
         finally { setServiceOptionsLoading(false); }
@@ -403,7 +403,7 @@ export default function BookingsPage() {
             name: b.user?.username || '',
             phone: b.user?.phone || '',
             email: b.user?.email || '',
-            date: item.bookingDate || shortDate(new Date()) ? new Date().toISOString().split('T')[0] : '',
+            date: item.bookingDate || new Date().toISOString().split('T')[0],
             startTime: item.startTime ? item.startTime.slice(0,5) : '10:00',
             endTime: item.endTime ? item.endTime.slice(0,5) : '12:00',
             serviceType: sType,
