@@ -17,18 +17,18 @@ const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
 const jwt_auth_guard_1 = require("../admin/jwt-auth.guard");
-const cloudinary_service_1 = require("./cloudinary.service");
+const storage_service_1 = require("./storage.service");
 let UploadController = class UploadController {
-    cloudinary;
-    constructor(cloudinary) {
-        this.cloudinary = cloudinary;
+    storage;
+    constructor(storage) {
+        this.storage = storage;
     }
     async uploadFile(file) {
         if (!file) {
             return { error: 'No file uploaded' };
         }
-        const result = await this.cloudinary.uploadFile(file);
-        return { url: result.secure_url };
+        const { url } = await this.storage.uploadFile(file);
+        return { url };
     }
 };
 exports.UploadController = UploadController;
@@ -52,6 +52,6 @@ __decorate([
 ], UploadController.prototype, "uploadFile", null);
 exports.UploadController = UploadController = __decorate([
     (0, common_1.Controller)('upload'),
-    __metadata("design:paramtypes", [cloudinary_service_1.CloudinaryService])
+    __metadata("design:paramtypes", [storage_service_1.StorageService])
 ], UploadController);
 //# sourceMappingURL=upload.controller.js.map

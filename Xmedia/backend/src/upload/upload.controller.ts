@@ -2,11 +2,11 @@ import { Controller, Post, UploadedFile, UseInterceptors, UseGuards, BadRequestE
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { RolesGuard } from '../admin/jwt-auth.guard';
-import { CloudinaryService } from './cloudinary.service';
+import { StorageService } from './storage.service';
 
 @Controller('upload')
 export class UploadController {
-    constructor(private readonly cloudinary: CloudinaryService) { }
+    constructor(private readonly storage: StorageService) { }
 
     @Post()
     @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN', 'MODERATOR'))
@@ -25,7 +25,7 @@ export class UploadController {
             return { error: 'No file uploaded' };
         }
 
-        const result = await this.cloudinary.uploadFile(file);
-        return { url: result.secure_url };
+        const { url } = await this.storage.uploadFile(file);
+        return { url };
     }
 }

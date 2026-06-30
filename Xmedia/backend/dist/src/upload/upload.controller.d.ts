@@ -1,7 +1,7 @@
-import { CloudinaryService } from './cloudinary.service';
+import { StorageService } from './storage.service';
 export declare class UploadController {
-    private readonly cloudinary;
-    constructor(cloudinary: CloudinaryService);
+    private readonly storage;
+    constructor(storage: StorageService);
     uploadFile(file: Express.Multer.File): Promise<{
         error: string;
         url?: undefined;

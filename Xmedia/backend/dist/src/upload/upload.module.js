@@ -10,7 +10,7 @@ exports.UploadModule = void 0;
 const common_1 = require("@nestjs/common");
 const upload_controller_1 = require("./upload.controller");
 const admin_module_1 = require("../admin/admin.module");
-const cloudinary_service_1 = require("./cloudinary.service");
+const storage_service_1 = require("./storage.service");
 let UploadModule = class UploadModule {
 };
 exports.UploadModule = UploadModule;
@@ -18,8 +18,8 @@ exports.UploadModule = UploadModule = __decorate([
     (0, common_1.Module)({
         imports: [admin_module_1.AdminModule],
         controllers: [upload_controller_1.UploadController],
-        providers: [cloudinary_service_1.CloudinaryService],
-        exports: [cloudinary_service_1.CloudinaryService],
+        providers: [storage_service_1.StorageService],
+        exports: [storage_service_1.StorageService],
     })
 ], UploadModule);
 //# sourceMappingURL=upload.module.js.map
