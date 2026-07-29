@@ -232,6 +232,7 @@ export class BookingsService {
             // Email admin: new invoice request
             this.mailService.sendNewOrderNotificationToAdmin(
                 booking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${dto.serviceName || dto.serviceType}`, total,
+                [{ date: bookingDate, startTime, endTime }],
             ).catch(() => {});
 
             return { ...booking, checkoutUrl: null };
@@ -274,6 +275,7 @@ export class BookingsService {
             // Email admin: new order
             this.mailService.sendNewOrderNotificationToAdmin(
                 booking.id, dto.name, dto.phone, dto.serviceName || dto.serviceType, total,
+                [{ date: bookingDate, startTime, endTime }],
             ).catch(() => {});
 
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
@@ -386,6 +388,15 @@ export class BookingsService {
         const totalAmount = createdBookings.reduce((sum, b) => sum + b.total, 0);
         const firstBooking = createdBookings[0].booking;
 
+        // Per-item schedule for the admin notification email
+        const cartSchedule = createdBookings.map(b => ({
+            date: b.booking.items[0]?.bookingDate,
+            startTime: b.booking.items[0]?.startTime,
+            endTime: b.booking.items[0]?.endTime,
+            // Label each line with its service only when there is more than one
+            serviceName: createdBookings.length > 1 ? (b.item.serviceName || b.item.serviceType) : undefined,
+        }));
+
         // Invoice path — send one combined invoice PDF
         if (dto.paymentType === 'invoice') {
             const invoiceItems = createdBookings.map(b => ({
@@ -410,6 +421,7 @@ export class BookingsService {
             // Email admin: cart invoice
             this.mailService.sendNewOrderNotificationToAdmin(
                 firstBooking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${serviceList}`, totalAmount,
+                cartSchedule,
             ).catch(() => {});
 
             return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
@@ -458,6 +470,7 @@ export class BookingsService {
             // Email admin: cart order
             this.mailService.sendNewOrderNotificationToAdmin(
                 firstBooking.id, dto.name, dto.phone, serviceList, totalAmount,
+                cartSchedule,
             ).catch(() => {});
 
             return { ...firstBooking, checkoutUrl: checkout.checkoutUrl, bookingIds: createdBookings.map(b => b.booking.id) };
