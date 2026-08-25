@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma.service';
 import { BundleServiceService } from '../bundle-service/bundle-service.service';
@@ -7,6 +7,7 @@ import { BylPaymentService } from './byl-payment.service';
 import { MailService } from './mail.service';
 import { InvoiceService } from './invoice.service';
 import { AdminNotificationService } from '../admin/admin-notification.service';
+import { toMinutes, minutesToTime, normalizeTime, durationMinutes, shiftDate } from './time.util';
 
 @Injectable()
 export class BookingsService {
@@ -180,12 +181,10 @@ export class BookingsService {
         }
 
         const bookingDate = dto.date.slice(0, 10);
-        const [h, m] = dto.time.split(':').map(Number);
-        // Build startTime/endTime as plain strings to avoid timezone issues
-        const startHour = h;
-        const endHour = h + dto.duration;
-        const startTime = `${String(startHour).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
-        const endTime = `${String(endHour).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
+        // Build startTime/endTime as plain strings to avoid timezone issues.
+        // Шөнө дамнасан үед (ж: 20:00 + 6ц) 24 цагийн модулиар нормчилно → "02:00:00"
+        const startTime = normalizeTime(dto.time);
+        const endTime = minutesToTime(toMinutes(dto.time) + Math.round(dto.duration * 60));
         const total = dto.unitPrice * dto.duration;
 
         const itemData: any = {
@@ -338,10 +337,10 @@ export class BookingsService {
         // Create a SEPARATE booking for each cart item
         for (const item of dto.items) {
             const bookingDate = item.date.slice(0, 10);
-            const [ih, im] = item.time.split(':').map(Number);
-            // Build startTime/endTime as plain strings to avoid timezone issues
-            const startTime = `${String(ih).padStart(2, '0')}:${String(im).padStart(2, '0')}:00`;
-            const endTime = `${String(ih + item.duration).padStart(2, '0')}:${String(im).padStart(2, '0')}:00`;
+            // Build startTime/endTime as plain strings to avoid timezone issues.
+            // Шөнө дамнасан үед 24 цагийн модулиар нормчилно (ж: 22:00 + 4ц → "02:00:00")
+            const startTime = normalizeTime(item.time);
+            const endTime = minutesToTime(toMinutes(item.time) + Math.round(item.duration * 60));
             const total = item.unitPrice * item.duration;
 
             const bookingItemData: any = {
@@ -566,8 +565,32 @@ export class BookingsService {
         }
     }
 
+    /**
+     * Байгаа хэрэглэгчийн холбоо барих мэдээллийг админы оруулсан утгаар шинэчилнэ.
+     * Хоосон талбарыг алгасна; и-мэйл нь өөр хэрэглэгчид бүртгэлтэй бол
+     * (email нь unique) алгасаж, захиалга үүсгэх үйлдлийг зогсоохгүй.
+     */
+    private async syncUserContact(
+        user: { id: number; username: string; email: string; phone: string | null },
+        dto: { name?: string; phone?: string; email?: string },
+    ): Promise<void> {
+        const patch: any = {};
+        if (dto.name && dto.name !== user.username) patch.username = dto.name;
+        if (dto.phone && dto.phone !== user.phone) patch.phone = dto.phone;
+        if (dto.email && dto.email !== user.email) {
+            const taken = await this.prisma.user.findFirst({
+                where: { email: dto.email, NOT: { id: user.id } },
+                select: { id: true },
+            });
+            if (!taken) patch.email = dto.email;
+        }
+        if (Object.keys(patch).length === 0) return;
+        await this.prisma.user.update({ where: { id: user.id }, data: patch });
+    }
+
     // Manual booking creation (for Admin use)
     async createManualBooking(dto: {
+        userId?: number;   // Бүртгэлтэй хэрэглэгчийг сонгосон бол түүний ID
         name: string;
         phone: string;
         email?: string;
@@ -581,8 +604,19 @@ export class BookingsService {
         paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED';
         notes?: string;
     }) {
-        // Find or create user
-        let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        // Find or create user.
+        // 1) Админ бүртгэлтэй хэрэглэгчийг сонгосон бол шууд түүгээр холбоно
+        // 2) Үгүй бол утсаар нь хайна (давхардсан хэрэглэгч үүсэхээс сэргийлнэ)
+        // 3) Олдохгүй бол шинээр үүсгэнэ
+        let user = dto.userId
+            ? await this.prisma.user.findUnique({ where: { id: Number(dto.userId) } })
+            : null;
+        if (dto.userId && !user) {
+            throw new NotFoundException(`User with ID ${dto.userId} not found`);
+        }
+        if (!user) {
+            user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        }
         if (!user) {
             user = await this.prisma.user.create({
                 data: {
@@ -592,24 +626,30 @@ export class BookingsService {
                     passwordHash: 'GUEST',
                 }
             });
+        } else {
+            // Байгаа хэрэглэгч дээр админы өөрчилсөн мэдээллийг шинэчилнэ
+            await this.syncUserContact(user, dto);
         }
 
         const bookingDate = dto.date.slice(0, 10);
-        const start = new Date(`1970-01-01T${dto.startTime}:00`);
-        const end = new Date(`1970-01-01T${dto.endTime}:00`);
 
-        // Calculate duration in hours
-        const durationHours = (end.getTime() - start.getTime()) / 3600000;
-        const unitPrice = dto.totalAmount / (durationHours || 1);
+        // Calculate duration in hours (шөнө дамнасан үед 24 цагийн модулиар: 20:00–02:00 = 6ц)
+        const durationMin = durationMinutes(dto.startTime, dto.endTime);
+        if (durationMin === 0) {
+            throw new BadRequestException('Эхлэх ба дуусах цаг ижил байж болохгүй.');
+        }
+        const durationHours = durationMin / 60;
+        const unitPrice = dto.totalAmount / durationHours;
 
         const itemData: any = {
             itemType: dto.serviceType as ItemType,
-            quantity: durationHours,
+            // quantity нь Int багана — 30 минутын алхмыг бүхэлчилнэ (үнэ нь unitPrice-аар яг таарна)
+            quantity: Math.max(1, Math.round(durationHours)),
             unitPrice,
             totalPrice: dto.totalAmount,
             bookingDate,
-            startTime: `${dto.startTime}:00`,
-            endTime: `${dto.endTime}:00`,
+            startTime: normalizeTime(dto.startTime),
+            endTime: normalizeTime(dto.endTime),
         };
 
         if (dto.serviceType === 'STUDIO') itemData.studioId = dto.serviceId;
@@ -786,9 +826,12 @@ export class BookingsService {
         date: string, // 'YYYY-MM-DD'
     ): Promise<string[]> {
         const bookingDate = date.slice(0, 10);
+        // Өмнөх өдрөөс шөнө дамжсан захиалга (ж: 20:00–02:00) энэ өдрийн эхний
+        // цагуудыг эзэлдэг тул хоёр өдрийн захиалгыг хамт татна
+        const prevDate = shiftDate(bookingDate, -1);
 
         // Build where clause for the specific service
-        const serviceWhere: any = { itemType: serviceType, bookingDate };
+        const serviceWhere: any = { itemType: serviceType, bookingDate: { in: [prevDate, bookingDate] } };
         if (serviceType === 'STUDIO') serviceWhere.studioId = serviceId;
         if (serviceType === 'LIVE_SERVICE') serviceWhere.liveServiceId = serviceId;
         if (serviceType === 'PHOTOGRAPHER_SERVICE') serviceWhere.photographerServiceId = serviceId;
@@ -804,7 +847,7 @@ export class BookingsService {
                 startTime: { not: null },
                 endTime: { not: null },
             },
-            select: { startTime: true, endTime: true },
+            select: { bookingDate: true, startTime: true, endTime: true },
         });
 
         // All 30-minute slots across the full 24-hour day (00:00 – 23:30)
@@ -823,11 +866,13 @@ export class BookingsService {
 
             const overlaps = items.some(item => {
                 if (!item.startTime || !item.endTime) return false;
-                // startTime/endTime stored as "HH:MM:SS" — split and parse directly
-                const [sh, sm] = item.startTime.split(':').map(Number);
-                const [eh, em] = item.endTime.split(':').map(Number);
-                const bookedStart = sh * 60 + sm;
-                const bookedEnd = eh * 60 + em;
+                // startTime/endTime stored as "HH:MM:SS" — шөнө дамнасан бол
+                // үргэлжлэх хугацаа нь 24 цагийн модулиар тооцогдоно
+                const duration = durationMinutes(item.startTime, item.endTime);
+                if (duration === 0) return false;
+                // Өмнөх өдрийн захиалгыг сөрөг тэнхлэг рүү шилжүүлнэ (ж: 22:00 → -120)
+                const bookedStart = toMinutes(item.startTime) - (item.bookingDate === bookingDate ? 0 : 1440);
+                const bookedEnd = bookedStart + duration;
                 // Overlap: slot starts before booking ends AND slot ends after booking starts
                 return slotStart < bookedEnd && slotEnd > bookedStart;
             });
@@ -948,25 +993,28 @@ export class BookingsService {
             throw new NotFoundException(`Booking with ID ${id} not found`);
         }
 
-        // Update user if provided
-        if (dto.name !== undefined || dto.phone !== undefined || dto.email !== undefined) {
-            await this.prisma.user.update({
-                where: { id: booking.userId },
-                data: {
-                    username: dto.name !== undefined ? dto.name : booking.user.username,
-                    phone: dto.phone !== undefined ? dto.phone : booking.user.phone,
-                    email: dto.email !== undefined ? dto.email : booking.user.email,
-                }
-            });
+        // Хэрэглэгч: админ хайлтаас өөр бүртгэлтэй хэрэглэгч сонгосон бол захиалгыг
+        // тэр хэрэглэгч рүү шилжүүлнэ, эс тэгвээс одоогийн хэрэглэгчийн мэдээллийг шинэчилнэ
+        let targetUserId = booking.userId;
+        if (dto.userId && Number(dto.userId) !== booking.userId) {
+            const picked = await this.prisma.user.findUnique({ where: { id: Number(dto.userId) } });
+            if (!picked) throw new NotFoundException(`User with ID ${dto.userId} not found`);
+            targetUserId = picked.id;
+            await this.syncUserContact(picked, dto);
+        } else if (dto.name !== undefined || dto.phone !== undefined || dto.email !== undefined) {
+            await this.syncUserContact(booking.user, dto);
         }
 
         const date = dto.date ? dto.date.slice(0, 10) : undefined;
         let durationHours = 1;
 
         if (dto.startTime && dto.endTime) {
-            const start = new Date(`1970-01-01T${dto.startTime}:00`);
-            const end = new Date(`1970-01-01T${dto.endTime}:00`);
-            durationHours = (end.getTime() - start.getTime()) / 3600000;
+            // Шөнө дамнасан үед 24 цагийн модулиар (20:00–02:00 = 6ц)
+            const durationMin = durationMinutes(dto.startTime, dto.endTime);
+            if (durationMin === 0) {
+                throw new BadRequestException('Эхлэх ба дуусах цаг ижил байж болохгүй.');
+            }
+            durationHours = durationMin / 60;
         }
 
         const unitPrice = dto.totalAmount ? dto.totalAmount / (durationHours || 1) : undefined;
@@ -975,11 +1023,11 @@ export class BookingsService {
         if (booking.items.length > 0) {
             const itemMap: any = {};
             if (date) itemMap.bookingDate = date;
-            if (dto.startTime) itemMap.startTime = dto.startTime.length === 5 ? `${dto.startTime}:00` : dto.startTime;
-            if (dto.endTime) itemMap.endTime = dto.endTime.length === 5 ? `${dto.endTime}:00` : dto.endTime;
+            if (dto.startTime) itemMap.startTime = normalizeTime(dto.startTime);
+            if (dto.endTime) itemMap.endTime = normalizeTime(dto.endTime);
             if (unitPrice !== undefined) itemMap.unitPrice = unitPrice;
             if (dto.totalAmount !== undefined) itemMap.totalPrice = dto.totalAmount;
-            if (dto.startTime && dto.endTime) itemMap.quantity = durationHours;
+            if (dto.startTime && dto.endTime) itemMap.quantity = Math.max(1, Math.round(durationHours));
 
             if (dto.serviceType) itemMap.itemType = dto.serviceType as ItemType;
 
@@ -1001,6 +1049,7 @@ export class BookingsService {
         const updated = await this.prisma.booking.update({
             where: { id },
             data: {
+                userId: targetUserId,
                 totalAmount: dto.totalAmount !== undefined ? dto.totalAmount : booking.totalAmount,
                 notes: dto.notes !== undefined ? dto.notes : booking.notes,
                 status: dto.status !== undefined ? dto.status : booking.status,

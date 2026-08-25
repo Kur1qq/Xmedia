@@ -10,6 +10,13 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
+    search(query: string, limit?: number): Promise<{
+        id: number;
+        username: string;
+        email: string;
+        phone: string | null;
+        bookingCount: number;
+    }[]>;
     findOne(id: number): Promise<{
         id: number;
         username: string;

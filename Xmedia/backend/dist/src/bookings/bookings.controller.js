@@ -47,6 +47,7 @@ let BookingsController = BookingsController_1 = class BookingsController {
     async createManualBooking(dto, req) {
         const result = await this.bookingsService.createManualBooking({
             ...dto,
+            userId: dto.userId ? Number(dto.userId) : undefined,
             serviceId: Number(dto.serviceId),
             totalAmount: Number(dto.totalAmount)
         });

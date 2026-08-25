@@ -1,10 +1,19 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { X, CheckCircle, Clock, XCircle, ChevronDown, Package, CalendarDays, List, ChevronLeft, ChevronRight, ArrowLeft, User, CreditCard, Activity, Calendar, Edit2, Trash2, Mail, MoreVertical, Download } from "lucide-react";
+import { X, CheckCircle, Clock, XCircle, ChevronDown, Package, CalendarDays, List, ChevronLeft, ChevronRight, ArrowLeft, User, CreditCard, Activity, Calendar, Edit2, Trash2, Mail, MoreVertical, Download, Search } from "lucide-react";
 import { toast } from "sonner";
 import { getAdminInfo } from "@/lib/auth";
+import { durationMinutes, formatTimeRange, isOvernight, shiftDateKey, toClock, toSpan } from "@/lib/time";
 import * as xlsx from "xlsx";
+
+// Хайлтаас олдсон бүртгэлтэй хэрэглэгч
+type CustomerHit = { id: number; username: string; email: string; phone: string | null; bookingCount: number };
+
+// Нэг захиалгын дээд хугацаа (минут). Шөнө дамнасан захиалга зөвшөөрөгдсөн тул
+// цагийг сөрөг байдлаар шалгах боломжгүй — оронд нь буруу сонголтоос (ж: 02:00–01:00 = 23ц)
+// хамгаалах эрүүл саруул хязгаар тавьсан. Шаардлагатай бол энэ тоог л өөрчилнө.
+const MAX_DURATION_MIN = 18 * 60;
 
 // ---- Booking service type detection ----
 function detectBookingType(booking: any): string {
@@ -88,6 +97,7 @@ export default function BookingsPage() {
     const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
     const [editBookingId, setEditBookingId] = useState<number | null>(null);
     const [addForm, setAddForm] = useState({
+        userId: null as number | null,   // Бүртгэлтэй хэрэглэгчийг сонгосон бол түүний ID
         name: '', phone: '', email: '',
         date: shortDate(new Date()) ? new Date().toISOString().split('T')[0] : '',
         startTime: '10:00', endTime: '12:00',
@@ -97,6 +107,13 @@ export default function BookingsPage() {
     const [serviceOptions, setServiceOptions] = useState<{ id: string; name: string }[]>([]);
     const [serviceOptionsLoading, setServiceOptionsLoading] = useState(false);
     const [timeConflict, setTimeConflict] = useState<string | null>(null);
+
+    // Бүртгэлтэй хэрэглэгчийн хайлт (гараар дахин бичихээс сэргийлнэ)
+    const [customerQuery, setCustomerQuery] = useState('');
+    const [customerResults, setCustomerResults] = useState<CustomerHit[]>([]);
+    const [customerSearching, setCustomerSearching] = useState(false);
+    const [customerListOpen, setCustomerListOpen] = useState(false);
+    const [customerError, setCustomerError] = useState<string | null>(null);
     const [adminBookedSlots, setAdminBookedSlots] = useState<string[]>([]);
 
     // 30-min interval time slots
@@ -213,6 +230,57 @@ export default function BookingsPage() {
 
     useEffect(() => { fetchBookings(); }, []);
 
+    // Хэрэглэгчийн хайлт — 300мс debounce-той
+    useEffect(() => {
+        const q = customerQuery.trim();
+        if (!isAddModalOpen || q.length < 2) {
+            setCustomerResults([]);
+            setCustomerSearching(false);
+            return;
+        }
+        setCustomerSearching(true);
+        const ctrl = new AbortController();
+        const timer = setTimeout(async () => {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const res = await fetch(`${API}/users/search?q=${encodeURIComponent(q)}`, {
+                    signal: ctrl.signal,
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                });
+                if (res.status === 401 || res.status === 403) {
+                    setCustomerError('Хэрэглэгч хайх эрх алга байна.');
+                    setCustomerResults([]);
+                } else {
+                    setCustomerError(null);
+                    setCustomerResults(res.ok ? await res.json() : []);
+                }
+                setCustomerListOpen(true);
+            } catch {
+                // AbortError — шинэ хайлт эхэлсэн, алдаа гэж үзэхгүй
+            } finally {
+                setCustomerSearching(false);
+            }
+        }, 300);
+        return () => { clearTimeout(timer); ctrl.abort(); };
+    }, [customerQuery, isAddModalOpen, API]);
+
+    // Хайлтаас хэрэглэгч сонгоход талбаруудыг автоматаар дүүргэнэ
+    const selectCustomer = (c: CustomerHit) => {
+        setAddForm(f => ({
+            ...f,
+            userId: c.id,
+            name: c.username || '',
+            phone: c.phone || '',
+            email: c.email || '',
+        }));
+        setCustomerQuery('');
+        setCustomerResults([]);
+        setCustomerListOpen(false);
+    };
+
+    // Холбоосыг салгах — шинэ хэрэглэгчээр үргэлжлүүлнэ
+    const unlinkCustomer = () => setAddForm(f => ({ ...f, userId: null }));
+
     // Current tab's bookings
     const activeBookings = tab === 'paid' ? bookings : tab === 'pending' ? pendingBookings : cancelledBookings;
 
@@ -275,12 +343,25 @@ export default function BookingsPage() {
         if (addForm.serviceType === 'STUDIO' && addForm.serviceId && addForm.date && addForm.startTime && addForm.endTime) {
             const newStart = addForm.startTime;
             const newEnd = addForm.endTime;
-            if (newStart >= newEnd) {
-                setTimeConflict('Эхлэх цаг дуусах цагаас өмнө байх ёстой.');
+            // Шөнө дамнасан захиалгыг (ж: 20:00–02:00 = 6ц) зөвшөөрнө — цагийг
+            // мөрөөр биш, үргэлжлэх хугацаагаар шалгана
+            const newDuration = durationMinutes(newStart, newEnd);
+            if (newDuration === 0) {
+                setTimeConflict('Эхлэх ба дуусах цаг ижил байж болохгүй.');
+                return;
+            }
+            if (newDuration > MAX_DURATION_MIN) {
+                setTimeConflict(`Нэг захиалга ${MAX_DURATION_MIN / 60} цагаас урт байж болохгүй.`);
                 return;
             }
             const dateKey = addForm.date;
-            const dayBookings = bookingsByDateKey[dateKey] || [];
+            // Өмнөх өдрөөс шөнө дамжсан захиалга энэ өдрийн эхний цагуудтай
+            // давхцаж болзошгүй тул хамт шалгана
+            const dayBookings = [
+                ...(bookingsByDateKey[shiftDateKey(dateKey, -1)] || []),
+                ...(bookingsByDateKey[dateKey] || []),
+            ];
+            const newSpan = toSpan(dateKey, newStart, newEnd);
             const studioId = String(addForm.serviceId);
             const conflicts = dayBookings.filter(b => {
                 if (modalMode === 'edit' && b.id === editBookingId) return false;
@@ -289,15 +370,17 @@ export default function BookingsPage() {
                 if (String(bItem.studioId ?? bItem.studio?.id) !== studioId) return false;
                 const bs = bItem.startTime?.slice(0, 5);
                 const be = bItem.endTime?.slice(0, 5);
-                if (!bs || !be) return false;
-                // Overlap: new.start < existing.end && new.end > existing.start
-                return newStart < be && newEnd > bs;
+                if (!bs || !be || !bItem.bookingDate) return false;
+                // Абсолют минутаар харьцуулна — шөнө дамнасан үед ч зөв ажиллана
+                const exSpan = toSpan(bItem.bookingDate, bs, be);
+                return newSpan.start < exSpan.end && newSpan.end > exSpan.start;
             });
             if (conflicts.length > 0) {
                 const c = conflicts[0];
                 const bs = c._item.startTime.slice(0, 5);
                 const be = c._item.endTime.slice(0, 5);
-                setTimeConflict(`Цаг давхцалдаа: ${bs}–${be} цагт #${c.id} захиалга буй байна.`);
+                const suffix = isOvernight(bs, be) ? ' (+1 өдөр)' : '';
+                setTimeConflict(`Цаг давхцалдаа: ${bs}–${be}${suffix} цагт #${c.id} захиалга буй байна.`);
                 return;
             }
         }
@@ -399,13 +482,16 @@ export default function BookingsPage() {
         else if (item.editServiceId) { sType = 'EDIT_SERVICE'; sId = String(item.editServiceId); }
         else if (item.bundleServiceId) { sType = 'BUNDLE_SERVICE'; sId = String(item.bundleServiceId); }
         
+        setCustomerQuery('');
+        setCustomerResults([]);
         setAddForm({
+            userId: b.user?.id ?? null,
             name: b.user?.username || '',
             phone: b.user?.phone || '',
             email: b.user?.email || '',
             date: item.bookingDate || new Date().toISOString().split('T')[0],
-            startTime: item.startTime ? item.startTime.slice(0,5) : '10:00',
-            endTime: item.endTime ? item.endTime.slice(0,5) : '12:00',
+            startTime: item.startTime ? toClock(item.startTime) : '10:00',
+            endTime: item.endTime ? toClock(item.endTime) : '12:00',
             serviceType: sType,
             serviceId: sId,
             totalAmount: Number(b.totalAmount) || 0,
@@ -554,8 +640,13 @@ export default function BookingsPage() {
             if (item?.startTime) {
                 // startTime is stored as "HH:MM:SS" string — parse directly
                 const startHour = parseTimeStrHour(item.startTime);
-                const endHour = item.endTime ? parseTimeStrHour(item.endTime) : startHour + 1;
-                for (let h = startHour; h < endHour; h++) {
+                // Шөнө дамнасан үед (ж: 20:00–02:00) цагийг 24-ийн модулиар эргүүлнэ,
+                // эс тэгвээс давталт огт ажиллахгүй бөгөөд захиалга календараас алга болно
+                const spanHours = item.endTime
+                    ? Math.max(1, Math.ceil(durationMinutes(item.startTime, item.endTime) / 60))
+                    : 1;
+                for (let i = 0; i < spanHours; i++) {
+                    const h = (startHour + i) % 24;
                     map[h] = map[h] || [];
                     if (!map[h].find((x: any) => x.id === b.id)) {
                         map[h].push(b);
@@ -685,7 +776,10 @@ export default function BookingsPage() {
                     <button
                         onClick={() => {
                             setModalMode('add');
+                            setCustomerQuery('');
+                            setCustomerResults([]);
                             setAddForm({
+                                userId: null,
                                 name: '', phone: '', email: '',
                                 date: shortDate(new Date()) ? new Date().toISOString().split('T')[0] : '',
                                 startTime: '10:00', endTime: '12:00',
@@ -1015,8 +1109,8 @@ export default function BookingsPage() {
                                                             : (TYPE_COLORS[b._type] || TYPE_COLORS.photographer);
                                                         const item = b._item;
                                                         // startTime/endTime are "HH:MM:SS" strings
-                                                        const startStr = item?.startTime ? item.startTime.slice(0, 5) : '';
-                                                        const endStr = item?.endTime ? item.endTime.slice(0, 5) : '';
+                                                        const startStr = toClock(item?.startTime);
+                                                        const endStr = toClock(item?.endTime);
                                                         return (
                                                             <button
                                                                 key={idx}
@@ -1029,7 +1123,7 @@ export default function BookingsPage() {
                                                                     <span className="text-xs opacity-60">{col.label}</span>
                                                                 </div>
                                                                 {startStr && (
-                                                                    <span className="text-xs opacity-70 shrink-0 ml-2">{startStr}{endStr ? ` – ${endStr}` : ''}</span>
+                                                                    <span className="text-xs opacity-70 shrink-0 ml-2">{startStr}{endStr ? ` – ${endStr}${isOvernight(startStr, endStr) ? ' (+1 өдөр)' : ''}` : ''}</span>
                                                                 )}
                                                             </button>
                                                         );
@@ -1097,7 +1191,7 @@ export default function BookingsPage() {
                                         {selectedBooking.items?.[0]?.startTime && (
                                             <span>
                                                 {' '}•{' '}
-                                                {selectedBooking.items[0].startTime.slice(0, 5)} – {selectedBooking.items[0].endTime?.slice(0, 5) || ''}
+                                                {formatTimeRange(selectedBooking.items[0].startTime, selectedBooking.items[0].endTime)}
                                             </span>
                                         )}
                                     </div>
@@ -1223,6 +1317,62 @@ export default function BookingsPage() {
                                 {/* User Info */}
                                 <div className="space-y-3">
                                     <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Хэрэглэгч</h3>
+
+                                    {/* Бүртгэлтэй хэрэглэгчийг хайж сонгосноор доорх талбарууд автоматаар бөглөгдөнө */}
+                                    {addForm.userId ? (
+                                        <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2">
+                                            <div className="min-w-0">
+                                                <p className="text-sm text-white truncate">
+                                                    {addForm.name || 'Нэргүй'} <span className="text-xs text-gray-400">#{addForm.userId}</span>
+                                                </p>
+                                                <p className="text-xs text-gray-400 truncate">Бүртгэлтэй хэрэглэгчтэй холбогдсон</p>
+                                            </div>
+                                            <button type="button" onClick={unlinkCustomer} className="text-xs text-gray-400 hover:text-white shrink-0 underline underline-offset-2">
+                                                Өөрчлөх
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                                            <input
+                                                type="text"
+                                                placeholder="Бүртгэлтэй хэрэглэгч хайх (нэр, утас, и-мэйл)"
+                                                className="w-full bg-black/20 border border-white/5 rounded-md pl-9 pr-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-primary transition-colors"
+                                                value={customerQuery}
+                                                onChange={e => { setCustomerQuery(e.target.value); setCustomerListOpen(true); }}
+                                                onFocus={() => setCustomerListOpen(true)}
+                                                // Гадуур дарахад хаана — сонголтын click бүртгэгдэх зайг үлдээв
+                                                onBlur={() => setTimeout(() => setCustomerListOpen(false), 150)}
+                                            />
+                                            {customerListOpen && customerQuery.trim().length >= 2 && (
+                                                <div className="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-md border border-white/10 bg-[#181818] shadow-xl">
+                                                    {customerSearching && (
+                                                        <p className="px-3 py-2 text-xs text-gray-500">Хайж байна...</p>
+                                                    )}
+                                                    {!customerSearching && customerError && (
+                                                        <p className="px-3 py-2 text-xs text-red-400">{customerError}</p>
+                                                    )}
+                                                    {!customerSearching && !customerError && customerResults.length === 0 && (
+                                                        <p className="px-3 py-2 text-xs text-gray-500">Олдсонгүй — доор гараар бөглөнө үү.</p>
+                                                    )}
+                                                    {customerResults.map(c => (
+                                                        <button
+                                                            key={c.id}
+                                                            type="button"
+                                                            onClick={() => selectCustomer(c)}
+                                                            className="w-full text-left px-3 py-2 hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
+                                                        >
+                                                            <p className="text-sm text-white truncate">{c.username}</p>
+                                                            <p className="text-xs text-gray-500 truncate">
+                                                                {c.phone || '—'}{c.email ? ` · ${c.email}` : ''} · {c.bookingCount} захиалга
+                                                            </p>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Нэр</label>
@@ -1230,7 +1380,8 @@ export default function BookingsPage() {
                                         </div>
                                         <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Утас</label>
-                                            <input required type="tel" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.phone} onChange={e => setAddForm({ ...addForm, phone: e.target.value })} />
+                                            {/* Утас нь хэрэглэгчийг таних түлхүүр тул засвал холбоос сална */}
+                                            <input required type="tel" className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors" value={addForm.phone} onChange={e => setAddForm({ ...addForm, phone: e.target.value, userId: null })} />
                                         </div>
                                     </div>
                                     <div>
@@ -1303,10 +1454,18 @@ export default function BookingsPage() {
                                                 onChange={e => { setAddForm(f => ({ ...f, endTime: e.target.value })); setTimeConflict(null); }}
                                             >
                                                 <option value="">— : —</option>
-                                                {TIME_SLOTS.filter(t => !adminBookedSlots.includes(t)).map(t => <option key={t} value={t}>{t}</option>)}
+                                                {/* Шөнө дамнасан үед дуусах цаг дараагийн өдөрт хамаарах тул
+                                                    тухайн өдрийн завгүй слотоор шүүхгүй — давхцлыг хадгалах үед шалгана */}
+                                                {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
                                             </select>
                                         </div>
                                     </div>
+                                    {addForm.startTime && addForm.endTime && durationMinutes(addForm.startTime, addForm.endTime) > 0 && (
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Нийт хугацаа: <span className="text-white font-medium">{durationMinutes(addForm.startTime, addForm.endTime) / 60} цаг</span>
+                                            {isOvernight(addForm.startTime, addForm.endTime) && <span className="text-amber-400/80"> · шөнө дамнасан (+1 өдөр)</span>}
+                                        </p>
+                                    )}
                                     {timeConflict && (
                                         <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2 mt-1">
                                             ⚠️ {timeConflict}

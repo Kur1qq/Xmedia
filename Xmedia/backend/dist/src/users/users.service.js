@@ -23,6 +23,37 @@ let UsersService = class UsersService {
             select: { id: true, username: true, email: true, phone: true, createdAt: true, updatedAt: true }
         });
     }
+    async search(query, limit = 8) {
+        const q = (query || '').trim();
+        if (q.length < 2)
+            return [];
+        const users = await this.prisma.user.findMany({
+            where: {
+                OR: [
+                    { username: { contains: q } },
+                    { phone: { contains: q } },
+                    { email: { contains: q } },
+                ],
+            },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                phone: true,
+                createdAt: true,
+                _count: { select: { bookings: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+        });
+        return users.map(u => ({
+            id: u.id,
+            username: u.username,
+            email: u.email.endsWith('@xtudio.guest') ? '' : u.email,
+            phone: u.phone,
+            bookingCount: u._count.bookings,
+        }));
+    }
     async findOne(id) {
         const user = await this.prisma.user.findUnique({
             where: { id },

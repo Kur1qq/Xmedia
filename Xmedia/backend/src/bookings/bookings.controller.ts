@@ -50,6 +50,7 @@ export class BookingsController {
     async createManualBooking(@Body() dto: any, @Req() req: any) {
         const result = await this.bookingsService.createManualBooking({
             ...dto,
+            userId: dto.userId ? Number(dto.userId) : undefined,
             serviceId: Number(dto.serviceId),
             totalAmount: Number(dto.totalAmount)
         });

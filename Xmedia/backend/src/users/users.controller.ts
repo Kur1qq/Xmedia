@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Query, Delete, UseGuards, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { RolesGuard } from '../admin/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -38,6 +39,14 @@ export class UsersController {
     @Get()
     findAll() {
         return this.usersService.findAll();
+    }
+
+    // Хэрэглэгч хайх (админы захиалга нэмэх цонхонд ашиглана).
+    // ЧУХАЛ: ':id' route-оос ӨМНӨ байрлах ёстой, эс тэгвээс 'search' нь id гэж танигдана.
+    @UseGuards(RolesGuard('SUPER_ADMIN', 'ADMIN'))
+    @Get('search')
+    search(@Query('q') q: string) {
+        return this.usersService.search(q);
     }
 
     @Get(':id')

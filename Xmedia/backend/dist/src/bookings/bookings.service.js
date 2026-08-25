@@ -18,6 +18,7 @@ const byl_payment_service_1 = require("./byl-payment.service");
 const mail_service_1 = require("./mail.service");
 const invoice_service_1 = require("./invoice.service");
 const admin_notification_service_1 = require("../admin/admin-notification.service");
+const time_util_1 = require("./time.util");
 let BookingsService = BookingsService_1 = class BookingsService {
     prisma;
     bylPayment;
@@ -145,11 +146,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
             });
         }
         const bookingDate = dto.date.slice(0, 10);
-        const [h, m] = dto.time.split(':').map(Number);
-        const startHour = h;
-        const endHour = h + dto.duration;
-        const startTime = `${String(startHour).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
-        const endTime = `${String(endHour).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
+        const startTime = (0, time_util_1.normalizeTime)(dto.time);
+        const endTime = (0, time_util_1.minutesToTime)((0, time_util_1.toMinutes)(dto.time) + Math.round(dto.duration * 60));
         const total = dto.unitPrice * dto.duration;
         const itemData = {
             itemType: dto.serviceType,
@@ -180,7 +178,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (dto.paymentType === 'invoice') {
             this.sendInvoiceForBooking(booking.id, dto.name, dto.email, dto.phone, [{ description: dto.serviceName || dto.serviceType, quantity: 1, unitPrice: total, totalPrice: total }], new Date().toISOString().slice(0, 10), { buyerOrg: dto.buyerOrg, buyerOrgReg: dto.buyerOrgReg, buyerOrgAddress: dto.buyerOrgAddress, buyerOrgPhone: dto.buyerOrgPhone }).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             this.adminNotificationService.createNotification('NEW_INVOICE_REQUEST', `Шинэ нэхэмжлэх хүсэлт: ${dto.name} — ${dto.serviceName || dto.serviceType} (${total.toLocaleString()}₮)`, booking.id).catch(() => { });
-            this.mailService.sendNewOrderNotificationToAdmin(booking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${dto.serviceName || dto.serviceType}`, total).catch(() => { });
+            this.mailService.sendNewOrderNotificationToAdmin(booking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${dto.serviceName || dto.serviceType}`, total, [{ date: bookingDate, startTime, endTime }]).catch(() => { });
             return { ...booking, checkoutUrl: null };
         }
         try {
@@ -206,7 +204,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 }
             });
             this.adminNotificationService.createNotification('NEW_ORDER', `Шинэ захиалга: ${dto.name} — ${dto.serviceName || dto.serviceType} (${total.toLocaleString()}₮)`, booking.id).catch(() => { });
-            this.mailService.sendNewOrderNotificationToAdmin(booking.id, dto.name, dto.phone, dto.serviceName || dto.serviceType, total).catch(() => { });
+            this.mailService.sendNewOrderNotificationToAdmin(booking.id, dto.name, dto.phone, dto.serviceName || dto.serviceType, total, [{ date: bookingDate, startTime, endTime }]).catch(() => { });
             return { ...booking, checkoutUrl: checkout.checkoutUrl };
         }
         catch (error) {
@@ -239,9 +237,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
         const createdBookings = [];
         for (const item of dto.items) {
             const bookingDate = item.date.slice(0, 10);
-            const [ih, im] = item.time.split(':').map(Number);
-            const startTime = `${String(ih).padStart(2, '0')}:${String(im).padStart(2, '0')}:00`;
-            const endTime = `${String(ih + item.duration).padStart(2, '0')}:${String(im).padStart(2, '0')}:00`;
+            const startTime = (0, time_util_1.normalizeTime)(item.time);
+            const endTime = (0, time_util_1.minutesToTime)((0, time_util_1.toMinutes)(item.time) + Math.round(item.duration * 60));
             const total = item.unitPrice * item.duration;
             const bookingItemData = {
                 itemType: item.serviceType,
@@ -282,6 +279,12 @@ let BookingsService = BookingsService_1 = class BookingsService {
         }
         const totalAmount = createdBookings.reduce((sum, b) => sum + b.total, 0);
         const firstBooking = createdBookings[0].booking;
+        const cartSchedule = createdBookings.map(b => ({
+            date: b.booking.items[0]?.bookingDate,
+            startTime: b.booking.items[0]?.startTime,
+            endTime: b.booking.items[0]?.endTime,
+            serviceName: createdBookings.length > 1 ? (b.item.serviceName || b.item.serviceType) : undefined,
+        }));
         if (dto.paymentType === 'invoice') {
             const invoiceItems = createdBookings.map(b => ({
                 description: b.item.serviceName || b.item.serviceType,
@@ -292,7 +295,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             this.sendInvoiceForBooking(firstBooking.id, dto.name, dto.email, dto.phone, invoiceItems, new Date().toISOString().slice(0, 10)).catch(err => this.logger.error(`Failed to send invoice async: ${err.message}`));
             const serviceList = createdBookings.map(b => b.item.serviceName || b.item.serviceType).join(', ');
             this.adminNotificationService.createNotification('NEW_INVOICE_REQUEST', `Шинэ нэхэмжлэх хүсэлт: ${dto.name} — ${serviceList} (${totalAmount.toLocaleString()}₮)`, firstBooking.id).catch(() => { });
-            this.mailService.sendNewOrderNotificationToAdmin(firstBooking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${serviceList}`, totalAmount).catch(() => { });
+            this.mailService.sendNewOrderNotificationToAdmin(firstBooking.id, dto.name, dto.phone, `[НЭХЭМЖЛЭХ] ${serviceList}`, totalAmount, cartSchedule).catch(() => { });
             return { ...firstBooking, checkoutUrl: null, bookingIds: createdBookings.map(b => b.booking.id) };
         }
         try {
@@ -324,7 +327,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 }
             });
             this.adminNotificationService.createNotification('NEW_ORDER', `Шинэ захиалга: ${dto.name} — ${serviceList} (${totalAmount.toLocaleString()}₮)`, firstBooking.id).catch(() => { });
-            this.mailService.sendNewOrderNotificationToAdmin(firstBooking.id, dto.name, dto.phone, serviceList, totalAmount).catch(() => { });
+            this.mailService.sendNewOrderNotificationToAdmin(firstBooking.id, dto.name, dto.phone, serviceList, totalAmount, cartSchedule).catch(() => { });
             return { ...firstBooking, checkoutUrl: checkout.checkoutUrl, bookingIds: createdBookings.map(b => b.booking.id) };
         }
         catch (error) {
@@ -397,8 +400,34 @@ let BookingsService = BookingsService_1 = class BookingsService {
             this.logger.error(`SMTP failed for booking #${bookingId}: ${mailErr.message}`);
         }
     }
+    async syncUserContact(user, dto) {
+        const patch = {};
+        if (dto.name && dto.name !== user.username)
+            patch.username = dto.name;
+        if (dto.phone && dto.phone !== user.phone)
+            patch.phone = dto.phone;
+        if (dto.email && dto.email !== user.email) {
+            const taken = await this.prisma.user.findFirst({
+                where: { email: dto.email, NOT: { id: user.id } },
+                select: { id: true },
+            });
+            if (!taken)
+                patch.email = dto.email;
+        }
+        if (Object.keys(patch).length === 0)
+            return;
+        await this.prisma.user.update({ where: { id: user.id }, data: patch });
+    }
     async createManualBooking(dto) {
-        let user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        let user = dto.userId
+            ? await this.prisma.user.findUnique({ where: { id: Number(dto.userId) } })
+            : null;
+        if (dto.userId && !user) {
+            throw new common_1.NotFoundException(`User with ID ${dto.userId} not found`);
+        }
+        if (!user) {
+            user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+        }
         if (!user) {
             user = await this.prisma.user.create({
                 data: {
@@ -409,19 +438,24 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 }
             });
         }
+        else {
+            await this.syncUserContact(user, dto);
+        }
         const bookingDate = dto.date.slice(0, 10);
-        const start = new Date(`1970-01-01T${dto.startTime}:00`);
-        const end = new Date(`1970-01-01T${dto.endTime}:00`);
-        const durationHours = (end.getTime() - start.getTime()) / 3600000;
-        const unitPrice = dto.totalAmount / (durationHours || 1);
+        const durationMin = (0, time_util_1.durationMinutes)(dto.startTime, dto.endTime);
+        if (durationMin === 0) {
+            throw new common_1.BadRequestException('Эхлэх ба дуусах цаг ижил байж болохгүй.');
+        }
+        const durationHours = durationMin / 60;
+        const unitPrice = dto.totalAmount / durationHours;
         const itemData = {
             itemType: dto.serviceType,
-            quantity: durationHours,
+            quantity: Math.max(1, Math.round(durationHours)),
             unitPrice,
             totalPrice: dto.totalAmount,
             bookingDate,
-            startTime: `${dto.startTime}:00`,
-            endTime: `${dto.endTime}:00`,
+            startTime: (0, time_util_1.normalizeTime)(dto.startTime),
+            endTime: (0, time_util_1.normalizeTime)(dto.endTime),
         };
         if (dto.serviceType === 'STUDIO')
             itemData.studioId = dto.serviceId;
@@ -551,7 +585,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
     }
     async getBookedSlots(serviceType, serviceId, date) {
         const bookingDate = date.slice(0, 10);
-        const serviceWhere = { itemType: serviceType, bookingDate };
+        const prevDate = (0, time_util_1.shiftDate)(bookingDate, -1);
+        const serviceWhere = { itemType: serviceType, bookingDate: { in: [prevDate, bookingDate] } };
         if (serviceType === 'STUDIO')
             serviceWhere.studioId = serviceId;
         if (serviceType === 'LIVE_SERVICE')
@@ -570,7 +605,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 startTime: { not: null },
                 endTime: { not: null },
             },
-            select: { startTime: true, endTime: true },
+            select: { bookingDate: true, startTime: true, endTime: true },
         });
         const ALL_TIMES = Array.from({ length: 48 }, (_, i) => {
             const h = Math.floor(i / 2);
@@ -585,10 +620,11 @@ let BookingsService = BookingsService_1 = class BookingsService {
             const overlaps = items.some(item => {
                 if (!item.startTime || !item.endTime)
                     return false;
-                const [sh, sm] = item.startTime.split(':').map(Number);
-                const [eh, em] = item.endTime.split(':').map(Number);
-                const bookedStart = sh * 60 + sm;
-                const bookedEnd = eh * 60 + em;
+                const duration = (0, time_util_1.durationMinutes)(item.startTime, item.endTime);
+                if (duration === 0)
+                    return false;
+                const bookedStart = (0, time_util_1.toMinutes)(item.startTime) - (item.bookingDate === bookingDate ? 0 : 1440);
+                const bookedEnd = bookedStart + duration;
                 return slotStart < bookedEnd && slotEnd > bookedStart;
             });
             if (overlaps)
@@ -661,22 +697,25 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (!booking) {
             throw new common_1.NotFoundException(`Booking with ID ${id} not found`);
         }
-        if (dto.name !== undefined || dto.phone !== undefined || dto.email !== undefined) {
-            await this.prisma.user.update({
-                where: { id: booking.userId },
-                data: {
-                    username: dto.name !== undefined ? dto.name : booking.user.username,
-                    phone: dto.phone !== undefined ? dto.phone : booking.user.phone,
-                    email: dto.email !== undefined ? dto.email : booking.user.email,
-                }
-            });
+        let targetUserId = booking.userId;
+        if (dto.userId && Number(dto.userId) !== booking.userId) {
+            const picked = await this.prisma.user.findUnique({ where: { id: Number(dto.userId) } });
+            if (!picked)
+                throw new common_1.NotFoundException(`User with ID ${dto.userId} not found`);
+            targetUserId = picked.id;
+            await this.syncUserContact(picked, dto);
+        }
+        else if (dto.name !== undefined || dto.phone !== undefined || dto.email !== undefined) {
+            await this.syncUserContact(booking.user, dto);
         }
         const date = dto.date ? dto.date.slice(0, 10) : undefined;
         let durationHours = 1;
         if (dto.startTime && dto.endTime) {
-            const start = new Date(`1970-01-01T${dto.startTime}:00`);
-            const end = new Date(`1970-01-01T${dto.endTime}:00`);
-            durationHours = (end.getTime() - start.getTime()) / 3600000;
+            const durationMin = (0, time_util_1.durationMinutes)(dto.startTime, dto.endTime);
+            if (durationMin === 0) {
+                throw new common_1.BadRequestException('Эхлэх ба дуусах цаг ижил байж болохгүй.');
+            }
+            durationHours = durationMin / 60;
         }
         const unitPrice = dto.totalAmount ? dto.totalAmount / (durationHours || 1) : undefined;
         if (booking.items.length > 0) {
@@ -684,15 +723,15 @@ let BookingsService = BookingsService_1 = class BookingsService {
             if (date)
                 itemMap.bookingDate = date;
             if (dto.startTime)
-                itemMap.startTime = dto.startTime.length === 5 ? `${dto.startTime}:00` : dto.startTime;
+                itemMap.startTime = (0, time_util_1.normalizeTime)(dto.startTime);
             if (dto.endTime)
-                itemMap.endTime = dto.endTime.length === 5 ? `${dto.endTime}:00` : dto.endTime;
+                itemMap.endTime = (0, time_util_1.normalizeTime)(dto.endTime);
             if (unitPrice !== undefined)
                 itemMap.unitPrice = unitPrice;
             if (dto.totalAmount !== undefined)
                 itemMap.totalPrice = dto.totalAmount;
             if (dto.startTime && dto.endTime)
-                itemMap.quantity = durationHours;
+                itemMap.quantity = Math.max(1, Math.round(durationHours));
             if (dto.serviceType)
                 itemMap.itemType = dto.serviceType;
             if (dto.serviceType === 'STUDIO') {
@@ -740,6 +779,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         const updated = await this.prisma.booking.update({
             where: { id },
             data: {
+                userId: targetUserId,
                 totalAmount: dto.totalAmount !== undefined ? dto.totalAmount : booking.totalAmount,
                 notes: dto.notes !== undefined ? dto.notes : booking.notes,
                 status: dto.status !== undefined ? dto.status : booking.status,

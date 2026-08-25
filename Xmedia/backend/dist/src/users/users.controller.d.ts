@@ -44,6 +44,13 @@ export declare class UsersController {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
+    search(q: string): Promise<{
+        id: number;
+        username: string;
+        email: string;
+        phone: string | null;
+        bookingCount: number;
+    }[]>;
     findOne(id: string): Promise<{
         id: number;
         username: string;

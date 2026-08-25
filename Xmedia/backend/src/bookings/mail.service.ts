@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as https from 'https';
+import { isOvernight } from './time.util';
 
 @Injectable()
 export class MailService {
@@ -157,7 +158,10 @@ export class MailService {
                 const date = (e.date || '').slice(0, 10);
                 const start = (e.startTime || '').slice(0, 5);
                 const end = (e.endTime || '').slice(0, 5);
-                const time = start ? ` &middot; ${start}${end ? `&ndash;${end}` : ''}` : '';
+                // Шөнө дамнасан бол (ж: 20:00–02:00) дуусах цаг дараагийн өдөрт хамаарна
+                const overnight = !!(start && end && isOvernight(start, end));
+                const endLabel = end ? `&ndash;${end}${overnight ? ' (маргааш)' : ''}` : '';
+                const time = start ? ` &middot; ${start}${endLabel}` : '';
                 const name = e.serviceName
                     ? `<span style="color:#6b7280;">${e.serviceName}:</span> `
                     : '';

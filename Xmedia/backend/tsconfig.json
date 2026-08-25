@@ -21,5 +21,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  // Нэг удаагийн script-үүд dist рүү эмхэтгэгдэхгүй (ts-node-оор шууд ажиллуулна)
+  "exclude": ["node_modules", "dist", "scripts"]
 }

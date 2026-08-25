@@ -10,9 +10,9 @@ export declare class PortfolioService {
         description: string | null;
         serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/library").JsonValue;
+        tags: import("@prisma/client/runtime/library").JsonValue | null;
         sortOrder: number;
         title: string;
-        tags: import("@prisma/client/runtime/library").JsonValue | null;
         isPublished: boolean;
         liveDate: Date | null;
         viewCount: number | null;
@@ -28,9 +28,9 @@ export declare class PortfolioService {
         description: string | null;
         serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/library").JsonValue;
+        tags: import("@prisma/client/runtime/library").JsonValue | null;
         sortOrder: number;
         title: string;
-        tags: import("@prisma/client/runtime/library").JsonValue | null;
         isPublished: boolean;
         liveDate: Date | null;
         viewCount: number | null;
@@ -60,9 +60,9 @@ export declare class PortfolioService {
         description: string | null;
         serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/library").JsonValue;
+        tags: import("@prisma/client/runtime/library").JsonValue | null;
         sortOrder: number;
         title: string;
-        tags: import("@prisma/client/runtime/library").JsonValue | null;
         isPublished: boolean;
         liveDate: Date | null;
         viewCount: number | null;
@@ -92,9 +92,9 @@ export declare class PortfolioService {
         description: string | null;
         serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/library").JsonValue;
+        tags: import("@prisma/client/runtime/library").JsonValue | null;
         sortOrder: number;
         title: string;
-        tags: import("@prisma/client/runtime/library").JsonValue | null;
         isPublished: boolean;
         liveDate: Date | null;
         viewCount: number | null;
@@ -110,9 +110,9 @@ export declare class PortfolioService {
         description: string | null;
         serviceType: import("@prisma/client").$Enums.PortfolioServiceType;
         images: import("@prisma/client/runtime/library").JsonValue;
+        tags: import("@prisma/client/runtime/library").JsonValue | null;
         sortOrder: number;
         title: string;
-        tags: import("@prisma/client/runtime/library").JsonValue | null;
         isPublished: boolean;
         liveDate: Date | null;
         viewCount: number | null;

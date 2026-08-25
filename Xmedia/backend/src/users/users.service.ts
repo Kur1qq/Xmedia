@@ -12,6 +12,44 @@ export class UsersService {
         });
     }
 
+    /**
+     * Админ гараар захиалга үүсгэхэд бүртгэлтэй хэрэглэгчээ хайх.
+     * Нэр, утас, и-мэйлээр хайж, хамгийн сүүлд бүртгүүлсэн дарааллаар 8 хүртэл буцаана.
+     */
+    async search(query: string, limit = 8) {
+        const q = (query || '').trim();
+        if (q.length < 2) return [];
+
+        const users = await this.prisma.user.findMany({
+            where: {
+                OR: [
+                    { username: { contains: q } },
+                    { phone: { contains: q } },
+                    { email: { contains: q } },
+                ],
+            },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                phone: true,
+                createdAt: true,
+                _count: { select: { bookings: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+        });
+
+        return users.map(u => ({
+            id: u.id,
+            username: u.username,
+            // Зочны автомат и-мэйлийг (guest_...@xtudio.guest) хоосон гэж үзнэ
+            email: u.email.endsWith('@xtudio.guest') ? '' : u.email,
+            phone: u.phone,
+            bookingCount: u._count.bookings,
+        }));
+    }
+
     async findOne(id: number) {
         const user = await this.prisma.user.findUnique({
             where: { id },

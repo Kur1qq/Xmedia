@@ -43,6 +43,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MailService = void 0;
 const common_1 = require("@nestjs/common");
 const https = __importStar(require("https"));
+const time_util_1 = require("./time.util");
 let MailService = MailService_1 = class MailService {
     logger = new common_1.Logger(MailService_1.name);
     ADMIN_EMAIL = 'xtudiomn@gmail.com';
@@ -167,6 +168,36 @@ let MailService = MailService_1 = class MailService {
           <tbody>${rows}</tbody>
         </table>`;
     }
+    formatSchedule(entries) {
+        return entries
+            .filter((e) => e.date)
+            .map((e) => {
+            const date = (e.date || '').slice(0, 10);
+            const start = (e.startTime || '').slice(0, 5);
+            const end = (e.endTime || '').slice(0, 5);
+            const overnight = !!(start && end && (0, time_util_1.isOvernight)(start, end));
+            const endLabel = end ? `&ndash;${end}${overnight ? ' (маргааш)' : ''}` : '';
+            const time = start ? ` &middot; ${start}${endLabel}` : '';
+            const name = e.serviceName
+                ? `<span style="color:#6b7280;">${e.serviceName}:</span> `
+                : '';
+            return `${name}${date}${time}`;
+        })
+            .join('<br>');
+    }
+    nowUB() {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Ulaanbaatar',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        })
+            .format(new Date())
+            .replace(',', '');
+    }
     async sendInvoiceEmail(to, subject, html, pdfBuffer, filename) {
         try {
             const attachments = [];
@@ -227,7 +258,7 @@ let MailService = MailService_1 = class MailService {
             this.logger.error(`Failed to send order cancelled email for booking #${bookingId}`, error);
         }
     }
-    async sendNewOrderNotificationToAdmin(bookingId, buyerName, buyerPhone, serviceName, totalAmount) {
+    async sendNewOrderNotificationToAdmin(bookingId, buyerName, buyerPhone, serviceName, totalAmount, schedule = []) {
         try {
             const isInvoice = serviceName.startsWith('[НЭХЭМЖЛЭХ]');
             const cleanService = isInvoice ? serviceName.replace('[НЭХЭМЖЛЭХ] ', '') : serviceName;
@@ -240,12 +271,16 @@ let MailService = MailService_1 = class MailService {
             const badgeBg = isInvoice ? '#ede9fe' : '#dbeafe';
             const badgeColor = isInvoice ? '#7c3aed' : '#1d4ed8';
             const icon = isInvoice ? '&#128196;' : '&#127881;';
+            const scheduleHtml = this.formatSchedule(schedule);
+            const scheduleRow = scheduleHtml ? this.row('Үйлчилгээний огноо', scheduleHtml) : '';
             const body = `
               ${this.table(this.row('Захиалгын дугаар', `#${orderNum}`) +
                 this.row('Захиалагчийн нэр', buyerName) +
                 this.row('Утасны дугаар', buyerPhone) +
                 this.row('Үйлчилгээ', cleanService) +
-                this.row('Нийт дүн', `&#8366;${totalAmount.toLocaleString()}`), 'Захиалгын дэлгэрэнгүй')}
+                scheduleRow +
+                this.row('Нийт дүн', `&#8366;${totalAmount.toLocaleString()}`) +
+                this.row(isInvoice ? 'Хүсэлт илгээсэн' : 'Захиалсан огноо', this.nowUB()), 'Захиалгын дэлгэрэнгүй')}
 `;
             const html = this.emailLayout(headerColor, badgeText, badgeBg, badgeColor, body);
             await this.sendViaBrevoApi(this.ADMIN_EMAIL, subject, html);
